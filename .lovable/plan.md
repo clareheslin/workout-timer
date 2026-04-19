@@ -1,49 +1,44 @@
 
-## Goal
-Apply the FEM brand palette across the app and place the FEM logo in a sensible, non-intrusive spot.
+## Plan: Workout export & import (.fem.json)
 
-## Palette mapping (oklch in `src/styles.css`)
-Given the palette `#43ac6d` (brand green), `#1f5014` (deep green), `#7d9b76` (sage), `#cbddd1` (mint), `#f6f6e9` (cream), `#f7f7f7` (off-white), `#272727` (near-black), `#000`, `#a9a9a9`, I recommend a **light theme** as the default (matches FEM's clean brand feel; current app already shows a light shell):
+### Behaviour decisions (from this turn)
+- **No auto-rename on import.** Keep the exported `name` exactly as-is, even if it collides with an existing workout. Multiple workouts with the same name is allowed (each gets a fresh `id`).
+- **Optional prefix on import.** Before importing, prompt the user with a small text input for an optional prefix (e.g. `"Sam's "`). If provided, the imported workout name becomes `${prefix}${originalName}`. Empty/whitespace prefix = use original name unchanged.
 
-| Token | Hex | Use |
-|---|---|---|
-| `--background` | `#f6f6e9` cream | App background |
-| `--foreground` | `#272727` | Body text |
-| `--card` / `--popover` | `#f7f7f7` | Cards, dropdowns |
-| `--primary` | `#1f5014` deep green | Primary buttons, headings accent |
-| `--primary-foreground` | `#f7f7f7` | Text on primary |
-| `--secondary` / `--muted` / `--accent` | `#cbddd1` mint | Soft chips, hover, muted surfaces |
-| `--secondary-foreground` / `--accent-foreground` | `#1f5014` | Text on mint |
-| `--muted-foreground` | `#7d9b76` sage | Helper text, captions |
-| `--border` / `--input` | `#cbddd1` | Borders, input outlines |
-| `--ring` | `#43ac6d` | Focus ring |
-| `--destructive` | keep current red (palette has no red — needed for delete/hold-to-exit fill so action stays unambiguous). Alternative: use `#1f5014` and rely on the hold gesture, but I'd keep red. |
-| `--exercise` | `#43ac6d` brand green | Exercise interval (already green — just align to brand value) |
-| `--exercise-foreground` | `#f7f7f7` | Text during exercise |
-| `--rest` | `#f6f6e9` cream | Rest interval |
-| `--rest-foreground` | `#272727` | Text during rest |
-| Chart colors | `#1f5014`, `#43ac6d`, `#7d9b76`, `#cbddd1`, `#a9a9a9` | Diary stats |
+### Files
 
-Dark theme: I'd **drop the dark variant** for now (set `.dark` values to mirror light) so the brand reads consistently. The app doesn't expose a theme toggle, so dark mode only triggers from OS preference and currently looks unrelated to FEM. If you want dark later, we'd design a separate "deep green night" pass.
+**New: `src/lib/workoutShare.ts`**
+- `WORKOUT_FILE_FORMAT = "fem.workout"`, `WORKOUT_FILE_VERSION = 1`
+- `serializeWorkout(workout)` → JSON string with envelope `{ format, version, exportedAt, workout: { name, blocks } }` (strips `id`, `createdAt`, `updatedAt` — they're regenerated on import).
+- `parseWorkoutFile(text)` → validated `Workout` shape or throws.
+- `isValidWorkoutShape(obj)` — structural checks for blocks/items/repExercises matching `src/types.ts`.
+- `slugifyFilename(name)` → safe `.fem.json` filename.
+- `regenerateIds(workout, prefix?)` → new `id`s for workout/blocks/items/repExercises, fresh `createdAt`/`updatedAt`, applies optional name prefix.
 
-## Logo placement
-Add `user-uploads://green_transparent.png` as `src/assets/fem-logo.png`. Place it in **two spots**:
+**New: `src/components/workouts/ImportWorkoutButton.tsx`**
+- Hidden `<input type="file" accept=".json,.fem.json,application/json">`.
+- On file selected → read text → parse → open small inline prompt for optional prefix → confirm → call `onImport(workout)`.
+- Shows toast on success/failure.
 
-1. **App header bar** — new slim header above the main content in `AppShell.tsx` (currently there's no header, only a bottom tab nav). Logo left-aligned, ~28px tall, on the cream background. Visible on every screen except the runner.
-2. **Workout runner idle/start screen** — small (~40px) above the workout name, so the brand shows on the "Start" screen but doesn't distract during active intervals.
+**Modified: `src/components/workouts/WorkoutsList.tsx`**
+- Add a "Share" action to each `WorkoutCard` (next to Duplicate/Delete).
+- Share handler: build envelope, attempt `navigator.share({ files: [File] })` if `navigator.canShare({ files })` is true; otherwise fall back to anchor download. Catches user-cancel silently.
+- Add `Import` button in the header row next to `+ New` / `Select`.
 
-Logo is **not** shown during running intervals or on the done screen — those need full focus on the timer.
+**Modified: `src/components/WorkoutsTab.tsx`**
+- Pass an `onImport` handler down to `WorkoutsList` that calls `addWorkout(regeneratedWorkout)` and shows a toast (`Imported "<name>"`).
 
-## Files to change
-1. `src/styles.css` — replace `:root` color tokens with the palette above; mirror in `.dark`; update `--exercise`/`--rest` and chart tokens.
-2. `src/assets/fem-logo.png` — copy from `user-uploads://green_transparent.png`.
-3. `src/components/AppShell.tsx` — add a slim header row containing the logo + "FEM" wordmark (optional) above `<main>`.
-4. `src/components/runner/TimeBlockRunner.tsx` & `RepBlockRunner.tsx` — add logo to the idle (pre-start) state only. (I'll check both files for the idle branch; if they share an idle screen, only one edit is needed.)
+**Modified: `src/lib/workout.ts`**
+- Re-export `serializeWorkout`, `parseWorkoutFile` from `workoutShare.ts` for convenience (optional).
 
-## Out of scope
-- No layout/structural changes beyond the header strip.
-- No new theme toggle.
-- Destructive red kept as-is for safety affordances.
+### UX flow
+1. **Export**: User taps Share on a workout → native share sheet opens (mobile) with `WorkoutName.fem.json` attached, or file downloads (desktop).
+2. **Import**: User taps Import in Workouts header → picks `.fem.json` → small dialog shows workout name + optional "Prefix (optional)" text field + Import/Cancel buttons → on Import the workout is added with `${prefix}${name}` (or just `name` if no prefix). No renaming, no de-duplication.
 
-## Open question
-Want me to also change the favicon and `<title>`/meta to FEM branding while I'm in there? (Currently "MOVE TIMER" / "Lovable App".)
+### Validation & errors
+- Reject files where `format !== "fem.workout"` or `version > 1`.
+- Reject malformed shapes with toast: `"Couldn't import: file is not a valid FEM workout."`
+- Web Share `AbortError` (user cancelled) is swallowed silently.
+
+### Out of scope
+- Bulk export, deep links, text/markdown summary, conflict resolution UI.
