@@ -116,11 +116,19 @@ export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
     : null;
 
   // Up-next: next planned interval in the same block, else "Block complete".
+  // If the next interval is the rest belonging to the current exercise, label it just "Rest"
+  // so we don't echo the current exercise's name back to the user.
   const nextPlanned = currentSchedule[scheduleIndex + 1] ?? null;
   const nextItem: UpNextInterval | null = nextPlanned
     ? {
         kind: nextPlanned.kind,
-        name: nextPlanned.name,
+        name:
+          nextPlanned.kind === "rest" &&
+          currentPlanned?.kind === "exercise" &&
+          nextPlanned.itemIndex === currentPlanned.itemIndex &&
+          nextPlanned.round === currentPlanned.round
+            ? "Rest"
+            : nextPlanned.name,
         durationSeconds: nextPlanned.durationSeconds,
       }
     : null;
