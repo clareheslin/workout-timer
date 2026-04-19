@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Timer, Zap, Clock, Repeat, ChevronRight } from "lucide-react";
-import { QuickStartPlaceholder } from "./QuickStartPlaceholder";
+import { StopwatchScreen } from "./StopwatchScreen";
+import { AmrapScreen } from "./AmrapScreen";
+import { EmomScreen } from "./EmomScreen";
+import { CircuitScreen } from "./CircuitScreen";
 
 export type QuickStartTimer = "stopwatch" | "amrap" | "emom" | "circuit";
 
@@ -41,10 +44,10 @@ const OPTIONS: TimerOption[] = [
 export function QuickStartScreen() {
   const [active, setActive] = useState<QuickStartTimer | null>(null);
 
-  if (active) {
-    const option = OPTIONS.find((o) => o.id === active)!;
-    return <QuickStartPlaceholder name={option.name} onBack={() => setActive(null)} />;
-  }
+  if (active === "stopwatch") return <StopwatchScreen onBack={() => setActive(null)} />;
+  if (active === "amrap") return <AmrapScreen onBack={() => setActive(null)} />;
+  if (active === "emom") return <EmomScreen onBack={() => setActive(null)} />;
+  if (active === "circuit") return <CircuitScreen onBack={() => setActive(null)} />;
 
   return (
     <div className="space-y-6">
