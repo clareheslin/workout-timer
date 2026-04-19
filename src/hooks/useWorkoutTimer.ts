@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Block, BlockItem, Workout } from "@/types";
 
+export interface WorkoutTimerCallbacks {
+  onTransition?: () => void;
+  onCountdownTick?: () => void;
+  onBlockEnd?: () => void;
+}
+
+
 export type TimerPhase = "idle" | "running" | "paused" | "block-complete" | "done";
 
 export type IntervalKind = "exercise" | "rest";
@@ -86,7 +93,10 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   return out;
 }
 
-export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
+export function useWorkoutTimer(
+  workout: Workout,
+  callbacks?: WorkoutTimerCallbacks,
+): UseWorkoutTimerResult {
   const blockSchedules = useMemo(
     () => workout.blocks.map((b, i) => planBlock(b, i)),
     [workout],
@@ -98,6 +108,16 @@ export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const intervalRef = useRef<number | null>(null);
+
+  // Keep callbacks in a ref so we don't re-run effects when they change identity.
+  const callbacksRef = useRef(callbacks);
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
+
+  // Track which (phase, second) we've already chimed for, to guard against
+  // double-fires from React re-renders or strict-mode double-invocation.
+  const lastCountdownKey = useRef<string | null>(null);
 
   const currentBlock = workout.blocks[blockIndex] ?? null;
   const currentSchedule = blockSchedules[blockIndex] ?? [];
@@ -158,6 +178,21 @@ export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
     return clearTick;
   }, [phase, clearTick]);
 
+  // Countdown beeps at 3, 2, 1 seconds remaining (running phase, > 0).
+  useEffect(() => {
+    if (phase !== "running") {
+      lastCountdownKey.current = null;
+      return;
+    }
+    if (timeRemaining > 0 && timeRemaining <= 3) {
+      const key = `${blockIndex}:${scheduleIndex}:${timeRemaining}`;
+      if (lastCountdownKey.current !== key) {
+        lastCountdownKey.current = key;
+        callbacksRef.current?.onCountdownTick?.();
+      }
+    }
+  }, [phase, timeRemaining, blockIndex, scheduleIndex]);
+
   // When timeRemaining hits 0 while running, advance to the next interval.
   useEffect(() => {
     if (phase !== "running" || timeRemaining > 0) return;
@@ -167,10 +202,13 @@ export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
       const next = currentSchedule[nextIdx];
       setScheduleIndex(nextIdx);
       setTimeRemaining(next.durationSeconds);
+      callbacksRef.current?.onTransition?.();
       return;
     }
 
-    // Block finished.
+    // Block finished — fire transition + block-end (per product decision).
+    callbacksRef.current?.onTransition?.();
+    callbacksRef.current?.onBlockEnd?.();
     const isLastBlock = blockIndex >= workout.blocks.length - 1;
     setPhase(isLastBlock ? "done" : "block-complete");
   }, [phase, timeRemaining, scheduleIndex, currentSchedule, blockIndex, workout.blocks.length]);
