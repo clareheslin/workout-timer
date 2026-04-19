@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { WorkoutLog, WorkoutLogBlock } from "@/types";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
+import { usePageHeader } from "./PageHeaderContext";
 
 function formatLogDate(iso: string): string {
   try {
@@ -186,13 +187,13 @@ function EmptyState() {
 
 export function DiaryTab() {
   const { logs, deleteLog } = useWorkoutDiary();
+  usePageHeader("Diary");
 
   // Most recent first. addLog already prepends, but sort defensively.
   const sorted = [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Diary</h1>
       {sorted.length === 0 ? (
         <EmptyState />
       ) : (
