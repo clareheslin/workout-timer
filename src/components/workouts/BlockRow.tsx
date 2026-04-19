@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Block } from "@/types";
+import { blockTotalSeconds, formatDuration } from "@/lib/duration";
 
 interface Props {
   block: Block;
