@@ -66,6 +66,10 @@ export interface UseWorkoutTimerResult {
   resume: () => void;
   nextBlock: () => void;
   finish: () => void;
+  /** ISO timestamp captured the first time `start` was tapped, or null if never. */
+  startedAt: string | null;
+  /** Build a summary of what actually played, for diary logging. */
+  getRunSummary: () => RunSummary | null;
 }
 
 interface PlannedInterval {
