@@ -8,6 +8,7 @@ interface Props {
   onEdit: (workout: Workout) => void;
   onPlay: (workout: Workout) => void;
   onDelete: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
 }
 
@@ -50,12 +51,18 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 
 function WorkoutCard({
   workout,
+  selecting,
+  selected,
+  onToggleSelect,
   onEdit,
   onPlay,
   onDelete,
   onDuplicate,
 }: {
   workout: Workout;
+  selecting: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
   onEdit: () => void;
   onPlay: () => void;
   onDelete: () => void;
@@ -71,6 +78,11 @@ function WorkoutCard({
     return () => window.clearTimeout(t);
   }, [confirming]);
 
+  // Reset confirm state when entering selection mode
+  useEffect(() => {
+    if (selecting) setConfirming(false);
+  }, [selecting]);
+
   const handleDelete = () => {
     if (confirming) {
       setConfirming(false);
@@ -81,53 +93,80 @@ function WorkoutCard({
   };
 
   return (
-    <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
+    <li
+      className={`rounded-lg border bg-card p-4 text-card-foreground transition-colors ${
+        selecting && selected ? "border-primary ring-1 ring-primary" : "border-border"
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        {selecting && (
+          <button
+            type="button"
+            onClick={onToggleSelect}
+            aria-label={selected ? "Deselect workout" : "Select workout"}
+            aria-pressed={selected}
+            className={`mt-1 grid h-5 w-5 shrink-0 place-content-center rounded border ${
+              selected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background"
+            }`}
+          >
+            {selected && (
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 8.5l3 3 7-7" />
+              </svg>
+            )}
+          </button>
+        )}
+        <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{workout.name || "Untitled"}</p>
           <p className="text-xs text-muted-foreground">
             {workout.blocks.length} {workout.blocks.length === 1 ? "block" : "blocks"}
             {totalSecs > 0 && <> · {formatDuration(totalSecs)}</>}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        {!selecting && (
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              disabled={!playable}
+              onClick={onPlay}
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
+            >
+              Play
+            </button>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Edit
+            </button>
+          </div>
+        )}
+      </div>
+      {!selecting && (
+        <div className="mt-3 flex items-center justify-between gap-2">
           <button
             type="button"
-            disabled={!playable}
-            onClick={onPlay}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
+            onClick={onDuplicate}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
           >
-            Play
+            Duplicate
           </button>
           <button
             type="button"
-            onClick={onEdit}
-            className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+            onClick={handleDelete}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+              confirming
+                ? "bg-destructive text-destructive-foreground"
+                : "border border-border hover:bg-accent"
+            }`}
           >
-            Edit
+            {confirming ? `Delete "${workout.name || "Untitled"}"? Tap to confirm` : "Delete"}
           </button>
         </div>
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={onDuplicate}
-          className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-        >
-          Duplicate
-        </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-            confirming
-              ? "bg-destructive text-destructive-foreground"
-              : "border border-border hover:bg-accent"
-          }`}
-        >
-          {confirming ? `Delete "${workout.name || "Untitled"}"? Tap to confirm` : "Delete"}
-        </button>
-      </div>
+      )}
     </li>
   );
 }
@@ -138,28 +177,137 @@ export function WorkoutsList({
   onEdit,
   onPlay,
   onDelete,
+  onBulkDelete,
   onDuplicate,
 }: Props) {
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmingBulk, setConfirmingBulk] = useState(false);
+
   const sorted = [...workouts].sort((a, b) => {
     const aTime = a.updatedAt ?? a.createdAt;
     const bTime = b.updatedAt ?? b.createdAt;
     return bTime.localeCompare(aTime);
   });
 
+  useEffect(() => {
+    if (!confirmingBulk) return;
+    const t = window.setTimeout(() => setConfirmingBulk(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [confirmingBulk]);
+
+  // Drop selections that no longer exist (e.g., after delete)
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const valid = new Set(sorted.map((w) => w.id));
+      let changed = false;
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (valid.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : prev;
+    });
+  }, [sorted]);
+
+  const exitSelecting = () => {
+    setSelecting(false);
+    setSelectedIds(new Set());
+    setConfirmingBulk(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setConfirmingBulk(false);
+  };
+
+  const allSelected = sorted.length > 0 && selectedIds.size === sorted.length;
+  const toggleSelectAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sorted.map((w) => w.id)));
+    setConfirmingBulk(false);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    if (confirmingBulk) {
+      const ids = Array.from(selectedIds);
+      onBulkDelete(ids);
+      exitSelecting();
+    } else {
+      setConfirmingBulk(true);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Workouts</h1>
         {sorted.length > 0 && (
-          <button
-            type="button"
-            onClick={onNew}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            + New Workout
-          </button>
+          <div className="flex items-center gap-2">
+            {selecting ? (
+              <button
+                type="button"
+                onClick={exitSelecting}
+                className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Cancel
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelecting(true)}
+                  className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+                >
+                  Select
+                </button>
+                <button
+                  type="button"
+                  onClick={onNew}
+                  className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  + New
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
+
+      {selecting && sorted.length > 0 && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
+          <button
+            type="button"
+            onClick={toggleSelectAll}
+            className="text-sm font-medium text-foreground hover:underline"
+          >
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+          <span className="text-xs text-muted-foreground">
+            {selectedIds.size} selected
+          </span>
+          <button
+            type="button"
+            disabled={selectedIds.size === 0}
+            onClick={handleBulkDelete}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
+              confirmingBulk
+                ? "bg-destructive text-destructive-foreground"
+                : "border border-border hover:bg-accent"
+            }`}
+          >
+            {confirmingBulk
+              ? `Delete ${selectedIds.size}? Tap to confirm`
+              : `Delete${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
+          </button>
+        </div>
+      )}
 
       {sorted.length === 0 ? (
         <EmptyState onNew={onNew} />
@@ -169,6 +317,9 @@ export function WorkoutsList({
             <WorkoutCard
               key={w.id}
               workout={w}
+              selecting={selecting}
+              selected={selectedIds.has(w.id)}
+              onToggleSelect={() => toggleSelect(w.id)}
               onEdit={() => onEdit(w)}
               onPlay={() => onPlay(w)}
               onDelete={() => onDelete(w.id)}
