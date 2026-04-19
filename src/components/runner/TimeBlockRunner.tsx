@@ -4,6 +4,7 @@ import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutT
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import femLogo from "@/assets/fem-logo.png";
 
 interface Props {
   block: Block;
@@ -99,6 +100,7 @@ export function TimeBlockRunner({
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
         {t.phase === "idle" && (
           <>
+            <img src={femLogo} alt="FEM" className="h-10 w-auto opacity-90" />
             <h2 className="text-2xl font-semibold">Ready</h2>
             <p className="text-sm opacity-70">
               {block.name} · {block.items.length} exercises

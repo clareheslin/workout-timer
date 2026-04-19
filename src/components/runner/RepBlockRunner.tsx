@@ -3,6 +3,7 @@ import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import femLogo from "@/assets/fem-logo.png";
 
 interface Props {
   block: Block;
