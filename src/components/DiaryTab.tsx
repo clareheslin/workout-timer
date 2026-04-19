@@ -38,15 +38,38 @@ function formatItemDuration(seconds: number): string {
 }
 
 function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
+  const isRep = block.blockType === "forTime" || block.blockType === "amrap";
+  const repItems = block.repItems ?? [];
+
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{block.blockName}</p>
         <p className="text-xs text-muted-foreground">
-          {block.rounds} {block.rounds === 1 ? "set" : "sets"}
+          {isRep
+            ? block.blockType === "amrap"
+              ? `AMRAP · cap ${formatItemDuration(block.durationSeconds ?? 0)}`
+              : `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
+            : `${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`}
         </p>
       </div>
-      {block.items.length === 0 ? (
+      {isRep ? (
+        repItems.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No exercises.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {repItems.map((it, i) => (
+              <li
+                key={`${it.exerciseName}-${i}`}
+                className="flex items-center justify-between gap-2 text-xs"
+              >
+                <span className="truncate">{it.exerciseName}</span>
+                <span className="shrink-0 text-muted-foreground">{it.reps} reps</span>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : block.items.length === 0 ? (
         <p className="text-xs text-muted-foreground">No exercises played.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
