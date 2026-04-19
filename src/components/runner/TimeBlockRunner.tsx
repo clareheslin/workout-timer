@@ -135,12 +135,12 @@ export function TimeBlockRunner({
             >
               <span className="text-7xl font-bold tabular-nums">{t.timeRemaining}</span>
             </div>
-            {!t.currentInterval.isPrep && (
-              <p className="text-sm opacity-80">
-                Round {t.currentRound} of {t.totalRounds}
-              </p>
-            )}
-            <div className="mt-2 text-sm opacity-80">
+            <p className="min-h-[1.25rem] text-sm opacity-80">
+              {!t.currentInterval.isPrep
+                ? `Round ${t.currentRound} of ${t.totalRounds}`
+                : "\u00A0"}
+            </p>
+            <div className="mt-2 min-h-[1.25rem] text-sm opacity-80">
               <span className="opacity-60">Up next: </span>
               {t.nextItem
                 ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
