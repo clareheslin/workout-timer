@@ -145,24 +145,7 @@ export function RepBlockRunner({
     onComplete(buildLog(finalDuration));
   };
 
-  // Long-press header to exit — only when idle, paused, or done.
-  const longPressTimer = useRef<number | null>(null);
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-  const handleHeaderPressStart = () => {
-    if (phase === "running") return;
-    clearLongPress();
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTimer.current = null;
-      if (window.confirm("Exit this workout?")) {
-        onExitWorkout();
-      }
-    }, LONG_PRESS_MS);
-  };
+
 
   const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
   const doneTimerLabel = formatDuration(finalDuration ?? 0);
