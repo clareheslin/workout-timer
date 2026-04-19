@@ -10,7 +10,7 @@ interface Props {
   onBack: () => void;
 }
 
-type Phase = "idle" | "running" | "done";
+type Phase = "idle" | "running" | "paused" | "done";
 
 interface Step {
   kind: "work" | "rest";
@@ -103,6 +103,15 @@ export function CircuitScreen({ onBack }: Props) {
     audio.unlock();
     setStepIdx(0);
     setRemaining(schedule[0].durationSeconds);
+    setPhase("running");
+  };
+
+  const handlePause = () => {
+    setPhase("paused");
+  };
+
+  const handleResume = () => {
+    audio.unlock();
     setPhase("running");
   };
 
