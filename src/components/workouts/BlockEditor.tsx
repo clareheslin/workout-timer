@@ -251,6 +251,15 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
             );
           })}
         </div>
+        <p className="text-xs text-muted-foreground">
+          {type === "circuit"
+            ? "Cycle through every exercise, then repeat for each round."
+            : type === "sets"
+              ? "Finish all rounds of one exercise before moving to the next."
+              : type === "forTime"
+                ? "Complete all reps as fast as possible. Stopwatch counts up until you tap Stop."
+                : "Repeat the exercise list as many times as you can before the time cap ends."}
+        </p>
       </div>
 
 
