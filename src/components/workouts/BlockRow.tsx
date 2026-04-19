@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Block } from "@/types";
-import { blockTotalSeconds, blockTotalSets, formatDuration } from "@/lib/duration";
+import { blockTotalSeconds, blockTotalSets, blockType, formatDuration } from "@/lib/duration";
+
+const TYPE_LABELS: Record<string, string> = {
+  circuit: "Circuit",
+  sets: "Sets",
+  forTime: "For Time",
+  amrap: "AMRAP",
+};
 
 interface Props {
   block: Block;
