@@ -161,9 +161,11 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             >
               <span className="text-7xl font-bold tabular-nums">{t.timeRemaining}</span>
             </div>
-            <p className="text-sm opacity-80">
-              Round {t.currentRound} of {t.totalRounds}
-            </p>
+            {!t.currentInterval.isPrep && (
+              <p className="text-sm opacity-80">
+                Round {t.currentRound} of {t.totalRounds}
+              </p>
+            )}
             <div className="mt-2 text-sm opacity-80">
               <span className="opacity-60">Up next: </span>
               {t.nextItem
