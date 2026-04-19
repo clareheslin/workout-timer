@@ -7,6 +7,23 @@ export interface WorkoutTimerCallbacks {
   onBlockEnd?: () => void;
 }
 
+export interface RunSummaryItem {
+  exerciseName: string;
+  exerciseDuration: number;
+  restDuration: number;
+}
+
+export interface RunSummaryBlock {
+  blockName: string;
+  rounds: number; // rounds fully completed
+  items: RunSummaryItem[];
+}
+
+export interface RunSummary {
+  startedAt: string; // ISO
+  blocks: RunSummaryBlock[];
+}
+
 
 /** Seconds of "Get Ready" prep prepended to every block. */
 export const BLOCK_PREP_SECONDS = 10;
