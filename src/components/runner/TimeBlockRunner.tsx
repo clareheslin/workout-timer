@@ -58,8 +58,15 @@ export function TimeBlockRunner({
     const summary = t.getRunSummary();
     if (!summary || summary.blocks.length === 0) return;
     completedRef.current = true;
-    onComplete(summary.blocks[0]);
-  }, [t.phase, t.getRunSummary, onComplete]);
+    const sb = summary.blocks[0];
+    const log: WorkoutLogBlock = {
+      blockName: sb.blockName,
+      rounds: sb.rounds,
+      items: sb.items,
+      blockType: block.type ?? "circuit",
+    };
+    onComplete(log);
+  }, [t.phase, t.getRunSummary, onComplete, block.type]);
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
   const bgClass =
