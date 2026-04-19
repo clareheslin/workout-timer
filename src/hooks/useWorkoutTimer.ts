@@ -8,6 +8,9 @@ export interface WorkoutTimerCallbacks {
 }
 
 
+/** Seconds of "Get Ready" prep prepended to every block. */
+export const BLOCK_PREP_SECONDS = 10;
+
 export type TimerPhase = "idle" | "running" | "paused" | "block-complete" | "done";
 
 export type IntervalKind = "exercise" | "rest";
@@ -18,14 +21,17 @@ export interface CurrentInterval {
   name: string;
   /** Original (planned) duration in seconds. */
   durationSeconds: number;
-  /** Index of the BlockItem within the current block. */
+  /** Index of the BlockItem within the current block. -1 for the prep interval. */
   itemIndex: number;
+  /** True only for the 10s "Get Ready" period at the start of a block. */
+  isPrep: boolean;
 }
 
 export interface UpNextInterval {
   kind: IntervalKind;
   name: string;
   durationSeconds: number;
+  isPrep: boolean;
 }
 
 export interface UseWorkoutTimerResult {
@@ -52,18 +58,33 @@ interface PlannedInterval {
   blockIndex: number;
   itemIndex: number;
   round: number; // 1-based
+  isPrep: boolean;
 }
 
 /**
  * Build the linear schedule of intervals for a single block.
  *
  * Rules:
+ *  - Every block starts with a 10s "Get Ready" prep period.
  *  - For each round, play each exercise then its rest.
  *  - Skip any rest with duration 0 ("No rest" / superset).
  *  - The very last rest of the very last round is skipped (no trailing rest).
  */
 function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   const out: PlannedInterval[] = [];
+
+  // 10s "Get Ready" prep at the start of every block. Modeled as a rest so it
+  // gets the rest visual treatment and doesn't echo as an exercise.
+  out.push({
+    kind: "rest",
+    name: "Get Ready",
+    durationSeconds: BLOCK_PREP_SECONDS,
+    blockIndex,
+    itemIndex: -1,
+    round: 1,
+    isPrep: true,
+  });
+
   const rounds = Math.max(1, block.rounds);
   for (let r = 1; r <= rounds; r++) {
     block.items.forEach((item, itemIndex) => {
@@ -74,6 +95,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
         blockIndex,
         itemIndex,
         round: r,
+        isPrep: false,
       });
 
       const isLastItemOfBlock = r === rounds && itemIndex === block.items.length - 1;
@@ -86,6 +108,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
           blockIndex,
           itemIndex,
           round: r,
+          isPrep: false,
         });
       }
     });
@@ -132,6 +155,7 @@ export function useWorkoutTimer(
         name: currentPlanned.name,
         durationSeconds: currentPlanned.durationSeconds,
         itemIndex: currentPlanned.itemIndex,
+        isPrep: currentPlanned.isPrep,
       }
     : null;
 
@@ -150,6 +174,7 @@ export function useWorkoutTimer(
             ? "Rest"
             : nextPlanned.name,
         durationSeconds: nextPlanned.durationSeconds,
+        isPrep: nextPlanned.isPrep,
       }
     : null;
 
