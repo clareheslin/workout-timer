@@ -114,32 +114,54 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   });
 
   const rounds = Math.max(1, block.rounds);
-  for (let r = 1; r <= rounds; r++) {
-    block.items.forEach((item, itemIndex) => {
+  const mode = block.mode ?? "circuit";
+  const itemCount = block.items.length;
+
+  const pushExerciseAndRest = (
+    item: BlockItem,
+    itemIndex: number,
+    round: number,
+    isLastOfBlock: boolean,
+  ) => {
+    out.push({
+      kind: "exercise",
+      name: item.exercise.name || `Exercise ${itemIndex + 1}`,
+      durationSeconds: Math.max(0, item.exercise.durationSeconds),
+      blockIndex,
+      itemIndex,
+      round,
+      isPrep: false,
+    });
+    const restSecs = Math.max(0, item.rest.durationSeconds);
+    if (restSecs > 0 && !isLastOfBlock) {
       out.push({
-        kind: "exercise",
-        name: item.exercise.name || `Exercise ${itemIndex + 1}`,
-        durationSeconds: Math.max(0, item.exercise.durationSeconds),
+        kind: "rest",
+        name: `${item.exercise.name || `Exercise ${itemIndex + 1}`} — Rest`,
+        durationSeconds: restSecs,
         blockIndex,
         itemIndex,
-        round: r,
+        round,
         isPrep: false,
       });
+    }
+  };
 
-      const isLastItemOfBlock = r === rounds && itemIndex === block.items.length - 1;
-      const restSecs = Math.max(0, item.rest.durationSeconds);
-      if (restSecs > 0 && !isLastItemOfBlock) {
-        out.push({
-          kind: "rest",
-          name: `${item.exercise.name || `Exercise ${itemIndex + 1}`} — Rest`,
-          durationSeconds: restSecs,
-          blockIndex,
-          itemIndex,
-          round: r,
-          isPrep: false,
-        });
+  if (mode === "sets") {
+    // All rounds of exercise 1, then all rounds of exercise 2, etc.
+    block.items.forEach((item, itemIndex) => {
+      for (let r = 1; r <= rounds; r++) {
+        const isLastOfBlock = itemIndex === itemCount - 1 && r === rounds;
+        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
       }
     });
+  } else {
+    // Circuit: exercise 1 → 2 → 3 ..., repeat for each round.
+    for (let r = 1; r <= rounds; r++) {
+      block.items.forEach((item, itemIndex) => {
+        const isLastOfBlock = r === rounds && itemIndex === itemCount - 1;
+        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
+      });
+    }
   }
   return out;
 }
@@ -358,15 +380,29 @@ export function useWorkoutTimer(
     if (startedAtRef.current === null) return null;
     const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
       const played = playedRef.current[i] ?? [];
-      // Rounds completed = max round number for which the LAST item of the
-      // block was played.
-      const lastItemIdx = block.items.length - 1;
-      const completedRoundNumbers = played
-        .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
-        .map((p) => p.round);
-      const roundsCompleted = completedRoundNumbers.length
-        ? Math.max(...completedRoundNumbers)
-        : 0;
+      const mode = block.mode ?? "circuit";
+      const totalRounds = Math.max(1, block.rounds);
+      const itemCount = block.items.length;
+
+      // Rounds completed:
+      //  - Circuit: max round number for which the LAST item played.
+      //  - Sets:    number of rounds for which EVERY item played that round.
+      let roundsCompleted = 0;
+      if (mode === "sets") {
+        for (let r = 1; r <= totalRounds; r++) {
+          const allPlayed = block.items.every((_, idx) =>
+            played.some((p) => p.kind === "exercise" && p.itemIndex === idx && p.round === r),
+          );
+          if (allPlayed) roundsCompleted = r;
+          else break;
+        }
+      } else {
+        const lastItemIdx = itemCount - 1;
+        const completedRoundNumbers = played
+          .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
+          .map((p) => p.round);
+        roundsCompleted = completedRoundNumbers.length ? Math.max(...completedRoundNumbers) : 0;
+      }
 
       // Build the items list from the workout definition, but only for items
       // that actually played at least once (any round, exercise side).

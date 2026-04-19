@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Block, BlockItem } from "@/types";
+import type { Block, BlockItem, BlockMode } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockItemRow } from "./BlockItemRow";
 
@@ -30,12 +30,19 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   const [name, setName] = useState(initial.name);
   const [rounds, setRounds] = useState<number>(initial.rounds);
   const [items, setItems] = useState<BlockItem[]>(initial.items);
+  const [mode, setMode] = useState<BlockMode>(initial.mode ?? "circuit");
 
   const initialSnapshot = useMemo(
-    () => JSON.stringify({ name: initial.name, rounds: initial.rounds, items: initial.items }),
+    () =>
+      JSON.stringify({
+        name: initial.name,
+        rounds: initial.rounds,
+        items: initial.items,
+        mode: initial.mode ?? "circuit",
+      }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, rounds, items }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, rounds, items, mode }) !== initialSnapshot;
 
   const canDone = items.length > 0;
 
@@ -84,6 +91,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
       name: name.trim() || defaultName,
       rounds: Math.max(1, Math.floor(rounds || 1)),
       items,
+      mode,
     });
   };
 
@@ -137,6 +145,40 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
           }}
           className="w-24 rounded-md border border-input bg-background px-3 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
         />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Mode</span>
+        <div
+          role="radiogroup"
+          aria-label="Block mode"
+          className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
+        >
+          {(["circuit", "sets"] as const).map((m) => {
+            const active = mode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setMode(m)}
+                className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent"
+                }`}
+              >
+                {m === "circuit" ? "Circuit" : "Sets"}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {mode === "circuit"
+            ? "Cycle through every exercise, then repeat for each round."
+            : "Finish all rounds of one exercise before moving to the next."}
+        </p>
       </div>
 
       <div className="flex flex-col gap-3">
