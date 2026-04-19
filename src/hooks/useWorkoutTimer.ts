@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Block, BlockItem, Workout } from "@/types";
 
+export interface WorkoutTimerCallbacks {
+  onTransition?: () => void;
+  onCountdownTick?: () => void;
+  onBlockEnd?: () => void;
+}
+
+
 export type TimerPhase = "idle" | "running" | "paused" | "block-complete" | "done";
 
 export type IntervalKind = "exercise" | "rest";
