@@ -76,6 +76,10 @@ export function TimeBlockRunner({
         : "bg-rest text-rest-foreground"
       : "bg-background text-foreground";
 
+  const isOnExerciseBg =
+    (t.phase === "running" || t.phase === "paused") && isExerciseInterval;
+  const headerLogo = isOnExerciseBg ? femLogoWhite : femLogo;
+
   const handleStart = () => {
     audio.unlock();
     t.start();
@@ -90,7 +94,7 @@ export function TimeBlockRunner({
     <div className={`flex min-h-screen flex-col transition-colors ${bgClass}`}>
       <header className="flex items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3 min-w-0">
-          <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
+          <img src={headerLogo} alt="FEM" className="h-7 w-auto shrink-0" />
           <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
