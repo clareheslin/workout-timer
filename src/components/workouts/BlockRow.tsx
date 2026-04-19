@@ -86,15 +86,37 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
           </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{block.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
-              {" · "}
-              {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
-              {" · "}
-              {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
-              {" · "}
-              {formatDuration(blockTotalSeconds(block))}
-            </p>
+            {(() => {
+              const t = blockType(block);
+              const typeLabel = TYPE_LABELS[t] ?? "Circuit";
+              if (t === "forTime" || t === "amrap") {
+                const reps = block.repExercises ?? [];
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
+                    {" · "}
+                    {typeLabel}
+                    {t === "amrap" && (
+                      <>
+                        {" · "}
+                        cap {formatDuration(block.timeCap ?? 0)}
+                      </>
+                    )}
+                  </p>
+                );
+              }
+              return (
+                <p className="text-xs text-muted-foreground">
+                  {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+                  {" · "}
+                  {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
+                  {" · "}
+                  {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+                  {" · "}
+                  {formatDuration(blockTotalSeconds(block))}
+                </p>
+              );
+            })()}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
