@@ -34,6 +34,10 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
           <p className="truncate text-sm font-medium">{block.name}</p>
           <p className="text-xs text-muted-foreground">
             {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+            {" · "}
+            {block.rounds} {block.rounds === 1 ? "round" : "rounds"}
+            {" · "}
+            {formatDuration(blockTotalSeconds(block))}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
