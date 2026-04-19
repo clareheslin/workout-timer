@@ -113,16 +113,16 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
     isPrep: true,
   });
 
-  const rounds = Math.max(1, block.rounds);
   const mode = block.mode ?? "circuit";
   const itemCount = block.items.length;
+  const itemRounds = block.items.map((it) => Math.max(1, Math.floor(it.exercise.rounds ?? 1)));
+  // Total exercise emissions across the whole block — used to know which one is "last".
+  const totalEmissions = itemRounds.reduce((a, b) => a + b, 0);
+  let emitted = 0;
 
-  const pushExerciseAndRest = (
-    item: BlockItem,
-    itemIndex: number,
-    round: number,
-    isLastOfBlock: boolean,
-  ) => {
+  const pushExerciseAndRest = (item: BlockItem, itemIndex: number, round: number) => {
+    emitted += 1;
+    const isLastOfBlock = emitted === totalEmissions;
     out.push({
       kind: "exercise",
       name: item.exercise.name || `Exercise ${itemIndex + 1}`,
@@ -149,18 +149,24 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   if (mode === "sets") {
     // All rounds of exercise 1, then all rounds of exercise 2, etc.
     block.items.forEach((item, itemIndex) => {
-      for (let r = 1; r <= rounds; r++) {
-        const isLastOfBlock = itemIndex === itemCount - 1 && r === rounds;
-        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
+      for (let r = 1; r <= itemRounds[itemIndex]; r++) {
+        pushExerciseAndRest(item, itemIndex, r);
       }
     });
   } else {
-    // Circuit: exercise 1 → 2 → 3 ..., repeat for each round.
-    for (let r = 1; r <= rounds; r++) {
-      block.items.forEach((item, itemIndex) => {
-        const isLastOfBlock = r === rounds && itemIndex === itemCount - 1;
-        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
-      });
+    // Circuit: cycle through exercises that still have rounds remaining.
+    // E.g. A(4), B(3) → A B A B A B A.
+    const remaining = [...itemRounds];
+    const round = Array(itemCount).fill(0);
+    let anyLeft = remaining.some((r) => r > 0);
+    while (anyLeft) {
+      for (let i = 0; i < itemCount; i++) {
+        if (remaining[i] <= 0) continue;
+        round[i] += 1;
+        remaining[i] -= 1;
+        pushExerciseAndRest(block.items[i], i, round[i]);
+      }
+      anyLeft = remaining.some((r) => r > 0);
     }
   }
   return out;
