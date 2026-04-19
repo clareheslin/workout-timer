@@ -242,7 +242,7 @@ export function WorkoutsList({
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmingBulk, setConfirmingBulk] = useState(false);
-  usePageHeader("Workouts");
+  usePageHeader("Workout Builder");
 
   const sorted = [...workouts].sort((a, b) => {
     const aTime = a.updatedAt ?? a.createdAt;
