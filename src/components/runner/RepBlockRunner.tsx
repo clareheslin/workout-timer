@@ -240,7 +240,7 @@ export function RepBlockRunner({
                       className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
                       aria-label="End block"
                     >
-                      End block »
+                      Skip Block »
                     </button>
                   </div>
                   {phase === "running" ? (
