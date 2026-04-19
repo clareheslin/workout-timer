@@ -114,32 +114,54 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   });
 
   const rounds = Math.max(1, block.rounds);
-  for (let r = 1; r <= rounds; r++) {
-    block.items.forEach((item, itemIndex) => {
+  const mode = block.mode ?? "circuit";
+  const itemCount = block.items.length;
+
+  const pushExerciseAndRest = (
+    item: BlockItem,
+    itemIndex: number,
+    round: number,
+    isLastOfBlock: boolean,
+  ) => {
+    out.push({
+      kind: "exercise",
+      name: item.exercise.name || `Exercise ${itemIndex + 1}`,
+      durationSeconds: Math.max(0, item.exercise.durationSeconds),
+      blockIndex,
+      itemIndex,
+      round,
+      isPrep: false,
+    });
+    const restSecs = Math.max(0, item.rest.durationSeconds);
+    if (restSecs > 0 && !isLastOfBlock) {
       out.push({
-        kind: "exercise",
-        name: item.exercise.name || `Exercise ${itemIndex + 1}`,
-        durationSeconds: Math.max(0, item.exercise.durationSeconds),
+        kind: "rest",
+        name: `${item.exercise.name || `Exercise ${itemIndex + 1}`} — Rest`,
+        durationSeconds: restSecs,
         blockIndex,
         itemIndex,
-        round: r,
+        round,
         isPrep: false,
       });
+    }
+  };
 
-      const isLastItemOfBlock = r === rounds && itemIndex === block.items.length - 1;
-      const restSecs = Math.max(0, item.rest.durationSeconds);
-      if (restSecs > 0 && !isLastItemOfBlock) {
-        out.push({
-          kind: "rest",
-          name: `${item.exercise.name || `Exercise ${itemIndex + 1}`} — Rest`,
-          durationSeconds: restSecs,
-          blockIndex,
-          itemIndex,
-          round: r,
-          isPrep: false,
-        });
+  if (mode === "sets") {
+    // All rounds of exercise 1, then all rounds of exercise 2, etc.
+    block.items.forEach((item, itemIndex) => {
+      for (let r = 1; r <= rounds; r++) {
+        const isLastOfBlock = itemIndex === itemCount - 1 && r === rounds;
+        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
       }
     });
+  } else {
+    // Circuit: exercise 1 → 2 → 3 ..., repeat for each round.
+    for (let r = 1; r <= rounds; r++) {
+      block.items.forEach((item, itemIndex) => {
+        const isLastOfBlock = r === rounds && itemIndex === itemCount - 1;
+        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
+      });
+    }
   }
   return out;
 }
