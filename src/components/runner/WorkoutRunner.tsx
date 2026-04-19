@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Workout } from "@/types";
-import { useWorkoutTimer } from "@/hooks/useWorkoutTimer";
+import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
+import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 
 interface Props {
@@ -12,7 +13,18 @@ interface Props {
 const LONG_PRESS_MS = 700;
 
 export function WorkoutRunner({ workout, onExit }: Props) {
-  const t = useWorkoutTimer(workout);
+  const audio = useWorkoutAudio();
+
+  const timerCallbacks = useMemo<WorkoutTimerCallbacks>(
+    () => ({
+      onTransition: audio.playTransitionBeep,
+      onCountdownTick: audio.playCountdownBeep,
+      onBlockEnd: audio.playBlockEndBeep,
+    }),
+    [audio.playTransitionBeep, audio.playCountdownBeep, audio.playBlockEndBeep],
+  );
+
+  const t = useWorkoutTimer(workout, timerCallbacks);
   const longPressTimer = useRef<number | null>(null);
 
   // Auto-navigate to Diary 2s after completion.
@@ -21,6 +33,17 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     const id = window.setTimeout(() => onExit("done"), 2000);
     return () => window.clearTimeout(id);
   }, [t.phase, onExit]);
+
+  const handleStart = () => {
+    audio.unlock();
+    t.start();
+  };
+
+  const handleNextBlock = () => {
+    audio.unlock();
+    t.nextBlock();
+  };
+
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
   const bgClass =
