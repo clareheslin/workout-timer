@@ -9,6 +9,12 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   vite: {
+    // Pre-bundle deps used by the Quick Start sheet so Vite doesn't trigger a
+    // mid-session re-optimize that can briefly leave a stale React copy in
+    // the dep cache (causes "Cannot read properties of null (reading 'use')").
+    optimizeDeps: {
+      include: ["@radix-ui/react-dialog", "@radix-ui/react-slot"],
+    },
     plugins: [
       VitePWA({
         registerType: "autoUpdate",
