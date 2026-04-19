@@ -13,9 +13,7 @@ interface Props {
 }
 
 function workoutHasExercise(w: Workout): boolean {
-  return w.blocks.some(
-    (b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0,
-  );
+  return w.blocks.some((b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0);
 }
 
 function EmptyState({ onNew }: { onNew: () => void }) {
@@ -38,7 +36,8 @@ function EmptyState({ onNew }: { onNew: () => void }) {
         <line x1="58" y1="32" x2="62" y2="32" />
       </svg>
       <p className="text-sm text-muted-foreground">
-        No workouts yet. Tap <span className="font-medium text-foreground">+ New Workout</span> to get started.
+        No workouts yet. Tap <span className="font-medium text-foreground">+ New Workout</span> to
+        get started.
       </p>
       <button
         type="button"
@@ -114,7 +113,15 @@ function WorkoutCard({
             }`}
           >
             {selected && (
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 16 16"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M3 8.5l3 3 7-7" />
               </svg>
             )}
@@ -291,9 +298,7 @@ export function WorkoutsList({
           >
             {allSelected ? "Deselect all" : "Select all"}
           </button>
-          <span className="text-xs text-muted-foreground">
-            {selectedIds.size} selected
-          </span>
+          <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
           <button
             type="button"
             disabled={selectedIds.size === 0}

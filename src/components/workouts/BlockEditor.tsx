@@ -134,17 +134,17 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleUpdate = (id: string, patch: Partial<BlockItem["exercise"]> & { restSeconds?: number }) => {
+  const handleUpdate = (
+    id: string,
+    patch: Partial<BlockItem["exercise"]> & { restSeconds?: number },
+  ) => {
     setItems((prev) =>
       prev.map((it) => {
         if (it.exercise.id !== id) return it;
         const { restSeconds, ...exercisePatch } = patch;
         return {
           exercise: { ...it.exercise, ...exercisePatch },
-          rest:
-            restSeconds === undefined
-              ? it.rest
-              : { ...it.rest, durationSeconds: restSeconds },
+          rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
         };
       }),
     );

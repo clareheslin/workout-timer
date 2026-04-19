@@ -36,14 +36,9 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
     }
   };
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: block.id,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),

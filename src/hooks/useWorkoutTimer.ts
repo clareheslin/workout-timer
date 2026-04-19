@@ -24,7 +24,6 @@ export interface RunSummary {
   blocks: RunSummaryBlock[];
 }
 
-
 /** Seconds of "Get Ready" prep prepended to every block. */
 export const BLOCK_PREP_SECONDS = 10;
 
@@ -176,10 +175,7 @@ export function useWorkoutTimer(
   workout: Workout,
   callbacks?: WorkoutTimerCallbacks,
 ): UseWorkoutTimerResult {
-  const blockSchedules = useMemo(
-    () => workout.blocks.map((b, i) => planBlock(b, i)),
-    [workout],
-  );
+  const blockSchedules = useMemo(() => workout.blocks.map((b, i) => planBlock(b, i)), [workout]);
 
   const [phase, setPhase] = useState<TimerPhase>("idle");
   const [blockIndex, setBlockIndex] = useState(0);
@@ -209,7 +205,7 @@ export function useWorkoutTimer(
   const currentPlanned = currentSchedule[scheduleIndex] ?? null;
 
   const currentItem: BlockItem | null =
-    currentBlock && currentPlanned ? currentBlock.items[currentPlanned.itemIndex] ?? null : null;
+    currentBlock && currentPlanned ? (currentBlock.items[currentPlanned.itemIndex] ?? null) : null;
 
   const currentInterval: CurrentInterval | null = currentPlanned
     ? {

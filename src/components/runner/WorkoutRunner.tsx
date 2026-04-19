@@ -102,9 +102,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         <h2 className="text-2xl font-semibold">
           {currentBlock.name || `Block ${blockIndex + 1}`} complete.
         </h2>
-        <p className="text-sm opacity-80">
-          Ready for {next?.name ?? `Block ${blockIndex + 2}`}?
-        </p>
+        <p className="text-sm opacity-80">Ready for {next?.name ?? `Block ${blockIndex + 2}`}?</p>
         <button
           type="button"
           onClick={handleNextBlock}

@@ -23,14 +23,9 @@ export function BlockItemRow({ item, onChange, onDelete }: Props) {
   const restSecs = item.rest.durationSeconds;
   const rounds = Math.max(1, Math.floor(item.exercise.rounds ?? 1));
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.exercise.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.exercise.id,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),

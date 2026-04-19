@@ -9,14 +9,9 @@ interface Props {
 }
 
 export function RepItemRow({ item, onChange, onDelete }: Props) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),

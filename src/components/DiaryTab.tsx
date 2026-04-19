@@ -81,9 +81,7 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
               <span className="truncate">{it.exerciseName}</span>
               <span className="shrink-0 text-muted-foreground">
                 {formatItemDuration(it.exerciseDuration)}
-                {it.restDuration > 0 && (
-                  <> · rest {formatItemDuration(it.restDuration)}</>
-                )}
+                {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
               </span>
             </li>
           ))}
@@ -116,12 +114,8 @@ function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
     <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold">
-            {log.workoutName || "Untitled"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {formatLogDate(log.completedAt)}
-          </p>
+          <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+          <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
           <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
         </div>
       </div>
@@ -144,9 +138,7 @@ function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
               : "border border-border hover:bg-accent"
           }`}
         >
-          {confirming
-            ? `Delete "${log.workoutName || "Untitled"}"? Tap to confirm`
-            : "Delete"}
+          {confirming ? `Delete "${log.workoutName || "Untitled"}"? Tap to confirm` : "Delete"}
         </button>
       </div>
 
@@ -194,9 +186,7 @@ export function DiaryTab() {
   const { logs, deleteLog } = useWorkoutDiary();
 
   // Most recent first. addLog already prepends, but sort defensively.
-  const sorted = [...logs].sort((a, b) =>
-    b.completedAt.localeCompare(a.completedAt),
-  );
+  const sorted = [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 
   return (
     <div className="flex flex-col gap-4">

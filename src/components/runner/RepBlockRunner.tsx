@@ -183,16 +183,11 @@ export function RepBlockRunner({
         </ul>
 
         <div className="flex flex-col items-center gap-3">
-          <p
-            className="text-5xl font-bold tabular-nums"
-            aria-live="polite"
-          >
+          <p className="text-5xl font-bold tabular-nums" aria-live="polite">
             {timerLabel}
           </p>
           {isAmrap && phase === "idle" && (
-            <p className="text-xs text-muted-foreground">
-              Cap: {formatDuration(timeCap)}
-            </p>
+            <p className="text-xs text-muted-foreground">Cap: {formatDuration(timeCap)}</p>
           )}
 
           {phase === "idle" && (
