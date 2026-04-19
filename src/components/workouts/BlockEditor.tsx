@@ -17,6 +17,7 @@ function makeNewItem(itemIndex: number): BlockItem {
       id: createId("ex"),
       name: `Exercise ${itemIndex + 1}`,
       durationSeconds: 30,
+      rounds: 1,
     },
     rest: {
       id: createId("rest"),
@@ -28,7 +29,6 @@ function makeNewItem(itemIndex: number): BlockItem {
 export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props) {
   const defaultName = `Block ${positionIndex + 1}`;
   const [name, setName] = useState(initial.name);
-  const [rounds, setRounds] = useState<number>(initial.rounds);
   const [items, setItems] = useState<BlockItem[]>(initial.items);
   const [mode, setMode] = useState<BlockMode>(initial.mode ?? "circuit");
 
@@ -36,13 +36,12 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
     () =>
       JSON.stringify({
         name: initial.name,
-        rounds: initial.rounds,
         items: initial.items,
         mode: initial.mode ?? "circuit",
       }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, rounds, items, mode }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, items, mode }) !== initialSnapshot;
 
   const canDone = items.length > 0;
 
@@ -89,7 +88,6 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
     onDone({
       ...initial,
       name: name.trim() || defaultName,
-      rounds: Math.max(1, Math.floor(rounds || 1)),
       items,
       mode,
     });
@@ -129,23 +127,6 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <label htmlFor="block-rounds" className="text-xs font-medium text-muted-foreground">
-          Rounds
-        </label>
-        <input
-          id="block-rounds"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          value={rounds}
-          onChange={(e) => {
-            const n = Number(e.target.value);
-            setRounds(Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1);
-          }}
-          className="w-24 rounded-md border border-input bg-background px-3 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
 
       <div className="flex flex-col gap-2">
         <span className="text-xs font-medium text-muted-foreground">Mode</span>
