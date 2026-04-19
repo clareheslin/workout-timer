@@ -83,8 +83,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const bgClass =
     t.phase === "running" || t.phase === "paused"
       ? isExerciseInterval
-        ? "bg-[#43AC6A] text-white"
-        : "bg-white text-black"
+        ? "bg-exercise text-exercise-foreground"
+        : "bg-rest text-rest-foreground"
       : "bg-background text-foreground";
 
   const isPaused = t.phase === "paused";
