@@ -34,9 +34,7 @@ function buildSchedule(
 }
 
 function stepLabel(step: Step): string {
-  return step.kind === "rest"
-    ? `Exercise ${step.exerciseIndex} — Rest`
-    : `Exercise ${step.exerciseIndex}`;
+  return step.kind === "rest" ? "Rest" : `Exercise ${step.exerciseIndex}`;
 }
 
 export function CircuitScreen({ onBack }: Props) {
