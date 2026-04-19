@@ -12,7 +12,8 @@ interface Props {
 }
 
 export function WorkoutsTab({ onPlay }: Props) {
-  const { workouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout } = useWorkouts();
+  const { workouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout } =
+    useWorkouts();
   const [view, setView] = useState<View>({ mode: "list" });
 
   if (view.mode === "edit") {
@@ -40,6 +41,11 @@ export function WorkoutsTab({ onPlay }: Props) {
         const target = workouts.find((w) => w.id === id);
         deleteWorkout(id);
         showToast(target ? `Deleted "${target.name}"` : "Workout deleted");
+      }}
+      onBulkDelete={(ids) => {
+        const idSet = new Set(ids);
+        setWorkouts((prev) => prev.filter((w) => !idSet.has(w.id)));
+        showToast(`Deleted ${ids.length} ${ids.length === 1 ? "workout" : "workouts"}`);
       }}
       onDuplicate={(id) => {
         duplicateWorkout(id);
