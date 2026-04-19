@@ -8,6 +8,9 @@ export interface WorkoutTimerCallbacks {
 }
 
 
+/** Seconds of "Get Ready" prep prepended to every block. */
+export const BLOCK_PREP_SECONDS = 10;
+
 export type TimerPhase = "idle" | "running" | "paused" | "block-complete" | "done";
 
 export type IntervalKind = "exercise" | "rest";
@@ -18,14 +21,17 @@ export interface CurrentInterval {
   name: string;
   /** Original (planned) duration in seconds. */
   durationSeconds: number;
-  /** Index of the BlockItem within the current block. */
+  /** Index of the BlockItem within the current block. -1 for the prep interval. */
   itemIndex: number;
+  /** True only for the 10s "Get Ready" period at the start of a block. */
+  isPrep: boolean;
 }
 
 export interface UpNextInterval {
   kind: IntervalKind;
   name: string;
   durationSeconds: number;
+  isPrep: boolean;
 }
 
 export interface UseWorkoutTimerResult {
@@ -52,6 +58,7 @@ interface PlannedInterval {
   blockIndex: number;
   itemIndex: number;
   round: number; // 1-based
+  isPrep: boolean;
 }
 
 /**
