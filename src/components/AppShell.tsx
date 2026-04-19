@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Workout } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
+import { DiaryTab } from "./DiaryTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 
