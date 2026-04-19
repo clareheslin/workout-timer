@@ -195,15 +195,34 @@ export function CircuitScreen({ onBack }: Props) {
           </div>
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
-            {phase === "running" ? (
+            {phase === "running" && (
               <button
                 type="button"
-                onClick={handleReset}
-                className="rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                onClick={handlePause}
+                className="rounded-full bg-foreground py-4 text-base font-semibold text-background"
               >
-                Reset
+                Pause
               </button>
-            ) : (
+            )}
+            {phase === "paused" && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleResume}
+                  className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
+                >
+                  Resume
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+            {phase === "done" && (
               <div className="flex gap-3">
                 <button
                   type="button"
