@@ -1,4 +1,20 @@
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Block, BlockItem, BlockMode } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockItemRow } from "./BlockItemRow";
@@ -181,20 +197,27 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
             No exercises yet. Add your first exercise.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {items.map((it, idx) => (
-              <BlockItemRow
-                key={it.exercise.id}
-                item={it}
-                isFirst={idx === 0}
-                isLast={idx === items.length - 1}
-                onChange={(patch) => handleUpdate(it.exercise.id, patch)}
-                onMoveUp={() => handleMove(it.exercise.id, -1)}
-                onMoveDown={() => handleMove(it.exercise.id, 1)}
-                onDelete={() => handleDelete(it.exercise.id)}
-              />
-            ))}
-          </ul>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={items.map((it) => it.exercise.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="flex flex-col gap-2">
+                {items.map((it) => (
+                  <BlockItemRow
+                    key={it.exercise.id}
+                    item={it}
+                    onChange={(patch) => handleUpdate(it.exercise.id, patch)}
+                    onDelete={() => handleDelete(it.exercise.id)}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>
