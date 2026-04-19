@@ -30,8 +30,19 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         : "bg-white text-black"
       : "bg-background text-foreground";
 
+  const isPaused = t.phase === "paused";
+
+  const clearLongPress = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   const handlePressStart = () => {
-    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
+    // Long-press to exit is only available while paused.
+    if (!isPaused) return;
+    clearLongPress();
     longPressTimer.current = window.setTimeout(() => {
       longPressTimer.current = null;
       if (window.confirm("Exit this workout?")) {
@@ -41,12 +52,10 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     }, LONG_PRESS_MS);
   };
 
-  const handlePressEnd = (action: () => void) => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-      action();
-    }
+  const handleClick = () => {
+    // Short tap toggles pause/resume.
+    if (t.phase === "running") t.pause();
+    else if (t.phase === "paused") t.resume();
   };
 
   return (
@@ -97,26 +106,20 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             </div>
             <button
               type="button"
-              onClick={() => (t.phase === "running" ? t.pause() : t.resume())}
+              onClick={handleClick}
               onMouseDown={handlePressStart}
-              onMouseUp={() =>
-                handlePressEnd(() => (t.phase === "running" ? t.pause() : t.resume()))
-              }
-              onMouseLeave={() => {
-                if (longPressTimer.current !== null) {
-                  window.clearTimeout(longPressTimer.current);
-                  longPressTimer.current = null;
-                }
-              }}
+              onMouseUp={clearLongPress}
+              onMouseLeave={clearLongPress}
               onTouchStart={handlePressStart}
-              onTouchEnd={() =>
-                handlePressEnd(() => (t.phase === "running" ? t.pause() : t.resume()))
-              }
+              onTouchEnd={clearLongPress}
+              onTouchCancel={clearLongPress}
               className="mt-4 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
             >
               {t.phase === "running" ? "Pause" : "Resume"}
             </button>
-            <p className="text-[11px] opacity-60">Hold to exit workout</p>
+            <p className="text-[11px] opacity-60">
+              {isPaused ? "Hold to exit workout" : "Tap to pause"}
+            </p>
           </>
         )}
 
