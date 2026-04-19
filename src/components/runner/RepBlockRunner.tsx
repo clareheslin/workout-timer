@@ -204,7 +204,6 @@ export function RepBlockRunner({
               >
                 Continue
               </button>
-              <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
             </>
           ) : (
             <>
@@ -227,14 +226,7 @@ export function RepBlockRunner({
 
               {(phase === "running" || phase === "paused") && (
                 <>
-                  <button
-                    type="button"
-                    onClick={handlePauseResume}
-                    className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                  >
-                    {phase === "running" ? "Pause" : "Resume"}
-                  </button>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleEnd}
@@ -252,14 +244,21 @@ export function RepBlockRunner({
                       End block »
                     </button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {phase === "paused" ? "Hold header to exit workout" : "Timer running"}
-                  </p>
+                  {phase === "running" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePauseResume}
+                        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                      >
+                        Pause
+                      </button>
+                      <p className="text-[11px] text-muted-foreground">Timer running</p>
+                    </>
+                  ) : (
+                    <HoldToExitButton onResume={handlePauseResume} onExit={onExitWorkout} />
+                  )}
                 </>
-              )}
-
-              {phase === "idle" && (
-                <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
               )}
             </>
           )}
