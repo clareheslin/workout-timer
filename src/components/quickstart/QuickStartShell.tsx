@@ -1,5 +1,4 @@
-import { ChevronLeft } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   Sheet,
   SheetContent,
@@ -9,6 +8,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { usePageHeader } from "../PageHeaderContext";
 
 interface Props {
   title: string;
@@ -19,34 +19,22 @@ interface Props {
 }
 
 /**
- * Shared layout for Quick Start timer screens:
- * - Back button top-left (with bottom-sheet confirmation while running)
- * - Centred title
- * - Children fill the remaining vertical space
+ * Shared layout for Quick Start timer screens. The page title and back
+ * action are pushed into the AppShell header (logo on the left, back
+ * chevron + title beside it). Children render directly under the header.
  */
 export function QuickStartShell({ title, guarded, onBack, children }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleBackClick = () => {
+  const handleBackClick = useCallback(() => {
     if (guarded) setConfirmOpen(true);
     else onBack();
-  };
+  }, [guarded, onBack]);
+
+  usePageHeader(title, handleBackClick);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="relative flex items-center justify-center pb-4">
-        <button
-          type="button"
-          onClick={handleBackClick}
-          className="absolute left-0 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-          aria-label="Back to Quick Start"
-        >
-          <ChevronLeft className="h-5 w-5" />
-          Back
-        </button>
-        <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-      </header>
-
       <div className="flex flex-1 flex-col">{children}</div>
 
       <Sheet open={confirmOpen} onOpenChange={setConfirmOpen}>
