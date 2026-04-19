@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import type { Block, Workout } from "@/types";
-import { useWorkoutTimer, type WorkoutTimerCallbacks, type RunSummaryBlock } from "@/hooks/useWorkoutTimer";
+import type { Block, Workout, WorkoutLogBlock } from "@/types";
+import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 
@@ -10,7 +10,7 @@ interface Props {
   totalBlocks: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
-  onComplete: (logBlock: RunSummaryBlock) => void;
+  onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
 }
 
