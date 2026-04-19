@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { formatMMSS, parseMMSS } from "./time";
 
 interface Props {
   label: string;
@@ -11,45 +10,85 @@ interface Props {
 }
 
 /**
- * Editable MM:SS field. Commits on blur or Enter; reverts to last valid
- * value on invalid input. Shows the value live as the user types.
+ * Editable duration with separate Min and Sec numeric fields.
+ * Commits on blur or Enter; reverts to last valid value on invalid input.
  */
 export function DurationInput({ label, valueSeconds, minSeconds, onChange }: Props) {
-  const [text, setText] = useState(formatMMSS(valueSeconds));
+  const [minText, setMinText] = useState(String(Math.floor(valueSeconds / 60)));
+  const [secText, setSecText] = useState((valueSeconds % 60).toString().padStart(2, "0"));
 
   // Sync external value changes (e.g. on hydration from localStorage).
   useEffect(() => {
-    setText(formatMMSS(valueSeconds));
+    setMinText(String(Math.floor(valueSeconds / 60)));
+    setSecText((valueSeconds % 60).toString().padStart(2, "0"));
   }, [valueSeconds]);
 
-  const commit = () => {
-    const parsed = parseMMSS(text);
-    if (parsed === null || parsed < minSeconds) {
-      setText(formatMMSS(valueSeconds));
-      return;
-    }
-    if (parsed !== valueSeconds) onChange(parsed);
-    setText(formatMMSS(parsed));
+  const revert = () => {
+    setMinText(String(Math.floor(valueSeconds / 60)));
+    setSecText((valueSeconds % 60).toString().padStart(2, "0"));
   };
 
+  const commit = () => {
+    const mins = parseInt(minText, 10);
+    const secs = parseInt(secText, 10);
+    if (
+      Number.isNaN(mins) ||
+      Number.isNaN(secs) ||
+      mins < 0 ||
+      secs < 0 ||
+      secs > 59
+    ) {
+      revert();
+      return;
+    }
+    const total = mins * 60 + secs;
+    if (total < minSeconds) {
+      revert();
+      return;
+    }
+    if (total !== valueSeconds) onChange(total);
+    setMinText(String(mins));
+    setSecText(secs.toString().padStart(2, "0"));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  const fieldClass =
+    "w-12 rounded-md bg-background px-2 py-1.5 text-right font-mono text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-ring";
+
   return (
-    <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
       <span className="text-sm font-medium">{label}</span>
-      <input
-        type="text"
-        inputMode="numeric"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            (e.target as HTMLInputElement).blur();
-          }
-        }}
-        className="w-20 rounded-md bg-background px-3 py-1.5 text-right font-mono text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          aria-label={`${label} minutes`}
+          value={minText}
+          onChange={(e) => setMinText(e.target.value.replace(/\D/g, ""))}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className={fieldClass}
+        />
+        <span className="text-xs text-muted-foreground">min</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          aria-label={`${label} seconds`}
+          value={secText}
+          onChange={(e) => setSecText(e.target.value.replace(/\D/g, ""))}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className={fieldClass}
+        />
+        <span className="text-xs text-muted-foreground">sec</span>
+      </div>
+    </div>
   );
 }
 
