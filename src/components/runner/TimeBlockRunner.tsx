@@ -138,20 +138,7 @@ export function TimeBlockRunner({
                 ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
                 : "Block complete"}
             </div>
-            <button
-              type="button"
-              onClick={handleClick}
-              onMouseDown={handlePressStart}
-              onMouseUp={clearLongPress}
-              onMouseLeave={clearLongPress}
-              onTouchStart={handlePressStart}
-              onTouchEnd={clearLongPress}
-              onTouchCancel={clearLongPress}
-              className="mt-4 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-            >
-              {t.phase === "running" ? "Pause" : "Resume"}
-            </button>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2">
               <button
                 type="button"
                 onClick={t.skipInterval}
@@ -169,9 +156,22 @@ export function TimeBlockRunner({
                 End block »
               </button>
             </div>
-            <p className="text-[11px] opacity-60">
-              {isPaused ? "Hold to exit workout" : "Tap to pause"}
-            </p>
+            {t.phase === "running" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={t.pause}
+                  className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                >
+                  Pause
+                </button>
+                <p className="text-[11px] opacity-60">Tap to pause</p>
+              </>
+            ) : (
+              <div className="mt-2">
+                <HoldToExitButton onResume={t.resume} onExit={handleExit} />
+              </div>
+            )}
           </>
         )}
       </main>
