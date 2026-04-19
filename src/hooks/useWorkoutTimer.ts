@@ -280,10 +280,16 @@ export function useWorkoutTimer(
       setPhase("done");
       return;
     }
+    // Capture the very first start time for diary logging.
+    if (startedAtRef.current === null) {
+      startedAtRef.current = new Date().toISOString();
+      playedRef.current = workout.blocks.map(() => []);
+      setStartedAtTick((n) => n + 1);
+    }
     setScheduleIndex(0);
     setTimeRemaining(schedule[0].durationSeconds);
     setPhase("running");
-  }, [phase, blockSchedules, blockIndex]);
+  }, [phase, blockSchedules, blockIndex, workout.blocks]);
 
   const pause = useCallback(() => {
     setPhase((p) => (p === "running" ? "paused" : p));
