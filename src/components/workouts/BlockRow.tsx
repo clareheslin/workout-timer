@@ -37,6 +37,8 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
             {" · "}
             {block.rounds} {block.rounds === 1 ? "round" : "rounds"}
             {" · "}
+            {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+            {" · "}
             {formatDuration(blockTotalSeconds(block))}
           </p>
         </div>
