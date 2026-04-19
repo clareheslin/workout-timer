@@ -321,6 +321,47 @@ export function useWorkoutTimer(
   // Stop tick on unmount.
   useEffect(() => clearTick, [clearTick]);
 
+  const getRunSummary = useCallback((): RunSummary | null => {
+    if (startedAtRef.current === null) return null;
+    const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
+      const played = playedRef.current[i] ?? [];
+      // Rounds completed = max round number for which the LAST item of the
+      // block was played.
+      const lastItemIdx = block.items.length - 1;
+      const completedRoundNumbers = played
+        .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
+        .map((p) => p.round);
+      const roundsCompleted = completedRoundNumbers.length
+        ? Math.max(...completedRoundNumbers)
+        : 0;
+
+      // Build the items list from the workout definition, but only for items
+      // that actually played at least once (any round, exercise side).
+      const playedItemIdxs = new Set(
+        played.filter((p) => p.kind === "exercise").map((p) => p.itemIndex),
+      );
+      const items: RunSummaryItem[] = block.items
+        .map((it, idx) => ({ it, idx }))
+        .filter(({ idx }) => playedItemIdxs.has(idx))
+        .map(({ it, idx }) => ({
+          exerciseName: it.exercise.name || `Exercise ${idx + 1}`,
+          exerciseDuration: Math.max(0, it.exercise.durationSeconds),
+          restDuration: Math.max(0, it.rest.durationSeconds),
+        }));
+
+      return {
+        blockName: block.name || `Block ${i + 1}`,
+        rounds: roundsCompleted,
+        items,
+      };
+    });
+    // Trim trailing blocks with zero rounds completed (never reached).
+    while (blocks.length > 0 && blocks[blocks.length - 1].rounds === 0) {
+      blocks.pop();
+    }
+    return { startedAt: startedAtRef.current, blocks };
+  }, [workout.blocks]);
+
   return {
     phase,
     currentBlockIndex: blockIndex,
@@ -336,5 +377,7 @@ export function useWorkoutTimer(
     resume,
     nextBlock,
     finish,
+    startedAt: startedAtRef.current,
+    getRunSummary,
   };
 }
