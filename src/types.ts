@@ -28,6 +28,7 @@ export interface Workout {
   name: string;
   blocks: Block[];
   createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp — bumped on every save
 }
 
 export interface WorkoutLogItem {
