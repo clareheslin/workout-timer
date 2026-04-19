@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Block } from "@/types";
+import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
-import type { RunSummaryBlock } from "@/hooks/useWorkoutTimer";
 import { formatDuration } from "@/lib/duration";
 
 interface Props {
@@ -10,7 +9,7 @@ interface Props {
   totalBlocks: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
-  onComplete: (logBlock: RunSummaryBlock) => void;
+  onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
 }
 
@@ -46,28 +45,21 @@ export function RepBlockRunner({
       completedRef.current = true;
       setPhase("done");
       audio.playBlockEndBeep();
-      const log: RunSummaryBlock = {
+      const log: WorkoutLogBlock = {
         blockName: block.name || `Block ${blockIndex + 1}`,
         rounds: 0,
         items: [],
+        blockType: isAmrap ? "amrap" : "forTime",
+        repItems: repExercises.map((ex) => ({
+          exerciseName: ex.name || "Exercise",
+          reps: Math.max(1, Math.floor(ex.reps)),
+        })),
+        durationSeconds: Math.max(0, Math.floor(durationSeconds)),
       };
-      onComplete({
-        ...log,
-        // The orchestrator augments with type/repItems/durationSeconds.
-        // We pass them via a side channel below.
-      } as RunSummaryBlock);
-      // Pass extra fields out by mutating after — but RunSummaryBlock type doesn't include them.
-      // The orchestrator will add the rep-specific fields based on the block definition;
-      // here we just communicate the duration via a custom event-style ref.
-      lastDurationRef.current = durationSeconds;
+      onComplete(log);
     },
-    [audio, block, blockIndex, onComplete],
+    [audio, block.name, blockIndex, isAmrap, repExercises, onComplete],
   );
-
-  // Track last duration so the orchestrator can read it via a getter prop. We
-  // use a module-scoped weakmap-style approach: simpler to expose a callback prop.
-  // (Replaced below — see onComplete signature in orchestrator.)
-  const lastDurationRef = useRef<number>(0);
 
   // Tick loop.
   useEffect(() => {
@@ -80,12 +72,7 @@ export function RepBlockRunner({
     }
     tickRef.current = window.setInterval(() => {
       if (isAmrap) {
-        setRemaining((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
+        setRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
       } else {
         setElapsed((prev) => prev + 1);
       }
@@ -125,7 +112,6 @@ export function RepBlockRunner({
   };
 
   const handleStop = () => {
-    // forTime only.
     finalize(elapsed);
   };
 
