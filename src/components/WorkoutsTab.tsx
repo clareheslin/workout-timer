@@ -7,7 +7,11 @@ import { WorkoutEditor } from "./workouts/WorkoutEditor";
 
 type View = { mode: "list" } | { mode: "edit"; workout: Workout | null };
 
-export function WorkoutsTab() {
+interface Props {
+  onPlay: (workout: Workout) => void;
+}
+
+export function WorkoutsTab({ onPlay }: Props) {
   const { workouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout } = useWorkouts();
   const [view, setView] = useState<View>({ mode: "list" });
 
@@ -31,9 +35,7 @@ export function WorkoutsTab() {
       workouts={workouts}
       onNew={() => setView({ mode: "edit", workout: null })}
       onEdit={(w) => setView({ mode: "edit", workout: w })}
-      onPlay={() => {
-        // Runner not implemented yet — disabled for empty workouts, no-op otherwise.
-      }}
+      onPlay={onPlay}
       onDelete={(id) => {
         const target = workouts.find((w) => w.id === id);
         deleteWorkout(id);
