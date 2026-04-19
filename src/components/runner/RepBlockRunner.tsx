@@ -152,15 +152,7 @@ export function RepBlockRunner({
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header
-        className="flex items-center justify-between gap-3 p-4"
-        onMouseDown={handleHeaderPressStart}
-        onMouseUp={clearLongPress}
-        onMouseLeave={clearLongPress}
-        onTouchStart={handleHeaderPressStart}
-        onTouchEnd={clearLongPress}
-        onTouchCancel={clearLongPress}
-      >
+      <header className="flex items-center justify-between gap-3 p-4">
         <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
         <div className="flex items-center gap-3">
           <p className="text-xs opacity-70">
