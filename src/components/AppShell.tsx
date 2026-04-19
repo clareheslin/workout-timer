@@ -32,11 +32,7 @@ export function AppShell() {
     <div className="min-h-screen bg-background text-foreground flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen flex flex-col border-x border-border">
         <main className="flex-1 p-6 pb-24">
-          {tab === "workouts" ? (
-            <WorkoutsTab onPlay={(w) => setRunning(w)} />
-          ) : (
-            <DiaryTab />
-          )}
+          {tab === "workouts" ? <WorkoutsTab onPlay={(w) => setRunning(w)} /> : <DiaryTab />}
         </main>
 
         <nav className="sticky bottom-0 grid grid-cols-2 border-t border-border bg-background">

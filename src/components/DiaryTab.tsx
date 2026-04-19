@@ -38,15 +38,38 @@ function formatItemDuration(seconds: number): string {
 }
 
 function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
+  const isRep = block.blockType === "forTime" || block.blockType === "amrap";
+  const repItems = block.repItems ?? [];
+
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{block.blockName}</p>
         <p className="text-xs text-muted-foreground">
-          {block.rounds} {block.rounds === 1 ? "set" : "sets"}
+          {isRep
+            ? block.blockType === "amrap"
+              ? `AMRAP · cap ${formatItemDuration(block.durationSeconds ?? 0)}`
+              : `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
+            : `${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`}
         </p>
       </div>
-      {block.items.length === 0 ? (
+      {isRep ? (
+        repItems.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No exercises.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {repItems.map((it, i) => (
+              <li
+                key={`${it.exerciseName}-${i}`}
+                className="flex items-center justify-between gap-2 text-xs"
+              >
+                <span className="truncate">{it.exerciseName}</span>
+                <span className="shrink-0 text-muted-foreground">{it.reps} reps</span>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : block.items.length === 0 ? (
         <p className="text-xs text-muted-foreground">No exercises played.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
@@ -58,9 +81,7 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
               <span className="truncate">{it.exerciseName}</span>
               <span className="shrink-0 text-muted-foreground">
                 {formatItemDuration(it.exerciseDuration)}
-                {it.restDuration > 0 && (
-                  <> · rest {formatItemDuration(it.restDuration)}</>
-                )}
+                {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
               </span>
             </li>
           ))}
@@ -93,12 +114,8 @@ function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
     <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold">
-            {log.workoutName || "Untitled"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {formatLogDate(log.completedAt)}
-          </p>
+          <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+          <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
           <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
         </div>
       </div>
@@ -121,9 +138,7 @@ function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
               : "border border-border hover:bg-accent"
           }`}
         >
-          {confirming
-            ? `Delete "${log.workoutName || "Untitled"}"? Tap to confirm`
-            : "Delete"}
+          {confirming ? `Delete "${log.workoutName || "Untitled"}"? Tap to confirm` : "Delete"}
         </button>
       </div>
 
@@ -171,9 +186,7 @@ export function DiaryTab() {
   const { logs, deleteLog } = useWorkoutDiary();
 
   // Most recent first. addLog already prepends, but sort defensively.
-  const sorted = [...logs].sort((a, b) =>
-    b.completedAt.localeCompare(a.completedAt),
-  );
+  const sorted = [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 
   return (
     <div className="flex flex-col gap-4">

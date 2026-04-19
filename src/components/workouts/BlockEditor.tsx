@@ -15,9 +15,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Block, BlockItem, BlockMode } from "@/types";
+import type { Block, BlockItem, BlockMode, BlockType, RepExercise } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockItemRow } from "./BlockItemRow";
+import { RepItemRow } from "./RepItemRow";
 
 interface Props {
   initial: Block;
@@ -26,6 +27,8 @@ interface Props {
   onCancel: () => void;
   onDone: (block: Block) => void;
 }
+
+const DEFAULT_AMRAP_CAP = 600; // 10:00
 
 function makeNewItem(itemIndex: number): BlockItem {
   return {
@@ -42,40 +45,85 @@ function makeNewItem(itemIndex: number): BlockItem {
   };
 }
 
+function makeNewRepItem(itemIndex: number): RepExercise {
+  return {
+    id: createId("rex"),
+    name: `Exercise ${itemIndex + 1}`,
+    reps: 10,
+  };
+}
+
+const BLOCK_TYPES: ReadonlyArray<{ value: BlockType; label: string }> = [
+  { value: "circuit", label: "Circuit" },
+  { value: "sets", label: "Sets" },
+  { value: "forTime", label: "For Time" },
+  { value: "amrap", label: "AMRAP" },
+];
+
 export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props) {
   const defaultName = `Block ${positionIndex + 1}`;
   const [name, setName] = useState(initial.name);
   const [items, setItems] = useState<BlockItem[]>(initial.items);
+  const [repItems, setRepItems] = useState<RepExercise[]>(initial.repExercises ?? []);
   const [mode, setMode] = useState<BlockMode>(initial.mode ?? "circuit");
+  const [type, setType] = useState<BlockType>(initial.type ?? "circuit");
+  const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+
+  const isRepBased = type === "forTime" || type === "amrap";
 
   const initialSnapshot = useMemo(
     () =>
       JSON.stringify({
         name: initial.name,
         items: initial.items,
+        repItems: initial.repExercises ?? [],
         mode: initial.mode ?? "circuit",
+        type: initial.type ?? "circuit",
+        timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
       }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, items, mode }) !== initialSnapshot;
+  const isDirty =
+    JSON.stringify({ name, items, repItems, mode, type, timeCap }) !== initialSnapshot;
 
-  const canDone = items.length > 0;
+  const canDone = isRepBased
+    ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
+    : items.length > 0;
 
-  const handleAdd = () =>
-    setItems((prev) => [...prev, makeNewItem(prev.length)]);
+  const handleAdd = () => {
+    if (isRepBased) {
+      setRepItems((prev) => [...prev, makeNewRepItem(prev.length)]);
+    } else {
+      setItems((prev) => [...prev, makeNewItem(prev.length)]);
+    }
+  };
 
-  const handleDelete = (id: string) =>
-    setItems((prev) => prev.filter((it) => it.exercise.id !== id));
+  const handleDelete = (id: string) => {
+    if (isRepBased) {
+      setRepItems((prev) => prev.filter((it) => it.id !== id));
+    } else {
+      setItems((prev) => prev.filter((it) => it.exercise.id !== id));
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    setItems((prev) => {
-      const oldIdx = prev.findIndex((it) => it.exercise.id === active.id);
-      const newIdx = prev.findIndex((it) => it.exercise.id === over.id);
-      if (oldIdx === -1 || newIdx === -1) return prev;
-      return arrayMove(prev, oldIdx, newIdx);
-    });
+    if (isRepBased) {
+      setRepItems((prev) => {
+        const oldIdx = prev.findIndex((it) => it.id === active.id);
+        const newIdx = prev.findIndex((it) => it.id === over.id);
+        if (oldIdx === -1 || newIdx === -1) return prev;
+        return arrayMove(prev, oldIdx, newIdx);
+      });
+    } else {
+      setItems((prev) => {
+        const oldIdx = prev.findIndex((it) => it.exercise.id === active.id);
+        const newIdx = prev.findIndex((it) => it.exercise.id === over.id);
+        if (oldIdx === -1 || newIdx === -1) return prev;
+        return arrayMove(prev, oldIdx, newIdx);
+      });
+    }
   };
 
   // Pointer requires 5px move before drag starts so taps on inputs still work.
@@ -86,20 +134,24 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleUpdate = (id: string, patch: Partial<BlockItem["exercise"]> & { restSeconds?: number }) => {
+  const handleUpdate = (
+    id: string,
+    patch: Partial<BlockItem["exercise"]> & { restSeconds?: number },
+  ) => {
     setItems((prev) =>
       prev.map((it) => {
         if (it.exercise.id !== id) return it;
         const { restSeconds, ...exercisePatch } = patch;
         return {
           exercise: { ...it.exercise, ...exercisePatch },
-          rest:
-            restSeconds === undefined
-              ? it.rest
-              : { ...it.rest, durationSeconds: restSeconds },
+          rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
         };
       }),
     );
+  };
+
+  const handleRepUpdate = (id: string, patch: Partial<Pick<RepExercise, "name" | "reps">>) => {
+    setRepItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
   const handleCancel = () => {
@@ -109,13 +161,33 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
 
   const handleDone = () => {
     if (!canDone) return;
-    onDone({
-      ...initial,
-      name: name.trim() || defaultName,
-      items,
-      mode,
-    });
+    if (isRepBased) {
+      onDone({
+        ...initial,
+        name: name.trim() || defaultName,
+        items: [],
+        type,
+        repExercises: repItems,
+        ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
+        // mode is irrelevant for rep blocks but kept for back-compat
+        mode,
+      });
+    } else {
+      onDone({
+        ...initial,
+        name: name.trim() || defaultName,
+        items,
+        mode,
+        type,
+        // Clear rep-only fields when reverting to time-based
+        repExercises: [],
+        timeCap: undefined,
+      });
+    }
   };
+
+  const capMinutes = Math.floor(timeCap / 60);
+  const capSeconds = timeCap % 60;
 
   return (
     <div className="flex flex-col gap-5">
@@ -151,40 +223,109 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         />
       </div>
 
-
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Mode</span>
+        <span className="text-xs font-medium text-muted-foreground">Block type</span>
         <div
           role="radiogroup"
-          aria-label="Block mode"
+          aria-label="Block type"
           className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
         >
-          {(["circuit", "sets"] as const).map((m) => {
-            const active = mode === m;
+          {BLOCK_TYPES.map((bt) => {
+            const active = type === bt.value;
             return (
               <button
-                key={m}
+                key={bt.value}
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => setMode(m)}
+                onClick={() => setType(bt.value)}
                 className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   active
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-accent"
                 }`}
               >
-                {m === "circuit" ? "Circuit" : "Sets"}
+                {bt.label}
               </button>
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {mode === "circuit"
-            ? "Cycle through every exercise, then repeat for each round."
-            : "Finish all rounds of one exercise before moving to the next."}
-        </p>
       </div>
+
+      {!isRepBased && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Mode</span>
+          <div
+            role="radiogroup"
+            aria-label="Block mode"
+            className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
+          >
+            {(["circuit", "sets"] as const).map((m) => {
+              const active = mode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setMode(m)}
+                  className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {m === "circuit" ? "Circuit" : "Sets"}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {mode === "circuit"
+              ? "Cycle through every exercise, then repeat for each round."
+              : "Finish all rounds of one exercise before moving to the next."}
+          </p>
+        </div>
+      )}
+
+      {type === "amrap" && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Time cap</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={capMinutes}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                const m = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+                const next = Math.max(1, m * 60 + capSeconds);
+                setTimeCap(next);
+              }}
+              aria-label="Minutes"
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-sm text-muted-foreground">min</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={59}
+              value={capSeconds}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                const s = Number.isFinite(n) ? Math.min(59, Math.max(0, Math.floor(n))) : 0;
+                const next = Math.max(1, capMinutes * 60 + s);
+                setTimeCap(next);
+              }}
+              aria-label="Seconds"
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-sm text-muted-foreground">sec</span>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -200,7 +341,35 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
           </button>
         </div>
 
-        {items.length === 0 ? (
+        {isRepBased ? (
+          repItems.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              No exercises yet. Add your first exercise.
+            </p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={repItems.map((it) => it.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className="flex flex-col gap-2">
+                  {repItems.map((it) => (
+                    <RepItemRow
+                      key={it.id}
+                      item={it}
+                      onChange={(patch) => handleRepUpdate(it.id, patch)}
+                      onDelete={() => handleDelete(it.id)}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
+          )
+        ) : items.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             No exercises yet. Add your first exercise.
           </p>

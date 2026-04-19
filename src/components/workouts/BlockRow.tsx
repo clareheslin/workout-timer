@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Block } from "@/types";
-import { blockTotalSeconds, blockTotalSets, formatDuration } from "@/lib/duration";
+import { blockTotalSeconds, blockTotalSets, blockType, formatDuration } from "@/lib/duration";
+
+const TYPE_LABELS: Record<string, string> = {
+  circuit: "Circuit",
+  sets: "Sets",
+  forTime: "For Time",
+  amrap: "AMRAP",
+};
 
 interface Props {
   block: Block;
@@ -29,14 +36,9 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
     }
   };
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: block.id,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -79,15 +81,37 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
           </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{block.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
-              {" · "}
-              {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
-              {" · "}
-              {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
-              {" · "}
-              {formatDuration(blockTotalSeconds(block))}
-            </p>
+            {(() => {
+              const t = blockType(block);
+              const typeLabel = TYPE_LABELS[t] ?? "Circuit";
+              if (t === "forTime" || t === "amrap") {
+                const reps = block.repExercises ?? [];
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
+                    {" · "}
+                    {typeLabel}
+                    {t === "amrap" && (
+                      <>
+                        {" · "}
+                        cap {formatDuration(block.timeCap ?? 0)}
+                      </>
+                    )}
+                  </p>
+                );
+              }
+              return (
+                <p className="text-xs text-muted-foreground">
+                  {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+                  {" · "}
+                  {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
+                  {" · "}
+                  {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+                  {" · "}
+                  {formatDuration(blockTotalSeconds(block))}
+                </p>
+              );
+            })()}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">

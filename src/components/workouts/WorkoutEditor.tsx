@@ -47,7 +47,8 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const isDirty = JSON.stringify({ name, blocks }) !== initialSnapshot;
 
   const canSave =
-    blocks.length > 0 && blocks.some((b) => b.items.length > 0);
+    blocks.length > 0 &&
+    blocks.some((b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0);
 
   const handleAddBlock = () => {
     setBlocks((prev) => [...prev, makeEmptyBlock(prev.length)]);
@@ -84,9 +85,7 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   };
 
   const editingBlock = blocks.find((b) => b.id === editingBlockId) ?? null;
-  const editingBlockIndex = editingBlock
-    ? blocks.findIndex((b) => b.id === editingBlock.id)
-    : -1;
+  const editingBlockIndex = editingBlock ? blocks.findIndex((b) => b.id === editingBlock.id) : -1;
 
   if (editingBlock && editingBlockIndex >= 0) {
     return (
@@ -175,10 +174,7 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={blocks.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
               <ul className="flex flex-col gap-2">
                 {blocks.map((b) => (
                   <BlockRow
