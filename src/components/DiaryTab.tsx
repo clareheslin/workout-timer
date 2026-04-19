@@ -52,7 +52,7 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
               ? `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
               : block.blockType === "sets"
                 ? `Sets · ${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`
-                : `Circuit · ${block.rounds} ${block.rounds === 1 ? "round" : "rounds"}`}
+                : `Circuit · ${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`}
         </p>
       </div>
       {isRep ? (
