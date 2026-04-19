@@ -15,7 +15,6 @@ interface Props {
   onExitWorkout: () => void;
 }
 
-const LONG_PRESS_MS = 700;
 
 /** Runs a single time-based block (circuit / sets) using useWorkoutTimer.
  *  We synthesize a one-block "workout" so the existing timer hook can drive it. */
