@@ -410,6 +410,8 @@ export function useWorkoutTimer(
     resume,
     nextBlock,
     finish,
+    skipInterval,
+    endBlock,
     startedAt: startedAtRef.current,
     getRunSummary,
   };
