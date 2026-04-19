@@ -164,6 +164,9 @@ export function RepBlockRunner({
 
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
+          {phase === "idle" && (
+            <img src={femLogo} alt="FEM" className="mb-2 h-10 w-auto opacity-90" />
+          )}
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {isAmrap ? "AMRAP" : "For Time"}
           </p>
