@@ -39,6 +39,7 @@ export function AppShell() {
           </button>
         </nav>
       </div>
+      <ToastViewport />
     </div>
   );
 }

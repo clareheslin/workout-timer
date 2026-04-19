@@ -73,11 +73,13 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
 
   const handleSave = () => {
     if (!canSave) return;
+    const now = new Date().toISOString();
     const workout: Workout = {
       id: initial?.id ?? createId("workout"),
       name: name.trim() || "My Workout",
       blocks,
-      createdAt: initial?.createdAt ?? new Date().toISOString(),
+      createdAt: initial?.createdAt ?? now,
+      updatedAt: now,
     };
     onSave(workout);
   };
