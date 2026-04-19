@@ -249,6 +249,14 @@ export function useWorkoutTimer(
   useEffect(() => {
     if (phase !== "running" || timeRemaining > 0) return;
 
+    // Record the interval that just completed (skip the prep "Get Ready").
+    const justFinished = currentSchedule[scheduleIndex];
+    if (justFinished && !justFinished.isPrep) {
+      const bucket = playedRef.current[justFinished.blockIndex] ?? [];
+      bucket.push(justFinished);
+      playedRef.current[justFinished.blockIndex] = bucket;
+    }
+
     const nextIdx = scheduleIndex + 1;
     if (nextIdx < currentSchedule.length) {
       const next = currentSchedule[nextIdx];
