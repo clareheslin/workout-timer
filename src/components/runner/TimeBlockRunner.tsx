@@ -49,7 +49,6 @@ export function TimeBlockRunner({
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks);
-  const longPressTimer = useRef<number | null>(null);
   const completedRef = useRef(false);
 
   // When the (single) block reaches done, hand the summary up.
@@ -76,35 +75,14 @@ export function TimeBlockRunner({
         : "bg-rest text-rest-foreground"
       : "bg-background text-foreground";
 
-  const isPaused = t.phase === "paused";
-
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  const handlePressStart = () => {
-    if (!isPaused) return;
-    clearLongPress();
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTimer.current = null;
-      if (window.confirm("Exit this workout?")) {
-        t.finish();
-        onExitWorkout();
-      }
-    }, LONG_PRESS_MS);
-  };
-
-  const handleClick = () => {
-    if (t.phase === "running") t.pause();
-    else if (t.phase === "paused") t.resume();
-  };
-
   const handleStart = () => {
     audio.unlock();
     t.start();
+  };
+
+  const handleExit = () => {
+    t.finish();
+    onExitWorkout();
   };
 
   return (
