@@ -155,6 +155,7 @@ export function useWorkoutTimer(
         name: currentPlanned.name,
         durationSeconds: currentPlanned.durationSeconds,
         itemIndex: currentPlanned.itemIndex,
+        isPrep: currentPlanned.isPrep,
       }
     : null;
 
@@ -173,6 +174,7 @@ export function useWorkoutTimer(
             ? "Rest"
             : nextPlanned.name,
         durationSeconds: nextPlanned.durationSeconds,
+        isPrep: nextPlanned.isPrep,
       }
     : null;
 
