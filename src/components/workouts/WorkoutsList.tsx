@@ -192,14 +192,25 @@ function WorkoutCard({
         )}
       </div>
       {!selecting && (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={onDuplicate}
-            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-          >
-            Duplicate
-          </button>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onDuplicate}
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              Duplicate
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                void shareWorkout(workout);
+              }}
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              Share
+            </button>
+          </div>
           <button
             type="button"
             onClick={handleDelete}
