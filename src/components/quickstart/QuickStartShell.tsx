@@ -33,7 +33,7 @@ export function QuickStartShell({ title, guarded, onBack, children }: Props) {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-3.25rem)] flex-col">
+    <div className="flex min-h-full flex-1 flex-col">
       <header className="relative flex items-center justify-center pb-4">
         <button
           type="button"
