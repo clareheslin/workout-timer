@@ -1,4 +1,20 @@
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Block, BlockItem, BlockMode } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockItemRow } from "./BlockItemRow";
@@ -51,16 +67,24 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   const handleDelete = (id: string) =>
     setItems((prev) => prev.filter((it) => it.exercise.id !== id));
 
-  const handleMove = (id: string, direction: -1 | 1) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     setItems((prev) => {
-      const idx = prev.findIndex((it) => it.exercise.id === id);
-      const target = idx + direction;
-      if (idx === -1 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
+      const oldIdx = prev.findIndex((it) => it.exercise.id === active.id);
+      const newIdx = prev.findIndex((it) => it.exercise.id === over.id);
+      if (oldIdx === -1 || newIdx === -1) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
     });
   };
+
+  // Pointer requires 5px move before drag starts so taps on inputs still work.
+  // Touch uses a 200ms long-press to avoid hijacking scroll on mobile.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleUpdate = (id: string, patch: Partial<BlockItem["exercise"]> & { restSeconds?: number }) => {
     setItems((prev) =>
@@ -181,20 +205,27 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
             No exercises yet. Add your first exercise.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {items.map((it, idx) => (
-              <BlockItemRow
-                key={it.exercise.id}
-                item={it}
-                isFirst={idx === 0}
-                isLast={idx === items.length - 1}
-                onChange={(patch) => handleUpdate(it.exercise.id, patch)}
-                onMoveUp={() => handleMove(it.exercise.id, -1)}
-                onMoveDown={() => handleMove(it.exercise.id, 1)}
-                onDelete={() => handleDelete(it.exercise.id)}
-              />
-            ))}
-          </ul>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={items.map((it) => it.exercise.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="flex flex-col gap-2">
+                {items.map((it) => (
+                  <BlockItemRow
+                    key={it.exercise.id}
+                    item={it}
+                    onChange={(patch) => handleUpdate(it.exercise.id, patch)}
+                    onDelete={() => handleDelete(it.exercise.id)}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>

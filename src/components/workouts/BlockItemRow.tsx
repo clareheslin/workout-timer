@@ -1,61 +1,77 @@
 import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { BlockItem } from "@/types";
 
 interface Props {
   item: BlockItem;
-  isFirst: boolean;
-  isLast: boolean;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
     rounds?: number;
     restSeconds?: number;
   }) => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onDelete: () => void;
 }
 
 type EditingField = "exercise" | "rest" | "rounds" | null;
 
-export function BlockItemRow({
-  item,
-  isFirst,
-  isLast,
-  onChange,
-  onMoveUp,
-  onMoveDown,
-  onDelete,
-}: Props) {
+export function BlockItemRow({ item, onChange, onDelete }: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
   const restSecs = item.rest.durationSeconds;
   const rounds = Math.max(1, Math.floor(item.exercise.rounds ?? 1));
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.exercise.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    // Lift the dragged row above siblings while it's being moved.
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.85 : undefined,
+  };
+
   return (
-    <li className="rounded-lg border border-border bg-card p-3 text-card-foreground">
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-lg border bg-card p-3 text-card-foreground ${
+        isDragging ? "border-primary shadow-lg" : "border-border"
+      }`}
+    >
       <div className="flex items-center gap-2">
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={isFirst}
-            aria-label="Move up"
-            className="rounded border border-border px-2 py-0.5 text-xs disabled:opacity-30"
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="Drag to reorder"
+          className="flex h-11 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded border border-border text-muted-foreground hover:bg-accent active:cursor-grabbing"
+        >
+          {/* Six-dot drag handle */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+            className="h-5 w-5"
           >
-            ▲
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={isLast}
-            aria-label="Move down"
-            className="rounded border border-border px-2 py-0.5 text-xs disabled:opacity-30"
-          >
-            ▼
-          </button>
-        </div>
+            <circle cx="9" cy="6" r="1.5" />
+            <circle cx="15" cy="6" r="1.5" />
+            <circle cx="9" cy="12" r="1.5" />
+            <circle cx="15" cy="12" r="1.5" />
+            <circle cx="9" cy="18" r="1.5" />
+            <circle cx="15" cy="18" r="1.5" />
+          </svg>
+        </button>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <input
@@ -66,7 +82,7 @@ export function BlockItemRow({
             className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-xs text-muted-foreground">Exercise</span>
             {editing === "exercise" ? (
               <input
