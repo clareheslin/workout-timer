@@ -236,6 +236,7 @@ export function WorkoutsList({
   onDelete,
   onBulkDelete,
   onDuplicate,
+  onImport,
 }: Props) {
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -305,18 +306,18 @@ export function WorkoutsList({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Workouts</h1>
-        {sorted.length > 0 && (
-          <div className="flex items-center gap-2">
-            {selecting ? (
-              <button
-                type="button"
-                onClick={exitSelecting}
-                className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
-              >
-                Cancel
-              </button>
-            ) : (
-              <>
+        <div className="flex items-center gap-2">
+          {sorted.length > 0 && selecting ? (
+            <button
+              type="button"
+              onClick={exitSelecting}
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Cancel
+            </button>
+          ) : (
+            <>
+              {sorted.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setSelecting(true)}
@@ -324,6 +325,9 @@ export function WorkoutsList({
                 >
                   Select
                 </button>
+              )}
+              <ImportWorkoutButton onImport={onImport} />
+              {sorted.length > 0 && (
                 <button
                   type="button"
                   onClick={onNew}
@@ -331,10 +335,10 @@ export function WorkoutsList({
                 >
                   + New
                 </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {selecting && sorted.length > 0 && (
