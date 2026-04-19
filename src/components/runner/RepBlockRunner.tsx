@@ -16,7 +16,6 @@ interface Props {
 
 type Phase = "idle" | "running" | "paused" | "done";
 
-const LONG_PRESS_MS = 700;
 
 /** Runs a single forTime or amrap block. The exercise list is static.
  *  Supports pause/resume, skip (jump to end), and end-block (same as skip). */
