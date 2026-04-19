@@ -95,7 +95,7 @@ export function HoldToExitButton({ onResume, onExit, holdDurationMs = 1200 }: Pr
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 bg-destructive/70 transition-[width] duration-75 ease-linear"
+          className="pointer-events-none absolute inset-y-0 left-0 bg-muted-foreground/80 transition-[width] duration-75 ease-linear"
           style={{ width: `${progress * 100}%` }}
         />
         <span className="relative z-10">Resume / Exit</span>
