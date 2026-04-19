@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
+import { HoldToExitButton } from "./HoldToExitButton";
 
 interface Props {
   block: Block;
