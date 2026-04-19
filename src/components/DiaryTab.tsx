@@ -46,11 +46,13 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{block.blockName}</p>
         <p className="text-xs text-muted-foreground">
-          {isRep
-            ? block.blockType === "amrap"
-              ? `AMRAP · cap ${formatItemDuration(block.durationSeconds ?? 0)}`
-              : `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
-            : `${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`}
+          {block.blockType === "amrap"
+            ? `AMRAP · cap ${formatItemDuration(block.durationSeconds ?? 0)}`
+            : block.blockType === "forTime"
+              ? `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
+              : block.blockType === "sets"
+                ? `Sets · ${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`
+                : `Circuit · ${block.rounds} ${block.rounds === 1 ? "round" : "rounds"}`}
         </p>
       </div>
       {isRep ? (
