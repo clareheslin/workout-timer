@@ -3,6 +3,7 @@ import type { Block, Workout, WorkoutLogBlock } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
+import { HoldToExitButton } from "./HoldToExitButton";
 
 interface Props {
   block: Block;
