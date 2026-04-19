@@ -1,18 +1,38 @@
 import { useState } from "react";
+import type { Workout } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { ToastViewport } from "./ToastViewport";
+import { WorkoutRunner } from "./runner/WorkoutRunner";
 
 type Tab = "workouts" | "diary";
 
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("workouts");
+  const [running, setRunning] = useState<Workout | null>(null);
+
+  if (running) {
+    return (
+      <div className="flex min-h-screen justify-center bg-background">
+        <div className="w-full max-w-[430px]">
+          <WorkoutRunner
+            workout={running}
+            onExit={(reason) => {
+              setRunning(null);
+              if (reason === "done") setTab("diary");
+            }}
+          />
+          <ToastViewport />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen flex flex-col border-x border-border">
         <main className="flex-1 p-6 pb-24">
           {tab === "workouts" ? (
-            <WorkoutsTab />
+            <WorkoutsTab onPlay={(w) => setRunning(w)} />
           ) : (
             <h1 className="text-2xl font-semibold">Diary</h1>
           )}
