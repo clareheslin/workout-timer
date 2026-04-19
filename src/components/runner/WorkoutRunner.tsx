@@ -16,6 +16,7 @@ const LONG_PRESS_MS = 700;
 
 export function WorkoutRunner({ workout, onExit }: Props) {
   const audio = useWorkoutAudio();
+  const diary = useWorkoutDiary();
 
   const timerCallbacks = useMemo<WorkoutTimerCallbacks>(
     () => ({
@@ -28,6 +29,36 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
   const t = useWorkoutTimer(workout, timerCallbacks);
   const longPressTimer = useRef<number | null>(null);
+  const loggedRef = useRef(false);
+
+  // When the workout completes naturally, write a diary entry exactly once.
+  useEffect(() => {
+    if (t.phase !== "done") return;
+    if (loggedRef.current) return;
+    const summary = t.getRunSummary();
+    if (!summary) return;
+    loggedRef.current = true;
+    const completedAt = new Date();
+    const startedAtDate = new Date(summary.startedAt);
+    const totalDurationSeconds = Math.max(
+      0,
+      Math.round((completedAt.getTime() - startedAtDate.getTime()) / 1000),
+    );
+    const log: WorkoutLog = {
+      id: createId("log"),
+      workoutId: workout.id,
+      workoutName: workout.name,
+      startedAt: summary.startedAt,
+      completedAt: completedAt.toISOString(),
+      totalDurationSeconds,
+      blockBreakdown: summary.blocks.map((b) => ({
+        blockName: b.blockName,
+        rounds: b.rounds,
+        items: b.items,
+      })),
+    };
+    diary.addLog(log);
+  }, [t.phase, t.getRunSummary, workout.id, workout.name, diary]);
 
   // Auto-navigate to Diary 2s after completion.
   useEffect(() => {
@@ -35,6 +66,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     const id = window.setTimeout(() => onExit("done"), 2000);
     return () => window.clearTimeout(id);
   }, [t.phase, onExit]);
+
 
   const handleStart = () => {
     audio.unlock();
