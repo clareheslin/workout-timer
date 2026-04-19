@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { WorkoutsTab } from "./WorkoutsTab";
+import { ToastViewport } from "./ToastViewport";
 
 type Tab = "workouts" | "diary";
 
@@ -38,6 +39,7 @@ export function AppShell() {
           </button>
         </nav>
       </div>
+      <ToastViewport />
     </div>
   );
 }
