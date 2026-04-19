@@ -111,7 +111,7 @@ export function EmomScreen({ onBack }: Props) {
   };
 
   return (
-    <QuickStartShell title="EMOM" guarded={phase === "running"} onBack={onBack}>
+    <QuickStartShell title="EMOM" guarded={phase === "running" || phase === "paused"} onBack={onBack}>
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
           <div className="space-y-3">

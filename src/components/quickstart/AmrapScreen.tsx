@@ -87,7 +87,7 @@ export function AmrapScreen({ onBack }: Props) {
   };
 
   return (
-    <QuickStartShell title="AMRAP" guarded={phase === "running"} onBack={onBack}>
+    <QuickStartShell title="AMRAP" guarded={phase === "running" || phase === "paused"} onBack={onBack}>
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
           <div className="space-y-3">
