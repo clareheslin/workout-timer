@@ -144,7 +144,7 @@ export function TimeBlockRunner({
                 className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
                 aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of block"}
               >
-                Skip ›
+                Skip Interval ›
               </button>
               <button
                 type="button"
