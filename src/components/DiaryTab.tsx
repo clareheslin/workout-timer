@@ -187,7 +187,7 @@ function EmptyState() {
 
 export function DiaryTab() {
   const { logs, deleteLog } = useWorkoutDiary();
-  usePageHeader("Diary");
+  usePageHeader("Workout Log");
 
   // Most recent first. addLog already prepends, but sort defensively.
   const sorted = [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
