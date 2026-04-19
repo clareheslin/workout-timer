@@ -43,7 +43,7 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
       <div className="mb-2 flex items-center justify-between">
         <p className="text-sm font-medium">{block.blockName}</p>
         <p className="text-xs text-muted-foreground">
-          {block.rounds} {block.rounds === 1 ? "round" : "rounds"}
+          {block.rounds} {block.rounds === 1 ? "set" : "sets"}
         </p>
       </div>
       {block.items.length === 0 ? (

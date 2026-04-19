@@ -5,13 +5,18 @@ interface Props {
   item: BlockItem;
   isFirst: boolean;
   isLast: boolean;
-  onChange: (patch: { name?: string; durationSeconds?: number; restSeconds?: number }) => void;
+  onChange: (patch: {
+    name?: string;
+    durationSeconds?: number;
+    rounds?: number;
+    restSeconds?: number;
+  }) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDelete: () => void;
 }
 
-type EditingField = "exercise" | "rest" | null;
+type EditingField = "exercise" | "rest" | "rounds" | null;
 
 export function BlockItemRow({
   item,
@@ -26,6 +31,7 @@ export function BlockItemRow({
 
   const exerciseSecs = item.exercise.durationSeconds;
   const restSecs = item.rest.durationSeconds;
+  const rounds = Math.max(1, Math.floor(item.exercise.rounds ?? 1));
 
   return (
     <li className="rounded-lg border border-border bg-card p-3 text-card-foreground">
@@ -118,6 +124,37 @@ export function BlockItemRow({
                 className="rounded-md border border-border px-2 py-1 font-medium hover:bg-accent"
               >
                 {restSecs === 0 ? "No rest" : `${restSecs}s`}
+              </button>
+            )}
+
+            <span className="ml-2 text-xs text-muted-foreground">Rounds</span>
+            {editing === "rounds" ? (
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                autoFocus
+                value={rounds}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  onChange({
+                    rounds: Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1,
+                  });
+                }}
+                onBlur={() => setEditing(null)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") setEditing(null);
+                }}
+                className="w-16 rounded-md border border-input bg-background px-2 py-1 text-right outline-none focus:ring-2 focus:ring-ring"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditing("rounds")}
+                className="rounded-md border border-border px-2 py-1 font-medium hover:bg-accent"
+                aria-label={`Rounds: ${rounds}`}
+              >
+                ×{rounds}
               </button>
             )}
           </div>

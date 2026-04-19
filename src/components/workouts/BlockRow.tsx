@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Block } from "@/types";
-import { blockTotalSeconds, formatDuration } from "@/lib/duration";
+import { blockTotalSeconds, blockTotalSets, formatDuration } from "@/lib/duration";
 
 interface Props {
   block: Block;
@@ -35,7 +35,7 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
           <p className="text-xs text-muted-foreground">
             {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
             {" · "}
-            {block.rounds} {block.rounds === 1 ? "round" : "rounds"}
+            {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
             {" · "}
             {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
             {" · "}

@@ -1,12 +1,31 @@
-import type { Block } from "@/types";
+import type { Block, BlockItem } from "@/types";
 
-/** Total seconds for one full pass of a block, multiplied by rounds. */
+/** Rounds for a single exercise. Defaults to 1 when missing/invalid. */
+export function exerciseRounds(item: BlockItem): number {
+  return Math.max(1, Math.floor(item.exercise.rounds ?? 1));
+}
+
+/** Total sets across all exercises in a block. */
+export function blockTotalSets(block: Block): number {
+  return block.items.reduce((sum, it) => sum + exerciseRounds(it), 0);
+}
+
+/** Total seconds for a single block, accounting for per-exercise rounds.
+ *  The trailing rest after the very last interval of the block is omitted
+ *  (matches the planner's behavior). */
 export function blockTotalSeconds(block: Block): number {
-  const perRound = block.items.reduce(
-    (sum, it) => sum + it.exercise.durationSeconds + it.rest.durationSeconds,
-    0,
-  );
-  return perRound * Math.max(1, block.rounds);
+  if (block.items.length === 0) return 0;
+  let total = 0;
+  for (const it of block.items) {
+    const rounds = exerciseRounds(it);
+    const exSecs = Math.max(0, it.exercise.durationSeconds);
+    const restSecs = Math.max(0, it.rest.durationSeconds);
+    total += rounds * (exSecs + restSecs);
+  }
+  // Strip the trailing rest of the very last interval in the block.
+  const lastRest = Math.max(0, block.items[block.items.length - 1].rest.durationSeconds);
+  total -= lastRest;
+  return Math.max(0, total);
 }
 
 /** Format seconds as "M:SS" (or "H:MM:SS" when >= 1h). */

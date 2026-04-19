@@ -113,16 +113,16 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
     isPrep: true,
   });
 
-  const rounds = Math.max(1, block.rounds);
   const mode = block.mode ?? "circuit";
   const itemCount = block.items.length;
+  const itemRounds = block.items.map((it) => Math.max(1, Math.floor(it.exercise.rounds ?? 1)));
+  // Total exercise emissions across the whole block — used to know which one is "last".
+  const totalEmissions = itemRounds.reduce((a, b) => a + b, 0);
+  let emitted = 0;
 
-  const pushExerciseAndRest = (
-    item: BlockItem,
-    itemIndex: number,
-    round: number,
-    isLastOfBlock: boolean,
-  ) => {
+  const pushExerciseAndRest = (item: BlockItem, itemIndex: number, round: number) => {
+    emitted += 1;
+    const isLastOfBlock = emitted === totalEmissions;
     out.push({
       kind: "exercise",
       name: item.exercise.name || `Exercise ${itemIndex + 1}`,
@@ -149,18 +149,24 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   if (mode === "sets") {
     // All rounds of exercise 1, then all rounds of exercise 2, etc.
     block.items.forEach((item, itemIndex) => {
-      for (let r = 1; r <= rounds; r++) {
-        const isLastOfBlock = itemIndex === itemCount - 1 && r === rounds;
-        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
+      for (let r = 1; r <= itemRounds[itemIndex]; r++) {
+        pushExerciseAndRest(item, itemIndex, r);
       }
     });
   } else {
-    // Circuit: exercise 1 → 2 → 3 ..., repeat for each round.
-    for (let r = 1; r <= rounds; r++) {
-      block.items.forEach((item, itemIndex) => {
-        const isLastOfBlock = r === rounds && itemIndex === itemCount - 1;
-        pushExerciseAndRest(item, itemIndex, r, isLastOfBlock);
-      });
+    // Circuit: cycle through exercises that still have rounds remaining.
+    // E.g. A(4), B(3) → A B A B A B A.
+    const remaining = [...itemRounds];
+    const round = Array(itemCount).fill(0);
+    let anyLeft = remaining.some((r) => r > 0);
+    while (anyLeft) {
+      for (let i = 0; i < itemCount; i++) {
+        if (remaining[i] <= 0) continue;
+        round[i] += 1;
+        remaining[i] -= 1;
+        pushExerciseAndRest(block.items[i], i, round[i]);
+      }
+      anyLeft = remaining.some((r) => r > 0);
     }
   }
   return out;
@@ -380,29 +386,9 @@ export function useWorkoutTimer(
     if (startedAtRef.current === null) return null;
     const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
       const played = playedRef.current[i] ?? [];
-      const mode = block.mode ?? "circuit";
-      const totalRounds = Math.max(1, block.rounds);
-      const itemCount = block.items.length;
 
-      // Rounds completed:
-      //  - Circuit: max round number for which the LAST item played.
-      //  - Sets:    number of rounds for which EVERY item played that round.
-      let roundsCompleted = 0;
-      if (mode === "sets") {
-        for (let r = 1; r <= totalRounds; r++) {
-          const allPlayed = block.items.every((_, idx) =>
-            played.some((p) => p.kind === "exercise" && p.itemIndex === idx && p.round === r),
-          );
-          if (allPlayed) roundsCompleted = r;
-          else break;
-        }
-      } else {
-        const lastItemIdx = itemCount - 1;
-        const completedRoundNumbers = played
-          .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
-          .map((p) => p.round);
-        roundsCompleted = completedRoundNumbers.length ? Math.max(...completedRoundNumbers) : 0;
-      }
+      // Total sets played in this block (one per completed exercise interval).
+      const setsPlayed = played.filter((p) => p.kind === "exercise").length;
 
       // Build the items list from the workout definition, but only for items
       // that actually played at least once (any round, exercise side).
@@ -420,11 +406,11 @@ export function useWorkoutTimer(
 
       return {
         blockName: block.name || `Block ${i + 1}`,
-        rounds: roundsCompleted,
+        rounds: setsPlayed,
         items,
       };
     });
-    // Trim trailing blocks with zero rounds completed (never reached).
+    // Trim trailing blocks with zero sets played (never reached).
     while (blocks.length > 0 && blocks[blocks.length - 1].rounds === 0) {
       blocks.pop();
     }
@@ -438,7 +424,7 @@ export function useWorkoutTimer(
     currentItem,
     currentInterval,
     currentRound: currentPlanned?.round ?? 1,
-    totalRounds: currentBlock ? Math.max(1, currentBlock.rounds) : 1,
+    totalRounds: currentItem ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1)) : 1,
     timeRemaining,
     nextItem,
     start,

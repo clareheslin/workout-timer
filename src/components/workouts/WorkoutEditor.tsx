@@ -15,7 +15,6 @@ function makeEmptyBlock(index: number): Block {
     id: createId("block"),
     name: `Block ${index + 1}`,
     items: [],
-    rounds: 1,
     mode: "circuit",
   };
 }
