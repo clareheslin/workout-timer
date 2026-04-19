@@ -1,19 +1,29 @@
-import type { Block, BlockItem } from "@/types";
+import type { Block, BlockItem, BlockType } from "@/types";
+
+/** Effective block type, defaulting to "circuit" for legacy data. */
+export function blockType(block: Block): BlockType {
+  return block.type ?? "circuit";
+}
 
 /** Rounds for a single exercise. Defaults to 1 when missing/invalid. */
 export function exerciseRounds(item: BlockItem): number {
   return Math.max(1, Math.floor(item.exercise.rounds ?? 1));
 }
 
-/** Total sets across all exercises in a block. */
+/** Total sets across all exercises in a block (time-based blocks only). */
 export function blockTotalSets(block: Block): number {
+  if (blockType(block) === "forTime" || blockType(block) === "amrap") return 0;
   return block.items.reduce((sum, it) => sum + exerciseRounds(it), 0);
 }
 
 /** Total seconds for a single block, accounting for per-exercise rounds.
  *  The trailing rest after the very last interval of the block is omitted
- *  (matches the planner's behavior). */
+ *  (matches the planner's behavior). For amrap, returns the time cap.
+ *  For forTime, returns 0 (unknown ahead of time). */
 export function blockTotalSeconds(block: Block): number {
+  const t = blockType(block);
+  if (t === "amrap") return Math.max(0, block.timeCap ?? 0);
+  if (t === "forTime") return 0;
   if (block.items.length === 0) return 0;
   let total = 0;
   for (const it of block.items) {
