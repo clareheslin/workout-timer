@@ -3,6 +3,7 @@ import type { Workout } from "@/types";
 import { formatDuration, workoutTotalSeconds } from "@/lib/workout";
 import { serializeWorkout, slugifyFilename } from "@/lib/workoutShare";
 import { showToast } from "@/lib/toast";
+import { usePageHeader } from "../PageHeaderContext";
 import { ImportWorkoutButton } from "./ImportWorkoutButton";
 
 interface Props {
@@ -241,6 +242,7 @@ export function WorkoutsList({
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmingBulk, setConfirmingBulk] = useState(false);
+  usePageHeader("Workouts");
 
   const sorted = [...workouts].sort((a, b) => {
     const aTime = a.updatedAt ?? a.createdAt;
@@ -304,8 +306,7 @@ export function WorkoutsList({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Workouts</h1>
+      <div className="flex items-center justify-end gap-2">
         <div className="flex items-center gap-2">
           {sorted.length > 0 && selecting ? (
             <button

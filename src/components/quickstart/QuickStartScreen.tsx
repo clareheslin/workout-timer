@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Timer, Zap, Clock, Repeat, ChevronRight } from "lucide-react";
+import { usePageHeader } from "../PageHeaderContext";
 import { StopwatchScreen } from "./StopwatchScreen";
 import { AmrapScreen } from "./AmrapScreen";
 import { EmomScreen } from "./EmomScreen";
@@ -49,14 +50,15 @@ export function QuickStartScreen() {
   if (active === "emom") return <EmomScreen onBack={() => setActive(null)} />;
   if (active === "circuit") return <CircuitScreen onBack={() => setActive(null)} />;
 
+  return <QuickStartList onPick={setActive} />;
+}
+
+function QuickStartList({ onPick }: { onPick: (id: QuickStartTimer) => void }) {
+  usePageHeader("Quick Start");
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Quick Start</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Pick a timer. No setup, no logging.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">Pick a timer. No setup, no logging.</p>
 
       <ul className="space-y-3">
         {OPTIONS.map((option) => {
@@ -65,7 +67,7 @@ export function QuickStartScreen() {
             <li key={option.id}>
               <button
                 type="button"
-                onClick={() => setActive(option.id)}
+                onClick={() => onPick(option.id)}
                 className="group flex w-full items-center gap-4 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
