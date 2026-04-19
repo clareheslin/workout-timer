@@ -88,8 +88,11 @@ export function TimeBlockRunner({
   return (
     <div className={`flex min-h-screen flex-col transition-colors ${bgClass}`}>
       <header className="flex items-center justify-between gap-3 p-4">
-        <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
+          <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
@@ -100,7 +103,6 @@ export function TimeBlockRunner({
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
         {t.phase === "idle" && (
           <>
-            <img src={femLogo} alt="FEM" className="h-24 w-auto" />
             <h2 className="text-2xl font-semibold">Ready</h2>
             <p className="text-sm opacity-70">
               {block.name} · {block.items.length} exercises
