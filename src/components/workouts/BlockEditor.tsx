@@ -253,41 +253,6 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         </div>
       </div>
 
-      {!isRepBased && (
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Mode</span>
-          <div
-            role="radiogroup"
-            aria-label="Block mode"
-            className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
-          >
-            {(["circuit", "sets"] as const).map((m) => {
-              const active = mode === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setMode(m)}
-                  className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  {m === "circuit" ? "Circuit" : "Sets"}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {mode === "circuit"
-              ? "Cycle through every exercise, then repeat for each round."
-              : "Finish all rounds of one exercise before moving to the next."}
-          </p>
-        </div>
-      )}
 
       {type === "amrap" && (
         <div className="flex flex-col gap-2">
