@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Workout } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
+import { DiaryTab } from "./DiaryTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 
@@ -34,7 +35,7 @@ export function AppShell() {
           {tab === "workouts" ? (
             <WorkoutsTab onPlay={(w) => setRunning(w)} />
           ) : (
-            <h1 className="text-2xl font-semibold">Diary</h1>
+            <DiaryTab />
           )}
         </main>
 

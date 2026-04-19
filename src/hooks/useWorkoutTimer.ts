@@ -7,6 +7,23 @@ export interface WorkoutTimerCallbacks {
   onBlockEnd?: () => void;
 }
 
+export interface RunSummaryItem {
+  exerciseName: string;
+  exerciseDuration: number;
+  restDuration: number;
+}
+
+export interface RunSummaryBlock {
+  blockName: string;
+  rounds: number; // rounds fully completed
+  items: RunSummaryItem[];
+}
+
+export interface RunSummary {
+  startedAt: string; // ISO
+  blocks: RunSummaryBlock[];
+}
+
 
 /** Seconds of "Get Ready" prep prepended to every block. */
 export const BLOCK_PREP_SECONDS = 10;
@@ -49,6 +66,10 @@ export interface UseWorkoutTimerResult {
   resume: () => void;
   nextBlock: () => void;
   finish: () => void;
+  /** ISO timestamp captured the first time `start` was tapped, or null if never. */
+  startedAt: string | null;
+  /** Build a summary of what actually played, for diary logging. */
+  getRunSummary: () => RunSummary | null;
 }
 
 interface PlannedInterval {
@@ -131,6 +152,12 @@ export function useWorkoutTimer(
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const intervalRef = useRef<number | null>(null);
+
+  // First-Start timestamp + per-block tally of intervals that fully played.
+  const startedAtRef = useRef<string | null>(null);
+  const playedRef = useRef<PlannedInterval[][]>([]);
+  // Force re-render when startedAt is set so consumers (and the runner) can react.
+  const [, setStartedAtTick] = useState(0);
 
   // Keep callbacks in a ref so we don't re-run effects when they change identity.
   const callbacksRef = useRef(callbacks);
@@ -222,6 +249,14 @@ export function useWorkoutTimer(
   useEffect(() => {
     if (phase !== "running" || timeRemaining > 0) return;
 
+    // Record the interval that just completed (skip the prep "Get Ready").
+    const justFinished = currentSchedule[scheduleIndex];
+    if (justFinished && !justFinished.isPrep) {
+      const bucket = playedRef.current[justFinished.blockIndex] ?? [];
+      bucket.push(justFinished);
+      playedRef.current[justFinished.blockIndex] = bucket;
+    }
+
     const nextIdx = scheduleIndex + 1;
     if (nextIdx < currentSchedule.length) {
       const next = currentSchedule[nextIdx];
@@ -245,10 +280,16 @@ export function useWorkoutTimer(
       setPhase("done");
       return;
     }
+    // Capture the very first start time for diary logging.
+    if (startedAtRef.current === null) {
+      startedAtRef.current = new Date().toISOString();
+      playedRef.current = workout.blocks.map(() => []);
+      setStartedAtTick((n) => n + 1);
+    }
     setScheduleIndex(0);
     setTimeRemaining(schedule[0].durationSeconds);
     setPhase("running");
-  }, [phase, blockSchedules, blockIndex]);
+  }, [phase, blockSchedules, blockIndex, workout.blocks]);
 
   const pause = useCallback(() => {
     setPhase((p) => (p === "running" ? "paused" : p));
@@ -280,6 +321,47 @@ export function useWorkoutTimer(
   // Stop tick on unmount.
   useEffect(() => clearTick, [clearTick]);
 
+  const getRunSummary = useCallback((): RunSummary | null => {
+    if (startedAtRef.current === null) return null;
+    const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
+      const played = playedRef.current[i] ?? [];
+      // Rounds completed = max round number for which the LAST item of the
+      // block was played.
+      const lastItemIdx = block.items.length - 1;
+      const completedRoundNumbers = played
+        .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
+        .map((p) => p.round);
+      const roundsCompleted = completedRoundNumbers.length
+        ? Math.max(...completedRoundNumbers)
+        : 0;
+
+      // Build the items list from the workout definition, but only for items
+      // that actually played at least once (any round, exercise side).
+      const playedItemIdxs = new Set(
+        played.filter((p) => p.kind === "exercise").map((p) => p.itemIndex),
+      );
+      const items: RunSummaryItem[] = block.items
+        .map((it, idx) => ({ it, idx }))
+        .filter(({ idx }) => playedItemIdxs.has(idx))
+        .map(({ it, idx }) => ({
+          exerciseName: it.exercise.name || `Exercise ${idx + 1}`,
+          exerciseDuration: Math.max(0, it.exercise.durationSeconds),
+          restDuration: Math.max(0, it.rest.durationSeconds),
+        }));
+
+      return {
+        blockName: block.name || `Block ${i + 1}`,
+        rounds: roundsCompleted,
+        items,
+      };
+    });
+    // Trim trailing blocks with zero rounds completed (never reached).
+    while (blocks.length > 0 && blocks[blocks.length - 1].rounds === 0) {
+      blocks.pop();
+    }
+    return { startedAt: startedAtRef.current, blocks };
+  }, [workout.blocks]);
+
   return {
     phase,
     currentBlockIndex: blockIndex,
@@ -295,5 +377,7 @@ export function useWorkoutTimer(
     resume,
     nextBlock,
     finish,
+    startedAt: startedAtRef.current,
+    getRunSummary,
   };
 }
