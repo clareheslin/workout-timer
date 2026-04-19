@@ -66,6 +66,13 @@ export interface UseWorkoutTimerResult {
   resume: () => void;
   nextBlock: () => void;
   finish: () => void;
+  /** Skip the current interval and advance to the next one within the block.
+   *  If this was the last interval, transitions the block to "block-complete"
+   *  (or "done" if it was the final block). Skipped intervals are NOT logged. */
+  skipInterval: () => void;
+  /** Skip all remaining intervals in the current block and go straight to
+   *  block-complete (or done if it was the final block). */
+  endBlock: () => void;
   /** ISO timestamp captured the first time `start` was tapped, or null if never. */
   startedAt: string | null;
   /** Build a summary of what actually played, for diary logging. */
@@ -318,6 +325,32 @@ export function useWorkoutTimer(
     setPhase("done");
   }, [clearTick]);
 
+  const skipInterval = useCallback(() => {
+    if (phase !== "running" && phase !== "paused") return;
+    const schedule = blockSchedules[blockIndex];
+    if (!schedule || schedule.length === 0) return;
+    const nextIdx = scheduleIndex + 1;
+    if (nextIdx < schedule.length) {
+      const next = schedule[nextIdx];
+      setScheduleIndex(nextIdx);
+      setTimeRemaining(next.durationSeconds);
+      callbacksRef.current?.onTransition?.();
+      return;
+    }
+    // No more intervals in this block — end of block.
+    callbacksRef.current?.onTransition?.();
+    callbacksRef.current?.onBlockEnd?.();
+    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    setPhase(isLastBlock ? "done" : "block-complete");
+  }, [phase, blockSchedules, blockIndex, scheduleIndex, workout.blocks.length]);
+
+  const endBlock = useCallback(() => {
+    if (phase !== "running" && phase !== "paused") return;
+    callbacksRef.current?.onBlockEnd?.();
+    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    setPhase(isLastBlock ? "done" : "block-complete");
+  }, [phase, blockIndex, workout.blocks.length]);
+
   // Stop tick on unmount.
   useEffect(() => clearTick, [clearTick]);
 
@@ -377,6 +410,8 @@ export function useWorkoutTimer(
     resume,
     nextBlock,
     finish,
+    skipInterval,
+    endBlock,
     startedAt: startedAtRef.current,
     getRunSummary,
   };

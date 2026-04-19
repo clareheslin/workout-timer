@@ -219,6 +219,28 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             >
               {t.phase === "running" ? "Pause" : "Resume"}
             </button>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={t.skipInterval}
+                className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                aria-label={
+                  t.nextItem
+                    ? `Skip to ${t.nextItem.name}`
+                    : "Skip to end of block"
+                }
+              >
+                Skip ›
+              </button>
+              <button
+                type="button"
+                onClick={t.endBlock}
+                className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                aria-label="End block"
+              >
+                End block »
+              </button>
+            </div>
             <p className="text-[11px] opacity-60">
               {isPaused ? "Hold to exit workout" : "Tap to pause"}
             </p>
