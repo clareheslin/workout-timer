@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Block, BlockItem } from "@/types";
+import type { Block, BlockItem, BlockMode } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockItemRow } from "./BlockItemRow";
 
@@ -30,12 +30,19 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   const [name, setName] = useState(initial.name);
   const [rounds, setRounds] = useState<number>(initial.rounds);
   const [items, setItems] = useState<BlockItem[]>(initial.items);
+  const [mode, setMode] = useState<BlockMode>(initial.mode ?? "circuit");
 
   const initialSnapshot = useMemo(
-    () => JSON.stringify({ name: initial.name, rounds: initial.rounds, items: initial.items }),
+    () =>
+      JSON.stringify({
+        name: initial.name,
+        rounds: initial.rounds,
+        items: initial.items,
+        mode: initial.mode ?? "circuit",
+      }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, rounds, items }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, rounds, items, mode }) !== initialSnapshot;
 
   const canDone = items.length > 0;
 
@@ -84,6 +91,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
       name: name.trim() || defaultName,
       rounds: Math.max(1, Math.floor(rounds || 1)),
       items,
+      mode,
     });
   };
 
