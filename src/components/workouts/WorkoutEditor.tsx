@@ -1,4 +1,20 @@
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Block, Workout } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockRow } from "./BlockRow";
@@ -48,6 +64,23 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const handleBlockDone = (updated: Block) => {
     setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
     setEditingBlockId(null);
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setBlocks((prev) => {
+      const oldIdx = prev.findIndex((b) => b.id === active.id);
+      const newIdx = prev.findIndex((b) => b.id === over.id);
+      if (oldIdx === -1 || newIdx === -1) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
   };
 
   const editingBlock = blocks.find((b) => b.id === editingBlockId) ?? null;
@@ -137,16 +170,27 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
             No blocks yet. Add your first block.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {blocks.map((b) => (
-              <BlockRow
-                key={b.id}
-                block={b}
-                onEdit={() => handleEditBlock(b.id)}
-                onDelete={() => handleDeleteBlock(b.id)}
-              />
-            ))}
-          </ul>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={blocks.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="flex flex-col gap-2">
+                {blocks.map((b) => (
+                  <BlockRow
+                    key={b.id}
+                    block={b}
+                    onEdit={() => handleEditBlock(b.id)}
+                    onDelete={() => handleDeleteBlock(b.id)}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
