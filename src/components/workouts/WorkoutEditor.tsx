@@ -47,7 +47,10 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const isDirty = JSON.stringify({ name, blocks }) !== initialSnapshot;
 
   const canSave =
-    blocks.length > 0 && blocks.some((b) => b.items.length > 0);
+    blocks.length > 0 &&
+    blocks.some(
+      (b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0,
+    );
 
   const handleAddBlock = () => {
     setBlocks((prev) => [...prev, makeEmptyBlock(prev.length)]);

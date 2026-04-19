@@ -13,7 +13,9 @@ interface Props {
 }
 
 function workoutHasExercise(w: Workout): boolean {
-  return w.blocks.some((b) => b.items.length > 0);
+  return w.blocks.some(
+    (b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0,
+  );
 }
 
 function EmptyState({ onNew }: { onNew: () => void }) {
