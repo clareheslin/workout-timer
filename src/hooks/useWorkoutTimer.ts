@@ -424,7 +424,7 @@ export function useWorkoutTimer(
     currentItem,
     currentInterval,
     currentRound: currentPlanned?.round ?? 1,
-    totalRounds: currentBlock ? Math.max(1, currentBlock.rounds) : 1,
+    totalRounds: currentItem ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1)) : 1,
     timeRemaining,
     nextItem,
     start,
