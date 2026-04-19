@@ -83,11 +83,54 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
   return (
     <div className={`flex min-h-screen flex-col transition-colors ${bgClass}`}>
-      <header className="flex items-center justify-between p-4">
+      <header className="flex items-center justify-between gap-3 p-4">
         <p className="truncate text-sm font-semibold opacity-80">{workout.name}</p>
-        <p className="text-xs opacity-70">
-          Block {t.currentBlockIndex + 1} of {workout.blocks.length}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs opacity-70">
+            Block {t.currentBlockIndex + 1} of {workout.blocks.length}
+          </p>
+          <button
+            type="button"
+            onClick={audio.toggleMute}
+            aria-label={audio.muted ? "Unmute audio" : "Mute audio"}
+            aria-pressed={audio.muted}
+            className="rounded-full p-1.5 opacity-80 hover:opacity-100"
+          >
+            {audio.muted ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg>
+            )}
+          </button>
+        </div>
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
