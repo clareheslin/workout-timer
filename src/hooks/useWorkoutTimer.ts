@@ -325,6 +325,32 @@ export function useWorkoutTimer(
     setPhase("done");
   }, [clearTick]);
 
+  const skipInterval = useCallback(() => {
+    if (phase !== "running" && phase !== "paused") return;
+    const schedule = blockSchedules[blockIndex];
+    if (!schedule || schedule.length === 0) return;
+    const nextIdx = scheduleIndex + 1;
+    if (nextIdx < schedule.length) {
+      const next = schedule[nextIdx];
+      setScheduleIndex(nextIdx);
+      setTimeRemaining(next.durationSeconds);
+      callbacksRef.current?.onTransition?.();
+      return;
+    }
+    // No more intervals in this block — end of block.
+    callbacksRef.current?.onTransition?.();
+    callbacksRef.current?.onBlockEnd?.();
+    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    setPhase(isLastBlock ? "done" : "block-complete");
+  }, [phase, blockSchedules, blockIndex, scheduleIndex, workout.blocks.length]);
+
+  const endBlock = useCallback(() => {
+    if (phase !== "running" && phase !== "paused") return;
+    callbacksRef.current?.onBlockEnd?.();
+    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    setPhase(isLastBlock ? "done" : "block-complete");
+  }, [phase, blockIndex, workout.blocks.length]);
+
   // Stop tick on unmount.
   useEffect(() => clearTick, [clearTick]);
 
