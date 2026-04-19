@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WorkoutsTab } from "./WorkoutsTab";
 
 type Tab = "workouts" | "diary";
 
@@ -8,9 +9,9 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-background text-foreground flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen flex flex-col border-x border-border">
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 pb-24">
           {tab === "workouts" ? (
-            <h1 className="text-2xl font-semibold">Workouts</h1>
+            <WorkoutsTab />
           ) : (
             <h1 className="text-2xl font-semibold">Diary</h1>
           )}
