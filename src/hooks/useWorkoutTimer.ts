@@ -66,6 +66,13 @@ export interface UseWorkoutTimerResult {
   resume: () => void;
   nextBlock: () => void;
   finish: () => void;
+  /** Skip the current interval and advance to the next one within the block.
+   *  If this was the last interval, transitions the block to "block-complete"
+   *  (or "done" if it was the final block). Skipped intervals are NOT logged. */
+  skipInterval: () => void;
+  /** Skip all remaining intervals in the current block and go straight to
+   *  block-complete (or done if it was the final block). */
+  endBlock: () => void;
   /** ISO timestamp captured the first time `start` was tapped, or null if never. */
   startedAt: string | null;
   /** Build a summary of what actually played, for diary logging. */
