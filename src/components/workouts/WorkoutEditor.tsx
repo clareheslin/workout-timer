@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Block, Workout } from "@/types";
 import { createId } from "@/lib/id";
 import { BlockRow } from "./BlockRow";
+import { BlockEditor } from "./BlockEditor";
 
 interface Props {
   initial: Workout | null;
@@ -21,6 +22,7 @@ function makeEmptyBlock(index: number): Block {
 export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [blocks, setBlocks] = useState<Block[]>(initial?.blocks ?? []);
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
   const initialSnapshot = useMemo(
     () => JSON.stringify({ name: initial?.name ?? "", blocks: initial?.blocks ?? [] }),
@@ -39,9 +41,30 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
     setBlocks((prev) => prev.filter((b) => b.id !== id));
   };
 
-  const handleEditBlock = (_id: string) => {
-    // Block editor lands in the next prompt.
+  const handleEditBlock = (id: string) => {
+    setEditingBlockId(id);
   };
+
+  const handleBlockDone = (updated: Block) => {
+    setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+    setEditingBlockId(null);
+  };
+
+  const editingBlock = blocks.find((b) => b.id === editingBlockId) ?? null;
+  const editingBlockIndex = editingBlock
+    ? blocks.findIndex((b) => b.id === editingBlock.id)
+    : -1;
+
+  if (editingBlock && editingBlockIndex >= 0) {
+    return (
+      <BlockEditor
+        initial={editingBlock}
+        positionIndex={editingBlockIndex}
+        onCancel={() => setEditingBlockId(null)}
+        onDone={handleBlockDone}
+      />
+    );
+  }
 
   const handleCancel = () => {
     if (isDirty && !window.confirm("Discard unsaved changes?")) return;
