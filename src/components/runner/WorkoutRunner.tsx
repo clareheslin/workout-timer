@@ -187,7 +187,9 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         {(t.phase === "running" || t.phase === "paused") && t.currentInterval && (
           <>
             <p className="text-sm font-medium uppercase tracking-wider opacity-80">
-              {t.currentInterval.name}
+              {t.currentInterval.kind === "rest" && !t.currentInterval.isPrep
+                ? "Rest"
+                : t.currentInterval.name}
             </p>
             <div
               className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/20"
