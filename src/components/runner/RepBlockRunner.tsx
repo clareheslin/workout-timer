@@ -13,10 +13,12 @@ interface Props {
   onExitWorkout: () => void;
 }
 
-type Phase = "idle" | "running" | "done";
+type Phase = "idle" | "running" | "paused" | "done";
 
-/** Runs a single forTime or amrap block. The exercise list is static and
- *  the timer runs uninterrupted (no pause). */
+const LONG_PRESS_MS = 700;
+
+/** Runs a single forTime or amrap block. The exercise list is static.
+ *  Supports pause/resume, skip (jump to end), and end-block (same as skip). */
 export function RepBlockRunner({
   block,
   blockIndex,
@@ -34,34 +36,48 @@ export function RepBlockRunner({
   // For forTime: elapsed seconds (counts up). For amrap: remaining seconds (counts down).
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
+  const [finalDuration, setFinalDuration] = useState<number | null>(null);
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
   const lastCountdownKey = useRef<number | null>(null);
+  const elapsedRef = useRef(0);
+  const remainingRef = useRef(timeCap);
+
+  useEffect(() => {
+    elapsedRef.current = elapsed;
+  }, [elapsed]);
+  useEffect(() => {
+    remainingRef.current = remaining;
+  }, [remaining]);
+
+  const buildLog = useCallback(
+    (durationSeconds: number): WorkoutLogBlock => ({
+      blockName: block.name || `Block ${blockIndex + 1}`,
+      rounds: 0,
+      items: [],
+      blockType: isAmrap ? "amrap" : "forTime",
+      repItems: repExercises.map((ex) => ({
+        exerciseName: ex.name || "Exercise",
+        reps: Math.max(1, Math.floor(ex.reps)),
+      })),
+      durationSeconds: Math.max(0, Math.floor(durationSeconds)),
+    }),
+    [block.name, blockIndex, isAmrap, repExercises],
+  );
 
   const finalize = useCallback(
     (durationSeconds: number) => {
       if (completedRef.current) return;
       completedRef.current = true;
+      setFinalDuration(Math.max(0, Math.floor(durationSeconds)));
       setPhase("done");
       audio.playBlockEndBeep();
-      const log: WorkoutLogBlock = {
-        blockName: block.name || `Block ${blockIndex + 1}`,
-        rounds: 0,
-        items: [],
-        blockType: isAmrap ? "amrap" : "forTime",
-        repItems: repExercises.map((ex) => ({
-          exerciseName: ex.name || "Exercise",
-          reps: Math.max(1, Math.floor(ex.reps)),
-        })),
-        durationSeconds: Math.max(0, Math.floor(durationSeconds)),
-      };
-      onComplete(log);
     },
-    [audio, block.name, blockIndex, isAmrap, repExercises, onComplete],
+    [audio],
   );
 
-  // Tick loop.
+  // Tick loop — only when running.
   useEffect(() => {
     if (phase !== "running") {
       if (tickRef.current !== null) {
@@ -105,17 +121,30 @@ export function RepBlockRunner({
   const handleStart = () => {
     audio.unlock();
     completedRef.current = false;
+    setFinalDuration(null);
     if (isAmrap) setRemaining(timeCap);
     else setElapsed(0);
     setPhase("running");
     audio.playTransitionBeep();
   };
 
-  const handleStop = () => {
-    finalize(elapsed);
+  const handlePauseResume = () => {
+    if (phase === "running") setPhase("paused");
+    else if (phase === "paused") setPhase("running");
   };
 
-  // Long-press to exit — only when idle (no pause for these block types).
+  // Skip / End block — both jump to the done screen with current duration.
+  const handleEnd = () => {
+    const duration = isAmrap ? timeCap - remainingRef.current : elapsedRef.current;
+    finalize(duration);
+  };
+
+  const handleContinue = () => {
+    if (finalDuration === null) return;
+    onComplete(buildLog(finalDuration));
+  };
+
+  // Long-press header to exit — only when idle, paused, or done.
   const longPressTimer = useRef<number | null>(null);
   const clearLongPress = () => {
     if (longPressTimer.current !== null) {
@@ -131,10 +160,11 @@ export function RepBlockRunner({
       if (window.confirm("Exit this workout?")) {
         onExitWorkout();
       }
-    }, 700);
+    }, LONG_PRESS_MS);
   };
 
-  const timerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
+  const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
+  const doneTimerLabel = formatDuration(finalDuration ?? 0);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -156,66 +186,106 @@ export function RepBlockRunner({
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col items-center gap-6 px-6 pb-8 pt-4 text-center">
-        <div className="flex flex-col items-center gap-1">
+      <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
+        <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {isAmrap ? "AMRAP" : "For Time"}
           </p>
           <h2 className="text-xl font-semibold">{block.name}</h2>
         </div>
 
-        <ul className="w-full max-w-sm flex-1 overflow-y-auto rounded-lg border border-border bg-card text-card-foreground">
+        <ul className="flex flex-1 flex-col gap-2">
           {repExercises.length === 0 ? (
-            <li className="p-6 text-sm text-muted-foreground">No exercises.</li>
+            <li className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+              No exercises.
+            </li>
           ) : (
-            repExercises.map((ex, i) => (
+            repExercises.map((ex) => (
               <li
                 key={ex.id}
-                className={`flex items-center justify-between gap-3 px-4 py-3 text-base ${
-                  i > 0 ? "border-t border-border" : ""
-                }`}
+                className="flex flex-1 items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground"
               >
-                <span className="truncate">{ex.name}</span>
-                <span className="shrink-0 font-semibold tabular-nums">{ex.reps}</span>
+                <span className="truncate text-base">{ex.name}</span>
+                <span className="shrink-0 text-base font-semibold tabular-nums">x{ex.reps}</span>
               </li>
             ))
           )}
         </ul>
 
         <div className="flex flex-col items-center gap-3">
-          <p className="text-5xl font-bold tabular-nums" aria-live="polite">
-            {timerLabel}
-          </p>
-          {isAmrap && phase === "idle" && (
-            <p className="text-xs text-muted-foreground">Cap: {formatDuration(timeCap)}</p>
-          )}
+          {phase === "done" ? (
+            <>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {isAmrap ? "Time" : "Your time"}
+              </p>
+              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
+                {doneTimerLabel}
+              </p>
+              <button
+                type="button"
+                onClick={handleContinue}
+                className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+              >
+                Continue
+              </button>
+              <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
+            </>
+          ) : (
+            <>
+              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
+                {liveTimerLabel}
+              </p>
+              {isAmrap && phase === "idle" && (
+                <p className="text-xs text-muted-foreground">Cap: {formatDuration(timeCap)}</p>
+              )}
 
-          {phase === "idle" && (
-            <button
-              type="button"
-              onClick={handleStart}
-              className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-            >
-              Start
-            </button>
-          )}
+              {phase === "idle" && (
+                <button
+                  type="button"
+                  onClick={handleStart}
+                  className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                >
+                  Start
+                </button>
+              )}
 
-          {phase === "running" && !isAmrap && (
-            <button
-              type="button"
-              onClick={handleStop}
-              className="rounded-full bg-destructive px-8 py-3 text-base font-semibold text-destructive-foreground"
-            >
-              Stop
-            </button>
-          )}
+              {(phase === "running" || phase === "paused") && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePauseResume}
+                    className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                  >
+                    {phase === "running" ? "Pause" : "Resume"}
+                  </button>
+                  <div className="mt-1 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleEnd}
+                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                      aria-label="Skip to end of block"
+                    >
+                      Skip ›
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEnd}
+                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                      aria-label="End block"
+                    >
+                      End block »
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {phase === "paused" ? "Hold header to exit workout" : "Timer running"}
+                  </p>
+                </>
+              )}
 
-          {phase === "running" && isAmrap && (
-            <p className="text-xs text-muted-foreground">Counting down…</p>
-          )}
-
-          {phase === "idle" && (
-            <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
+              {phase === "idle" && (
+                <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
+              )}
+            </>
           )}
         </div>
       </main>
