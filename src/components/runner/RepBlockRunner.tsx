@@ -153,8 +153,11 @@ export function RepBlockRunner({
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="flex items-center justify-between gap-3 p-4">
-        <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
+          <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
@@ -164,9 +167,6 @@ export function RepBlockRunner({
 
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
-          {phase === "idle" && (
-            <img src={femLogo} alt="FEM" className="mb-3 h-24 w-auto" />
-          )}
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {isAmrap ? "AMRAP" : "For Time"}
           </p>
