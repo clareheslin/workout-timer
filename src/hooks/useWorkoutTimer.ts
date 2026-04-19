@@ -93,7 +93,10 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   return out;
 }
 
-export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
+export function useWorkoutTimer(
+  workout: Workout,
+  callbacks?: WorkoutTimerCallbacks,
+): UseWorkoutTimerResult {
   const blockSchedules = useMemo(
     () => workout.blocks.map((b, i) => planBlock(b, i)),
     [workout],
@@ -105,6 +108,16 @@ export function useWorkoutTimer(workout: Workout): UseWorkoutTimerResult {
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const intervalRef = useRef<number | null>(null);
+
+  // Keep callbacks in a ref so we don't re-run effects when they change identity.
+  const callbacksRef = useRef(callbacks);
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
+
+  // Track which (phase, second) we've already chimed for, to guard against
+  // double-fires from React re-renders or strict-mode double-invocation.
+  const lastCountdownKey = useRef<string | null>(null);
 
   const currentBlock = workout.blocks[blockIndex] ?? null;
   const currentSchedule = blockSchedules[blockIndex] ?? [];
