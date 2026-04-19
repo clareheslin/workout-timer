@@ -65,8 +65,9 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   const [name, setName] = useState(initial.name);
   const [items, setItems] = useState<BlockItem[]>(initial.items);
   const [repItems, setRepItems] = useState<RepExercise[]>(initial.repExercises ?? []);
-  const [mode, setMode] = useState<BlockMode>(initial.mode ?? "circuit");
   const [type, setType] = useState<BlockType>(initial.type ?? "circuit");
+  // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
+  const mode: BlockMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
 
   const isRepBased = type === "forTime" || type === "amrap";
