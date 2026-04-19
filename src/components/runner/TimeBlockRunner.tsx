@@ -5,6 +5,7 @@ import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
 import femLogo from "@/assets/fem-logo.png";
+import femLogoWhite from "@/assets/fem-logo-white.png";
 
 interface Props {
   block: Block;
