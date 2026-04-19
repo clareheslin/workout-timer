@@ -132,9 +132,39 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+@theme inline {
+  --font-sans:
+    "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-exercise: var(--exercise);
+  --color-exercise-foreground: var(--exercise-foreground);
+  --color-rest: var(--rest);
+  --color-rest-foreground: var(--rest-foreground);
+}
+
+:root {
+  --exercise: oklch(0.68 0.16 145);
+  --exercise-foreground: oklch(1 0 0);
+  --rest: oklch(1 0 0);
+  --rest-foreground: oklch(0.15 0 0);
+}
+
+.dark {
+  --exercise: oklch(0.68 0.16 145);
+  --exercise-foreground: oklch(1 0 0);
+  --rest: oklch(1 0 0);
+  --rest-foreground: oklch(0.15 0 0);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    font-family:
+      "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "ss01", "cv11";
   }
 
   body {
