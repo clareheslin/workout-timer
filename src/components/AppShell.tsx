@@ -11,7 +11,7 @@ import femLogo from "@/assets/fem-logo.png";
 type Tab = "workouts" | "quickstart" | "diary";
 
 export function AppShell() {
-  const [tab, setTab] = useState<Tab>("workouts");
+  const [tab, setTab] = useState<Tab>("quickstart");
   const [running, setRunning] = useState<Workout | null>(null);
 
   if (running) {
