@@ -9,11 +9,21 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   vite: {
-    // Pre-bundle deps used by the Quick Start sheet so Vite doesn't trigger a
-    // mid-session re-optimize that can briefly leave a stale React copy in
-    // the dep cache (causes "Cannot read properties of null (reading 'use')").
+    // Pre-bundle core runtime deps up front so preview hydration doesn't race
+    // against a mid-session optimize pass, which can leave the client entry
+    // pointing at an outdated react-dom_client chunk.
     optimizeDeps: {
-      include: ["@radix-ui/react-dialog", "@radix-ui/react-slot"],
+      entries: ["src/**/*.{ts,tsx}"],
+      include: [
+        "react",
+        "react/jsx-dev-runtime",
+        "react-dom",
+        "react-dom/client",
+        "@tanstack/react-start/client",
+        "@tanstack/react-router",
+        "@radix-ui/react-dialog",
+        "@radix-ui/react-slot",
+      ],
     },
     plugins: [
       VitePWA({
