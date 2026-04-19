@@ -1,44 +1,109 @@
 
-## Plan: Workout export & import (.fem.json)
+## Plan: Convert app to installable PWA
 
-### Behaviour decisions (from this turn)
-- **No auto-rename on import.** Keep the exported `name` exactly as-is, even if it collides with an existing workout. Multiple workouts with the same name is allowed (each gets a fresh `id`).
-- **Optional prefix on import.** Before importing, prompt the user with a small text input for an optional prefix (e.g. `"Sam's "`). If provided, the imported workout name becomes `${prefix}${originalName}`. Empty/whitespace prefix = use original name unchanged.
+User asked for full PWA with offline support, so this includes a service worker (not just a manifest). Per Lovable's PWA guidance I'll guard registration so it only runs in production / outside the preview iframe — otherwise the editor preview will serve stale cached builds.
 
-### Files
+### What this gets the user
+- **Install on iOS & Android home screen** with app icon, name, and standalone (no browser chrome) display.
+- **Offline support**: app shell + previously visited routes load with no network. Workouts and diary already use `localStorage`, so user data persists offline today.
+- **Auto-updates**: when a new version is published, clients update on next visit.
 
-**New: `src/lib/workoutShare.ts`**
-- `WORKOUT_FILE_FORMAT = "fem.workout"`, `WORKOUT_FILE_VERSION = 1`
-- `serializeWorkout(workout)` → JSON string with envelope `{ format, version, exportedAt, workout: { name, blocks } }` (strips `id`, `createdAt`, `updatedAt` — they're regenerated on import).
-- `parseWorkoutFile(text)` → validated `Workout` shape or throws.
-- `isValidWorkoutShape(obj)` — structural checks for blocks/items/repExercises matching `src/types.ts`.
-- `slugifyFilename(name)` → safe `.fem.json` filename.
-- `regenerateIds(workout, prefix?)` → new `id`s for workout/blocks/items/repExercises, fresh `createdAt`/`updatedAt`, applies optional name prefix.
+### Changes
 
-**New: `src/components/workouts/ImportWorkoutButton.tsx`**
-- Hidden `<input type="file" accept=".json,.fem.json,application/json">`.
-- On file selected → read text → parse → open small inline prompt for optional prefix → confirm → call `onImport(workout)`.
-- Shows toast on success/failure.
+**1. Add dependency**
+- `vite-plugin-pwa` (with built-in Workbox).
 
-**Modified: `src/components/workouts/WorkoutsList.tsx`**
-- Add a "Share" action to each `WorkoutCard` (next to Duplicate/Delete).
-- Share handler: build envelope, attempt `navigator.share({ files: [File] })` if `navigator.canShare({ files })` is true; otherwise fall back to anchor download. Catches user-cancel silently.
-- Add `Import` button in the header row next to `+ New` / `Select`.
+**2. `vite.config.ts`** — pass VitePWA via the wrapped config:
+```ts
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { VitePWA } from "vite-plugin-pwa";
 
-**Modified: `src/components/WorkoutsTab.tsx`**
-- Pass an `onImport` handler down to `WorkoutsList` that calls `addWorkout(regeneratedWorkout)` and shows a toast (`Imported "<name>"`).
+export default defineConfig({
+  vite: {
+    plugins: [
+      VitePWA({
+        registerType: "autoUpdate",
+        devOptions: { enabled: false },           // never run SW in dev/preview
+        includeAssets: ["favicon.ico", "icons/*.png"],
+        manifest: {
+          name: "FEM Workout Timer",
+          short_name: "FEM Timer",
+          description: "Create, run, and log structured workouts.",
+          theme_color: "#0b0b0b",                 // matches dark bg
+          background_color: "#0b0b0b",
+          display: "standalone",
+          orientation: "portrait",
+          start_url: "/",
+          scope: "/",
+          icons: [
+            { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+            { src: "/icons/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ],
+        },
+        workbox: {
+          navigateFallback: "/",
+          navigateFallbackDenylist: [/^\/~oauth/],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com",
+              handler: "StaleWhileRevalidate",
+              options: { cacheName: "google-fonts" },
+            },
+          ],
+        },
+      }),
+    ],
+  },
+});
+```
 
-**Modified: `src/lib/workout.ts`**
-- Re-export `serializeWorkout`, `parseWorkoutFile` from `workoutShare.ts` for convenience (optional).
+**3. App icons** — generate from existing `src/assets/fem-logo.png`:
+- `public/icons/icon-192.png` (192×192)
+- `public/icons/icon-512.png` (512×512)
+- `public/icons/icon-512-maskable.png` (512×512, padded for Android maskable)
+- `public/apple-touch-icon.png` (180×180, iOS home screen)
 
-### UX flow
-1. **Export**: User taps Share on a workout → native share sheet opens (mobile) with `WorkoutName.fem.json` attached, or file downloads (desktop).
-2. **Import**: User taps Import in Workouts header → picks `.fem.json` → small dialog shows workout name + optional "Prefix (optional)" text field + Import/Cancel buttons → on Import the workout is added with `${prefix}${name}` (or just `name` if no prefix). No renaming, no de-duplication.
+**4. iOS meta tags** in `src/routes/__root.tsx` head:
+- `apple-mobile-web-app-capable` = `yes`
+- `apple-mobile-web-app-status-bar-style` = `black-translucent`
+- `apple-mobile-web-app-title` = `FEM Timer`
+- `<link rel="apple-touch-icon" href="/apple-touch-icon.png">`
+- `theme-color` meta = `#0b0b0b`
 
-### Validation & errors
-- Reject files where `format !== "fem.workout"` or `version > 1`.
-- Reject malformed shapes with toast: `"Couldn't import: file is not a valid FEM workout."`
-- Web Share `AbortError` (user cancelled) is swallowed silently.
+**5. New: `src/pwa.ts`** — safe SW registration, imported once from `src/router.tsx` (client-only via `typeof window` guard):
+```ts
+export function registerPWA() {
+  if (typeof window === "undefined") return;
+
+  const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+  const host = window.location.hostname;
+  const isPreviewHost = host.includes("id-preview--") || host.includes("lovableproject.com") || host.includes("lovable.app") && host.startsWith("id-preview--");
+
+  if (isInIframe || isPreviewHost) {
+    navigator.serviceWorker?.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    return;
+  }
+
+  import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
+```
+Note: the published app at `femworkouttimer.lovable.app` is NOT a preview host, so the SW will register there. The `id-preview--*.lovable.app` editor will not.
+
+**6. `src/router.tsx`** — call `registerPWA()` once at module load.
+
+**7. Types** — add `vite-plugin-pwa/client` to `tsconfig.json` `compilerOptions.types` so `virtual:pwa-register` resolves.
+
+### Caveats I'll tell the user after building
+- **Offline & install only work on the published URL** (`femworkouttimer.lovable.app` or a custom domain), not inside the Lovable editor preview — by design, to avoid stale-cache bugs while editing.
+- **iOS install**: Safari → Share → "Add to Home Screen" (iOS has no auto install prompt).
+- **Android install**: Chrome shows an install prompt automatically once criteria are met (manifest + SW + HTTPS + 2 icons), or via menu → "Install app".
+- After publishing once, future updates auto-apply on the user's next visit (no manual refresh needed beyond one reload).
 
 ### Out of scope
-- Bulk export, deep links, text/markdown summary, conflict resolution UI.
+- Custom in-app "Install" button / `beforeinstallprompt` UI.
+- Background sync / push notifications.
+- Splash-screen images per iOS device size (system generates a basic one from the manifest).
