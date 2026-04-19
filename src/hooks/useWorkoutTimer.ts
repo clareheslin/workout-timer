@@ -65,12 +65,26 @@ interface PlannedInterval {
  * Build the linear schedule of intervals for a single block.
  *
  * Rules:
+ *  - Every block starts with a 10s "Get Ready" prep period.
  *  - For each round, play each exercise then its rest.
  *  - Skip any rest with duration 0 ("No rest" / superset).
  *  - The very last rest of the very last round is skipped (no trailing rest).
  */
 function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
   const out: PlannedInterval[] = [];
+
+  // 10s "Get Ready" prep at the start of every block. Modeled as a rest so it
+  // gets the rest visual treatment and doesn't echo as an exercise.
+  out.push({
+    kind: "rest",
+    name: "Get Ready",
+    durationSeconds: BLOCK_PREP_SECONDS,
+    blockIndex,
+    itemIndex: -1,
+    round: 1,
+    isPrep: true,
+  });
+
   const rounds = Math.max(1, block.rounds);
   for (let r = 1; r <= rounds; r++) {
     block.items.forEach((item, itemIndex) => {
@@ -81,6 +95,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
         blockIndex,
         itemIndex,
         round: r,
+        isPrep: false,
       });
 
       const isLastItemOfBlock = r === rounds && itemIndex === block.items.length - 1;
@@ -93,6 +108,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
           blockIndex,
           itemIndex,
           round: r,
+          isPrep: false,
         });
       }
     });
