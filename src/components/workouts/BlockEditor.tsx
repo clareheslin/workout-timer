@@ -67,16 +67,24 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   const handleDelete = (id: string) =>
     setItems((prev) => prev.filter((it) => it.exercise.id !== id));
 
-  const handleMove = (id: string, direction: -1 | 1) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     setItems((prev) => {
-      const idx = prev.findIndex((it) => it.exercise.id === id);
-      const target = idx + direction;
-      if (idx === -1 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
+      const oldIdx = prev.findIndex((it) => it.exercise.id === active.id);
+      const newIdx = prev.findIndex((it) => it.exercise.id === over.id);
+      if (oldIdx === -1 || newIdx === -1) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
     });
   };
+
+  // Pointer requires 5px move before drag starts so taps on inputs still work.
+  // Touch uses a 200ms long-press to avoid hijacking scroll on mobile.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleUpdate = (id: string, patch: Partial<BlockItem["exercise"]> & { restSeconds?: number }) => {
     setItems((prev) =>
