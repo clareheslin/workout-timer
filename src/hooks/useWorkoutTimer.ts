@@ -178,6 +178,21 @@ export function useWorkoutTimer(
     return clearTick;
   }, [phase, clearTick]);
 
+  // Countdown beeps at 3, 2, 1 seconds remaining (running phase, > 0).
+  useEffect(() => {
+    if (phase !== "running") {
+      lastCountdownKey.current = null;
+      return;
+    }
+    if (timeRemaining > 0 && timeRemaining <= 3) {
+      const key = `${blockIndex}:${scheduleIndex}:${timeRemaining}`;
+      if (lastCountdownKey.current !== key) {
+        lastCountdownKey.current = key;
+        callbacksRef.current?.onCountdownTick?.();
+      }
+    }
+  }, [phase, timeRemaining, blockIndex, scheduleIndex]);
+
   // When timeRemaining hits 0 while running, advance to the next interval.
   useEffect(() => {
     if (phase !== "running" || timeRemaining > 0) return;
@@ -187,10 +202,13 @@ export function useWorkoutTimer(
       const next = currentSchedule[nextIdx];
       setScheduleIndex(nextIdx);
       setTimeRemaining(next.durationSeconds);
+      callbacksRef.current?.onTransition?.();
       return;
     }
 
-    // Block finished.
+    // Block finished — fire transition + block-end (per product decision).
+    callbacksRef.current?.onTransition?.();
+    callbacksRef.current?.onBlockEnd?.();
     const isLastBlock = blockIndex >= workout.blocks.length - 1;
     setPhase(isLastBlock ? "done" : "block-complete");
   }, [phase, timeRemaining, scheduleIndex, currentSchedule, blockIndex, workout.blocks.length]);
