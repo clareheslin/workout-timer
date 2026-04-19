@@ -153,6 +153,12 @@ export function useWorkoutTimer(
 
   const intervalRef = useRef<number | null>(null);
 
+  // First-Start timestamp + per-block tally of intervals that fully played.
+  const startedAtRef = useRef<string | null>(null);
+  const playedRef = useRef<PlannedInterval[][]>([]);
+  // Force re-render when startedAt is set so consumers (and the runner) can react.
+  const [, setStartedAtTick] = useState(0);
+
   // Keep callbacks in a ref so we don't re-run effects when they change identity.
   const callbacksRef = useRef(callbacks);
   useEffect(() => {
