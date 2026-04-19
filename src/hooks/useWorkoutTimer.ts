@@ -386,29 +386,9 @@ export function useWorkoutTimer(
     if (startedAtRef.current === null) return null;
     const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
       const played = playedRef.current[i] ?? [];
-      const mode = block.mode ?? "circuit";
-      const totalRounds = Math.max(1, block.rounds);
-      const itemCount = block.items.length;
 
-      // Rounds completed:
-      //  - Circuit: max round number for which the LAST item played.
-      //  - Sets:    number of rounds for which EVERY item played that round.
-      let roundsCompleted = 0;
-      if (mode === "sets") {
-        for (let r = 1; r <= totalRounds; r++) {
-          const allPlayed = block.items.every((_, idx) =>
-            played.some((p) => p.kind === "exercise" && p.itemIndex === idx && p.round === r),
-          );
-          if (allPlayed) roundsCompleted = r;
-          else break;
-        }
-      } else {
-        const lastItemIdx = itemCount - 1;
-        const completedRoundNumbers = played
-          .filter((p) => p.kind === "exercise" && p.itemIndex === lastItemIdx)
-          .map((p) => p.round);
-        roundsCompleted = completedRoundNumbers.length ? Math.max(...completedRoundNumbers) : 0;
-      }
+      // Total sets played in this block (one per completed exercise interval).
+      const setsPlayed = played.filter((p) => p.kind === "exercise").length;
 
       // Build the items list from the workout definition, but only for items
       // that actually played at least once (any round, exercise side).
@@ -426,11 +406,11 @@ export function useWorkoutTimer(
 
       return {
         blockName: block.name || `Block ${i + 1}`,
-        rounds: roundsCompleted,
+        rounds: setsPlayed,
         items,
       };
     });
-    // Trim trailing blocks with zero rounds completed (never reached).
+    // Trim trailing blocks with zero sets played (never reached).
     while (blocks.length > 0 && blocks[blocks.length - 1].rounds === 0) {
       blocks.pop();
     }
