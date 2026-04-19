@@ -15,7 +15,6 @@ type Phase = "idle" | "running" | "done";
 interface Step {
   kind: "work" | "rest";
   exerciseIndex: number; // 1-based
-  round: number; // 1-based
   durationSeconds: number;
 }
 
@@ -23,15 +22,12 @@ function buildSchedule(
   exerciseCount: number,
   workSeconds: number,
   restSeconds: number,
-  rounds: number,
 ): Step[] {
   const steps: Step[] = [];
-  for (let r = 1; r <= rounds; r++) {
-    for (let e = 1; e <= exerciseCount; e++) {
-      steps.push({ kind: "work", exerciseIndex: e, round: r, durationSeconds: workSeconds });
-      if (restSeconds > 0) {
-        steps.push({ kind: "rest", exerciseIndex: e, round: r, durationSeconds: restSeconds });
-      }
+  for (let e = 1; e <= exerciseCount; e++) {
+    steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
+    if (restSeconds > 0 && e < exerciseCount) {
+      steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
     }
   }
   return steps;
@@ -47,15 +43,15 @@ export function CircuitScreen({ onBack }: Props) {
   const { settings, updateCircuit } = useQuickStartSettings();
   const audio = useWorkoutAudio();
 
-  const { exerciseCount, workSeconds, restSeconds, rounds } = settings.circuit;
+  const { exerciseCount, workSeconds, restSeconds } = settings.circuit;
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [stepIdx, setStepIdx] = useState(0);
   const [remaining, setRemaining] = useState(0);
 
   const schedule = useMemo(
-    () => buildSchedule(exerciseCount, workSeconds, restSeconds, rounds),
-    [exerciseCount, workSeconds, restSeconds, rounds],
+    () => buildSchedule(exerciseCount, workSeconds, restSeconds),
+    [exerciseCount, workSeconds, restSeconds],
   );
 
   const tickRef = useRef<number | null>(null);
@@ -139,7 +135,7 @@ export function CircuitScreen({ onBack }: Props) {
               min={1}
               max={10}
               onChange={(v) =>
-                updateCircuit({ exerciseCount: v, workSeconds, restSeconds, rounds })
+                updateCircuit({ exerciseCount: v, workSeconds, restSeconds })
               }
             />
             <SecondsInput
@@ -147,7 +143,7 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={workSeconds}
               minSeconds={1}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds: v, restSeconds, rounds })
+                updateCircuit({ exerciseCount, workSeconds: v, restSeconds })
               }
             />
             <SecondsInput
@@ -155,15 +151,7 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={restSeconds}
               minSeconds={0}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds: v, rounds })
-              }
-            />
-            <NumberInput
-              label="Rounds"
-              value={rounds}
-              min={1}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds: v })
+                updateCircuit({ exerciseCount, workSeconds, restSeconds: v })
               }
             />
           </div>
@@ -190,10 +178,7 @@ export function CircuitScreen({ onBack }: Props) {
             <div className="mt-3 font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
               {formatMMSS(remaining)}
             </div>
-            <p className="mt-4 text-base font-medium">
-              Round {current?.round ?? rounds} of {rounds}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-4 text-xs text-muted-foreground">
               {upNext
                 ? `Up next: ${stepLabel(upNext)} · ${formatMMSS(upNext.durationSeconds)}`
                 : phase === "done"
