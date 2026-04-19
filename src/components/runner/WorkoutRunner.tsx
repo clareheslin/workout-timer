@@ -199,7 +199,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             </p>
             <button
               type="button"
-              onClick={t.nextBlock}
+              onClick={handleNextBlock}
               className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
             >
               Start {workout.blocks[t.currentBlockIndex + 1]?.name ?? `Block ${t.currentBlockIndex + 2}`}
