@@ -35,7 +35,7 @@ export function AppShell() {
           {tab === "workouts" ? (
             <WorkoutsTab onPlay={(w) => setRunning(w)} />
           ) : (
-            <h1 className="text-2xl font-semibold">Diary</h1>
+            <DiaryTab />
           )}
         </main>
 
