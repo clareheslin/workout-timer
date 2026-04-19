@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
+import { HoldToExitButton } from "./HoldToExitButton";
 
 interface Props {
   block: Block;
@@ -15,7 +16,6 @@ interface Props {
 
 type Phase = "idle" | "running" | "paused" | "done";
 
-const LONG_PRESS_MS = 700;
 
 /** Runs a single forTime or amrap block. The exercise list is static.
  *  Supports pause/resume, skip (jump to end), and end-block (same as skip). */
@@ -144,39 +144,14 @@ export function RepBlockRunner({
     onComplete(buildLog(finalDuration));
   };
 
-  // Long-press header to exit — only when idle, paused, or done.
-  const longPressTimer = useRef<number | null>(null);
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-  const handleHeaderPressStart = () => {
-    if (phase === "running") return;
-    clearLongPress();
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTimer.current = null;
-      if (window.confirm("Exit this workout?")) {
-        onExitWorkout();
-      }
-    }, LONG_PRESS_MS);
-  };
+
 
   const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
   const doneTimerLabel = formatDuration(finalDuration ?? 0);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header
-        className="flex items-center justify-between gap-3 p-4"
-        onMouseDown={handleHeaderPressStart}
-        onMouseUp={clearLongPress}
-        onMouseLeave={clearLongPress}
-        onTouchStart={handleHeaderPressStart}
-        onTouchEnd={clearLongPress}
-        onTouchCancel={clearLongPress}
-      >
+      <header className="flex items-center justify-between gap-3 p-4">
         <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
         <div className="flex items-center gap-3">
           <p className="text-xs opacity-70">
@@ -228,7 +203,6 @@ export function RepBlockRunner({
               >
                 Continue
               </button>
-              <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
             </>
           ) : (
             <>
@@ -251,14 +225,7 @@ export function RepBlockRunner({
 
               {(phase === "running" || phase === "paused") && (
                 <>
-                  <button
-                    type="button"
-                    onClick={handlePauseResume}
-                    className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                  >
-                    {phase === "running" ? "Pause" : "Resume"}
-                  </button>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleEnd}
@@ -276,14 +243,21 @@ export function RepBlockRunner({
                       End block »
                     </button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {phase === "paused" ? "Hold header to exit workout" : "Timer running"}
-                  </p>
+                  {phase === "running" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePauseResume}
+                        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                      >
+                        Pause
+                      </button>
+                      <p className="text-[11px] text-muted-foreground">Timer running</p>
+                    </>
+                  ) : (
+                    <HoldToExitButton onResume={handlePauseResume} onExit={onExitWorkout} />
+                  )}
                 </>
-              )}
-
-              {phase === "idle" && (
-                <p className="text-[11px] text-muted-foreground">Hold header to exit workout</p>
               )}
             </>
           )}

@@ -3,6 +3,7 @@ import type { Block, Workout, WorkoutLogBlock } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
+import { HoldToExitButton } from "./HoldToExitButton";
 
 interface Props {
   block: Block;
@@ -14,7 +15,6 @@ interface Props {
   onExitWorkout: () => void;
 }
 
-const LONG_PRESS_MS = 700;
 
 /** Runs a single time-based block (circuit / sets) using useWorkoutTimer.
  *  We synthesize a one-block "workout" so the existing timer hook can drive it. */
@@ -48,7 +48,6 @@ export function TimeBlockRunner({
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks);
-  const longPressTimer = useRef<number | null>(null);
   const completedRef = useRef(false);
 
   // When the (single) block reaches done, hand the summary up.
@@ -75,35 +74,14 @@ export function TimeBlockRunner({
         : "bg-rest text-rest-foreground"
       : "bg-background text-foreground";
 
-  const isPaused = t.phase === "paused";
-
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  const handlePressStart = () => {
-    if (!isPaused) return;
-    clearLongPress();
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTimer.current = null;
-      if (window.confirm("Exit this workout?")) {
-        t.finish();
-        onExitWorkout();
-      }
-    }, LONG_PRESS_MS);
-  };
-
-  const handleClick = () => {
-    if (t.phase === "running") t.pause();
-    else if (t.phase === "paused") t.resume();
-  };
-
   const handleStart = () => {
     audio.unlock();
     t.start();
+  };
+
+  const handleExit = () => {
+    t.finish();
+    onExitWorkout();
   };
 
   return (
@@ -159,20 +137,7 @@ export function TimeBlockRunner({
                 ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
                 : "Block complete"}
             </div>
-            <button
-              type="button"
-              onClick={handleClick}
-              onMouseDown={handlePressStart}
-              onMouseUp={clearLongPress}
-              onMouseLeave={clearLongPress}
-              onTouchStart={handlePressStart}
-              onTouchEnd={clearLongPress}
-              onTouchCancel={clearLongPress}
-              className="mt-4 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-            >
-              {t.phase === "running" ? "Pause" : "Resume"}
-            </button>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2">
               <button
                 type="button"
                 onClick={t.skipInterval}
@@ -190,9 +155,22 @@ export function TimeBlockRunner({
                 End block »
               </button>
             </div>
-            <p className="text-[11px] opacity-60">
-              {isPaused ? "Hold to exit workout" : "Tap to pause"}
-            </p>
+            {t.phase === "running" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={t.pause}
+                  className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                >
+                  Pause
+                </button>
+                <p className="text-[11px] opacity-60">Tap to pause</p>
+              </>
+            ) : (
+              <div className="mt-2">
+                <HoldToExitButton onResume={t.resume} onExit={handleExit} />
+              </div>
+            )}
           </>
         )}
       </main>
