@@ -53,20 +53,19 @@ export function TimeBlockRunner({
 
   // When the (single) block reaches done, hand the summary up.
   useEffect(() => {
-    if (t.phase !== "done") return;
+    if (t.phase !== "done" && t.phase !== "block-complete") return;
     if (completedRef.current) return;
-    const summary = t.getRunSummary();
-    if (!summary || summary.blocks.length === 0) return;
     completedRef.current = true;
-    const sb = summary.blocks[0];
+    const summary = t.getRunSummary();
+    const sb = summary?.blocks[0];
     const log: WorkoutLogBlock = {
-      blockName: sb.blockName,
-      rounds: sb.rounds,
-      items: sb.items,
+      blockName: sb?.blockName ?? block.name ?? `Block ${blockIndex + 1}`,
+      rounds: sb?.rounds ?? 0,
+      items: sb?.items ?? [],
       blockType: block.type ?? "circuit",
     };
     onComplete(log);
-  }, [t.phase, t.getRunSummary, onComplete, block.type]);
+  }, [t.phase, t.getRunSummary, onComplete, block.type, block.name, blockIndex]);
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
   const bgClass =
