@@ -43,7 +43,7 @@ export function AppShell() {
         <header className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-4 py-3">
           <img src={femLogo} alt="FEM" className="h-7 w-auto" />
         </header>
-        <main className="flex-1 p-6 pb-24">{renderTab()}</main>
+        <main className="flex flex-1 flex-col p-6 pb-24">{renderTab()}</main>
 
         <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background">
           <TabButton
