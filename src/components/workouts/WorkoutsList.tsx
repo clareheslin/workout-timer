@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Workout } from "@/types";
 import { formatDuration, workoutTotalSeconds } from "@/lib/workout";
+import { serializeWorkout, slugifyFilename } from "@/lib/workoutShare";
+import { showToast } from "@/lib/toast";
+import { ImportWorkoutButton } from "./ImportWorkoutButton";
 
 interface Props {
   workouts: Workout[];
@@ -10,6 +13,40 @@ interface Props {
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
+  onImport: (workout: Workout) => void;
+}
+
+async function shareWorkout(workout: Workout): Promise<void> {
+  const json = serializeWorkout(workout);
+  const filename = slugifyFilename(workout.name || "workout");
+  const file = new File([json], filename, { type: "application/json" });
+
+  const nav = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+  const shareData: ShareData = { files: [file], title: workout.name || "Workout" };
+
+  if (nav.share && nav.canShare?.(shareData)) {
+    try {
+      await nav.share(shareData);
+      return;
+    } catch (err) {
+      if ((err as DOMException)?.name === "AbortError") return;
+      // fall through to download fallback
+    }
+  }
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast(`Downloaded ${filename}`);
 }
 
 function workoutHasExercise(w: Workout): boolean {
@@ -155,14 +192,25 @@ function WorkoutCard({
         )}
       </div>
       {!selecting && (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={onDuplicate}
-            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-          >
-            Duplicate
-          </button>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onDuplicate}
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              Duplicate
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                void shareWorkout(workout);
+              }}
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              Share
+            </button>
+          </div>
           <button
             type="button"
             onClick={handleDelete}
@@ -188,6 +236,7 @@ export function WorkoutsList({
   onDelete,
   onBulkDelete,
   onDuplicate,
+  onImport,
 }: Props) {
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -257,18 +306,18 @@ export function WorkoutsList({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Workouts</h1>
-        {sorted.length > 0 && (
-          <div className="flex items-center gap-2">
-            {selecting ? (
-              <button
-                type="button"
-                onClick={exitSelecting}
-                className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
-              >
-                Cancel
-              </button>
-            ) : (
-              <>
+        <div className="flex items-center gap-2">
+          {sorted.length > 0 && selecting ? (
+            <button
+              type="button"
+              onClick={exitSelecting}
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Cancel
+            </button>
+          ) : (
+            <>
+              {sorted.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setSelecting(true)}
@@ -276,6 +325,9 @@ export function WorkoutsList({
                 >
                   Select
                 </button>
+              )}
+              <ImportWorkoutButton onImport={onImport} />
+              {sorted.length > 0 && (
                 <button
                   type="button"
                   onClick={onNew}
@@ -283,10 +335,10 @@ export function WorkoutsList({
                 >
                   + New
                 </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {selecting && sorted.length > 0 && (

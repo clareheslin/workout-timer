@@ -51,6 +51,9 @@ export function WorkoutsTab({ onPlay }: Props) {
         duplicateWorkout(id);
         showToast("Workout duplicated");
       }}
+      onImport={(workout) => {
+        addWorkout(workout);
+      }}
     />
   );
 }
