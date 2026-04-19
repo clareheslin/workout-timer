@@ -5,13 +5,18 @@ interface Props {
   item: BlockItem;
   isFirst: boolean;
   isLast: boolean;
-  onChange: (patch: { name?: string; durationSeconds?: number; restSeconds?: number }) => void;
+  onChange: (patch: {
+    name?: string;
+    durationSeconds?: number;
+    rounds?: number;
+    restSeconds?: number;
+  }) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDelete: () => void;
 }
 
-type EditingField = "exercise" | "rest" | null;
+type EditingField = "exercise" | "rest" | "rounds" | null;
 
 export function BlockItemRow({
   item,
