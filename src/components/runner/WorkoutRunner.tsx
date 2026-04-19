@@ -142,7 +142,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
             </p>
             <button
               type="button"
-              onClick={t.start}
+              onClick={handleStart}
               className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
             >
               Start
