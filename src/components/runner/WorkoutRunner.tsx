@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
-import type { Workout } from "@/types";
+import type { Workout, WorkoutLog } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
+import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { formatDuration } from "@/lib/duration";
+import { createId } from "@/lib/id";
 
 interface Props {
   workout: Workout;
