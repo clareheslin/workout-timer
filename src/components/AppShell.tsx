@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dumbbell, BookOpen, Zap, ChevronLeft } from "lucide-react";
 import type { Workout } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
@@ -21,7 +21,19 @@ export function AppShell() {
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
 
-  const setState = useCallback((s: PageHeaderState) => setHeaderState(s), []);
+  const setState = useCallback((s: PageHeaderState) => {
+    setHeaderState((prev) => {
+      if (
+        prev.title === s.title &&
+        prev.onBack === s.onBack &&
+        (prev.tone ?? "default") === (s.tone ?? "default")
+      ) {
+        return prev;
+      }
+      return s;
+    });
+  }, []);
+  const ctxValue = useMemo(() => ({ state: headerState, setState }), [headerState, setState]);
 
   if (running) {
     return (
@@ -53,7 +65,7 @@ export function AppShell() {
     : "bg-background text-foreground";
 
   return (
-    <PageHeaderProvider value={{ state: headerState, setState }}>
+    <PageHeaderProvider value={ctxValue}>
       <div
         className={`min-h-screen flex justify-center transition-colors ${
           isExercise ? "bg-exercise" : "bg-background text-foreground"
