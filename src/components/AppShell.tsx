@@ -75,7 +75,7 @@ export function AppShell() {
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
           <AppHeader tone={tone} />
-          <main className="flex flex-1 flex-col px-6 pt-4 pb-24">{renderTab()}</main>
+          <main className={`flex flex-1 flex-col px-6 pt-4 ${isExercise ? "pb-6" : "pb-24"}`}>{renderTab()}</main>
 
           {!isExercise && (
             <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
