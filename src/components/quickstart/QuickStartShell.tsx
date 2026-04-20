@@ -8,13 +8,15 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { usePageHeader } from "../PageHeaderContext";
+import { usePageHeader, type PageHeaderTone } from "../PageHeaderContext";
 
 interface Props {
   title: string;
   /** When true, Back tap opens a "Stop this timer?" confirmation sheet. */
   guarded: boolean;
   onBack: () => void;
+  /** Optional background tone — set to "exercise" while a timer is running. */
+  tone?: PageHeaderTone;
   children: ReactNode;
 }
 
@@ -23,7 +25,7 @@ interface Props {
  * action are pushed into the AppShell header (logo on the left, back
  * chevron + title beside it). Children render directly under the header.
  */
-export function QuickStartShell({ title, guarded, onBack, children }: Props) {
+export function QuickStartShell({ title, guarded, onBack, tone = "default", children }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleBackClick = useCallback(() => {
@@ -31,7 +33,7 @@ export function QuickStartShell({ title, guarded, onBack, children }: Props) {
     else onBack();
   }, [guarded, onBack]);
 
-  usePageHeader(title, handleBackClick);
+  usePageHeader(title, handleBackClick, tone);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
