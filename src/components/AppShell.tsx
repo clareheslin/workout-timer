@@ -77,26 +77,28 @@ export function AppShell() {
           <AppHeader tone={tone} />
           <main className="flex flex-1 flex-col px-6 pt-4 pb-24">{renderTab()}</main>
 
-          <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
-            <TabButton
-              label="Quick Start"
-              icon={<Zap className="h-5 w-5" />}
-              active={tab === "quickstart"}
-              onClick={() => setTab("quickstart")}
-            />
-            <TabButton
-              label="Builder"
-              icon={<Dumbbell className="h-5 w-5" />}
-              active={tab === "workouts"}
-              onClick={() => setTab("workouts")}
-            />
-            <TabButton
-              label="Log"
-              icon={<BookOpen className="h-5 w-5" />}
-              active={tab === "diary"}
-              onClick={() => setTab("diary")}
-            />
-          </nav>
+          {!isExercise && (
+            <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
+              <TabButton
+                label="Quick Start"
+                icon={<Zap className="h-5 w-5" />}
+                active={tab === "quickstart"}
+                onClick={() => setTab("quickstart")}
+              />
+              <TabButton
+                label="Builder"
+                icon={<Dumbbell className="h-5 w-5" />}
+                active={tab === "workouts"}
+                onClick={() => setTab("workouts")}
+              />
+              <TabButton
+                label="Log"
+                icon={<BookOpen className="h-5 w-5" />}
+                active={tab === "diary"}
+                onClick={() => setTab("diary")}
+              />
+            </nav>
+          )}
         </div>
         <ToastViewport />
       </div>
