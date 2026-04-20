@@ -12,6 +12,7 @@ import {
   type PageHeaderState,
 } from "./PageHeaderContext";
 import femLogo from "@/assets/fem-logo.png";
+import femLogoWhite from "@/assets/fem-logo-white.png";
 
 type Tab = "workouts" | "quickstart" | "diary";
 
