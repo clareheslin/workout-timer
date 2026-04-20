@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect } from "react";
 
+export type PageHeaderTone = "default" | "exercise";
+
 export interface PageHeaderState {
   /** Right-of-logo title text shown in the AppShell header. */
   title: string;
   /** Optional back action — when present, a chevron-left appears before the title. */
   onBack?: () => void;
+  /** Background tone for the page (header + content area). Default = neutral. */
+  tone?: PageHeaderTone;
 }
 
 interface PageHeaderContextValue {
@@ -30,17 +34,21 @@ export function usePageHeaderState(): PageHeaderState {
 }
 
 /**
- * Set the AppShell header title (and optional back action) for the current
- * screen. Updates whenever the title or onBack identity changes, and resets
- * to a blank title on unmount so the previous screen's title doesn't linger.
+ * Set the AppShell header title (and optional back action / tone) for the
+ * current screen. Updates whenever any input changes, and resets on unmount
+ * so the previous screen's state doesn't linger.
  */
-export function usePageHeader(title: string, onBack?: () => void) {
+export function usePageHeader(
+  title: string,
+  onBack?: () => void,
+  tone: PageHeaderTone = "default",
+) {
   const ctx = useContext(PageHeaderContext);
   useEffect(() => {
     if (!ctx) return;
-    ctx.setState({ title, onBack });
+    ctx.setState({ title, onBack, tone });
     return () => {
-      ctx.setState({ title: "", onBack: undefined });
+      ctx.setState({ title: "", onBack: undefined, tone: "default" });
     };
-  }, [ctx, title, onBack]);
+  }, [ctx, title, onBack, tone]);
 }
