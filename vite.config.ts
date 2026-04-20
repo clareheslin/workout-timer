@@ -9,9 +9,6 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   vite: {
-    // Pre-bundle core runtime deps up front so preview hydration doesn't race
-    // against a mid-session optimize pass, which can leave the client entry
-    // pointing at an outdated react-dom_client chunk.
     optimizeDeps: {
       entries: ["src/**/*.{ts,tsx}"],
       include: [
@@ -19,7 +16,6 @@ export default defineConfig({
         "react/jsx-dev-runtime",
         "react-dom",
         "react-dom/client",
-        "@tanstack/react-start/client",
         "@tanstack/react-router",
         "@radix-ui/react-dialog",
         "@radix-ui/react-slot",
