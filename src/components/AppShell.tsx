@@ -46,14 +46,26 @@ export function AppShell() {
     return <DiaryTab />;
   };
 
+  const tone = headerState.tone ?? "default";
+  const isExercise = tone === "exercise";
+  const toneClass = isExercise
+    ? "bg-exercise text-exercise-foreground"
+    : "bg-background text-foreground";
+
   return (
     <PageHeaderProvider value={{ state: headerState, setState }}>
-      <div className="min-h-screen bg-background text-foreground flex justify-center">
-        <div className="w-full max-w-[430px] min-h-screen flex flex-col border-x border-border">
-          <AppHeader />
+      <div
+        className={`min-h-screen flex justify-center transition-colors ${
+          isExercise ? "bg-exercise" : "bg-background text-foreground"
+        }`}
+      >
+        <div
+          className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
+        >
+          <AppHeader tone={tone} />
           <main className="flex flex-1 flex-col px-6 pt-4 pb-24">{renderTab()}</main>
 
-          <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background">
+          <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
             <TabButton
               label="Quick Start"
               icon={<Zap className="h-5 w-5" />}
@@ -80,17 +92,29 @@ export function AppShell() {
   );
 }
 
-function AppHeader() {
+function AppHeader({ tone }: { tone: "default" | "exercise" }) {
   const { title, onBack } = usePageHeaderState();
+  const isExercise = tone === "exercise";
+  const logo = isExercise ? femLogoWhite : femLogo;
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-4 py-3">
-      <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
+    <header
+      className={`sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 transition-colors ${
+        isExercise
+          ? "border-exercise-foreground/20 bg-exercise text-exercise-foreground"
+          : "border-border bg-background text-foreground"
+      }`}
+    >
+      <img src={logo} alt="FEM" className="h-7 w-auto shrink-0" />
       {onBack && (
         <button
           type="button"
           onClick={onBack}
           aria-label="Back"
-          className="-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+          className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
+            isExercise
+              ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
