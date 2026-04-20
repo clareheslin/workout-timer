@@ -20,6 +20,18 @@ export default defineConfig({
         "@radix-ui/react-dialog",
         "@radix-ui/react-slot",
       ],
+      // The TanStack Start Vite plugin needs to transform these itself so it can
+      // code-split server-only modules (e.g. start-storage-context, which calls
+      // `new AsyncLocalStorage()` at module load) out of the client bundle.
+      // If Vite pre-bundles them, that server code leaks into the browser and
+      // crashes with "AsyncLocalStorage is not a constructor".
+      exclude: [
+        "@tanstack/react-start",
+        "@tanstack/react-start/client",
+        "@tanstack/react-start-client",
+        "@tanstack/start-client-core",
+        "@tanstack/start-storage-context",
+      ],
     },
     plugins: [
       VitePWA({
