@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Timer, Zap, Clock, Repeat, ChevronRight } from "lucide-react";
 import { usePageHeader } from "../PageHeaderContext";
 import { StopwatchScreen } from "./StopwatchScreen";
@@ -44,11 +44,12 @@ const OPTIONS: TimerOption[] = [
 
 export function QuickStartScreen() {
   const [active, setActive] = useState<QuickStartTimer | null>(null);
+  const handleBack = useCallback(() => setActive(null), []);
 
-  if (active === "stopwatch") return <StopwatchScreen onBack={() => setActive(null)} />;
-  if (active === "amrap") return <AmrapScreen onBack={() => setActive(null)} />;
-  if (active === "emom") return <EmomScreen onBack={() => setActive(null)} />;
-  if (active === "circuit") return <CircuitScreen onBack={() => setActive(null)} />;
+  if (active === "stopwatch") return <StopwatchScreen onBack={handleBack} />;
+  if (active === "amrap") return <AmrapScreen onBack={handleBack} />;
+  if (active === "emom") return <EmomScreen onBack={handleBack} />;
+  if (active === "circuit") return <CircuitScreen onBack={handleBack} />;
 
   return <QuickStartList onPick={setActive} />;
 }
