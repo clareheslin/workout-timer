@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
+import { TimerCircle } from "./TimerCircle";
 import { DurationInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
@@ -115,14 +116,7 @@ export function AmrapScreen({ onBack }: Props) {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-12">
-          <div className="text-center">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Time remaining
-            </p>
-            <div className="mt-2 font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
-              {formatMMSS(remaining)}
-            </div>
-          </div>
+          <TimerCircle label="Time remaining" time={formatMMSS(remaining)} />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
             {phase === "running" && (

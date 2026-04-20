@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
+import { TimerCircle } from "./TimerCircle";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
@@ -79,9 +80,7 @@ export function StopwatchScreen({ onBack }: Props) {
       tone={phase === "running" ? "exercise" : "default"}
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-12">
-        <div className="font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
-          {format(elapsedMs)}
-        </div>
+        <TimerCircle time={format(elapsedMs)} />
 
         <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
           {phase === "idle" && (

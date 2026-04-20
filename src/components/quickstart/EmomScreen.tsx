@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
+import { TimerCircle } from "./TimerCircle";
 import { DurationInput, NumberInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
@@ -145,17 +146,11 @@ export function EmomScreen({ onBack }: Props) {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
-          <div className="text-center">
-            <div className="font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
-              {formatMMSS(remaining)}
-            </div>
-            <p className="mt-4 text-base font-medium">
-              Round {round} of {rounds}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Elapsed {formatMMSS(elapsed)}
-            </p>
-          </div>
+          <TimerCircle
+            label={`Round ${round} of ${rounds}`}
+            time={formatMMSS(remaining)}
+            hint={`Elapsed ${formatMMSS(elapsed)}`}
+          />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
             {phase === "running" && (
