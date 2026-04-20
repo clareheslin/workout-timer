@@ -44,11 +44,12 @@ export function usePageHeader(
   tone: PageHeaderTone = "default",
 ) {
   const ctx = useContext(PageHeaderContext);
+  const setState = ctx?.setState;
   useEffect(() => {
-    if (!ctx) return;
-    ctx.setState({ title, onBack, tone });
+    if (!setState) return;
+    setState({ title, onBack, tone });
     return () => {
-      ctx.setState({ title: "", onBack: undefined, tone: "default" });
+      setState({ title: "", onBack: undefined, tone: "default" });
     };
-  }, [ctx, title, onBack, tone]);
+  }, [setState, title, onBack, tone]);
 }
