@@ -72,7 +72,12 @@ export function StopwatchScreen({ onBack }: Props) {
   };
 
   return (
-    <QuickStartShell title="Stopwatch" guarded={phase === "running"} onBack={onBack}>
+    <QuickStartShell
+      title="Stopwatch"
+      guarded={phase === "running"}
+      onBack={onBack}
+      tone={phase === "running" ? "exercise" : "default"}
+    >
       <div className="flex flex-1 flex-col items-center justify-center gap-12">
         <div className="font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
           {format(elapsedMs)}
