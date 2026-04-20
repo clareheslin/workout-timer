@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
+import { TimerCircle } from "./TimerCircle";
 import { NumberInput, SecondsInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
@@ -179,25 +180,17 @@ export function CircuitScreen({ onBack }: Props) {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
-          <div className="text-center">
-            <p
-              className={`text-sm font-semibold uppercase tracking-widest ${
-                current?.kind === "rest" ? "text-muted-foreground" : "text-primary"
-              }`}
-            >
-              {current ? stepLabel(current) : ""}
-            </p>
-            <div className="mt-3 font-mono text-7xl font-bold tabular-nums tracking-tight sm:text-8xl">
-              {formatMMSS(remaining)}
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              {upNext
+          <TimerCircle
+            label={current ? stepLabel(current) : ""}
+            time={formatMMSS(remaining)}
+            hint={
+              upNext
                 ? `Up next: ${stepLabel(upNext)} · ${formatMMSS(upNext.durationSeconds)}`
                 : phase === "done"
                   ? "Complete"
-                  : "Last interval"}
-            </p>
-          </div>
+                  : "Last interval"
+            }
+          />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
             {phase === "running" && (
