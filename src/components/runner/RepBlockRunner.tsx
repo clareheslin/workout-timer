@@ -194,6 +194,13 @@ export function RepBlockRunner({
           </p>
         </div>
 
+        {phase === "idle" && workoutNotes && (
+          <CoachNotes notes={workoutNotes} label="Workout notes" defaultOpen />
+        )}
+        {phase === "idle" && block.notes && (
+          <CoachNotes notes={block.notes} label="Block notes" />
+        )}
+
         <ul className="flex flex-col divide-y divide-border border-y border-border">
           {repExercises.length === 0 ? (
             <li className="px-1 py-3 text-sm text-muted-foreground">No exercises.</li>
