@@ -38,13 +38,19 @@ function makeEmptyBlock(index: number): Block {
 export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [blocks, setBlocks] = useState<Block[]>(initial?.blocks ?? []);
+  const [notes, setNotes] = useState<string>(initial?.notes ?? "");
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
   const initialSnapshot = useMemo(
-    () => JSON.stringify({ name: initial?.name ?? "", blocks: initial?.blocks ?? [] }),
+    () =>
+      JSON.stringify({
+        name: initial?.name ?? "",
+        blocks: initial?.blocks ?? [],
+        notes: initial?.notes ?? "",
+      }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, blocks }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, blocks, notes }) !== initialSnapshot;
 
   const canSave =
     blocks.length > 0 &&
