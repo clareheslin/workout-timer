@@ -377,6 +377,20 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
           </DndContext>
         )}
       </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="block-notes" className="text-xs font-medium text-muted-foreground">
+          Coach notes <span className="opacity-70">(optional · markdown supported)</span>
+        </label>
+        <textarea
+          id="block-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="How to perform this block, scaling options, cues, etc."
+          rows={4}
+          className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
     </div>
   );
 }
