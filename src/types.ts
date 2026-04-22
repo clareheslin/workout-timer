@@ -47,6 +47,8 @@ export interface Block {
   repExercises?: RepExercise[];
   /** Time cap in seconds. AMRAP only. */
   timeCap?: number;
+  /** Optional coach notes (markdown) shown on the block's Ready screen. */
+  notes?: string;
 }
 
 export interface Workout {
@@ -55,6 +57,8 @@ export interface Workout {
   blocks: Block[];
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp — bumped on every save
+  /** Optional coach notes (markdown) shown before the first block. */
+  notes?: string;
 }
 
 export interface WorkoutLogItem {
