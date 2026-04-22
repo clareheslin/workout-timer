@@ -84,6 +84,19 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return null;
   }
 
+  if (phase === "workout-preview") {
+    return (
+      <WorkoutPreview
+        workout={workout}
+        onBegin={() => {
+          audio.unlock();
+          setPhase("running-block");
+        }}
+        onExit={handleExitWorkout}
+      />
+    );
+  }
+
   if (phase === "done") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6 text-center text-foreground">
@@ -119,8 +132,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     );
   }
 
-  const blockType = currentBlock.type ?? "circuit";
-  const isRepBlock = blockType === "forTime" || blockType === "amrap";
+  const blockTypeKey = currentBlock.type ?? "circuit";
+  const isRepBlock = blockTypeKey === "forTime" || blockTypeKey === "amrap";
 
   if (isRepBlock) {
     return (
@@ -130,7 +143,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         blockIndex={blockIndex}
         totalBlocks={workout.blocks.length}
         workoutName={workout.name}
-        workoutNotes={blockIndex === 0 ? workout.notes : undefined}
         audio={audio}
         onComplete={handleBlockComplete}
         onExitWorkout={handleExitWorkout}
@@ -145,7 +157,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       blockIndex={blockIndex}
       totalBlocks={workout.blocks.length}
       workoutName={workout.name}
-      workoutNotes={blockIndex === 0 ? workout.notes : undefined}
       audio={audio}
       onComplete={handleBlockComplete}
       onExitWorkout={handleExitWorkout}
