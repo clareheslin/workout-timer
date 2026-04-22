@@ -1,55 +1,64 @@
 
 
-## Goal
+## Problem
 
-On the Ready screen of every block type in the workout runner, show the user a clear preview of what they're about to do — exercises, durations, rest, rounds (or reps for AMRAP / For Time) — so they can mentally prepare before tapping Start.
+Right now "Exit workout" is only reachable in three places:
 
-## What changes (per block type)
+- **WorkoutPreview** screen — has an "Exit" pill in the header.
+- **Paused state** (Time and Rep block runners) — via the Hold-to-Exit button.
+- Nowhere else: not on a block's Ready screen, not on the between-blocks interstitial, not on the rep-block "done" screen, and not while a timer is actively running without first tapping Pause.
 
-**Circuit / Sets (TimeBlockRunner — currently just shows "block name · N exercises")**
+That's inconsistent and forces users to pause just to bail out.
 
-Replace the sparse Ready content with:
+## Recommendation
 
-- **Header block** (centered, above the list)
-  - Mode tag: `CIRCUIT` or `SETS` (small, uppercase, muted)
-  - Block name (large, semibold)
-  - Meta line: `N exercises · {total time formatted M:SS}` using `blockTotalSeconds(block)`
-- **Compact exercise list** (one row per exercise, vertical stack, full content width)
-  - Left: exercise name (truncates if long)
-  - Right: `40s · rest 20s · ×3` style — work seconds, rest seconds (omitted if 0), rounds (omitted if 1)
-  - Subtle divider between rows; no card chrome — keep it lean and scannable
-- **Start button** below the list (unchanged styling)
+Add a single, persistent **Exit** affordance to the runner header so it's available on every runner screen, in every phase. Keep the existing hold-to-exit on the paused state (it's a deliberate safety gesture) and keep the header Exit unguarded on idle/preview/between-blocks screens. Add a confirm sheet only when a timer is actively running or paused.
 
-**For Time / AMRAP (RepBlockRunner — already lists exercises)**
+### Why a header button (not a floating one)
 
-Restyle for consistency with the new time-block layout:
+- Already where users look for navigation (mute, block counter live there today).
+- Doesn't compete with primary in-screen CTAs (Start, Pause, Skip).
+- Works identically across TimeBlockRunner, RepBlockRunner, WorkoutPreview, and the between-blocks screen — one mental model.
 
-- **Header block**
-  - Mode tag: `FOR TIME` or `AMRAP`
-  - Block name
-  - Meta line: AMRAP → `Cap {timeCap}`; For Time → `{N} exercises`
-- **Compact exercise list** in the same row style
-  - Left: exercise name
-  - Right: `×{reps}`
-- The existing live timer + Start button remain below the list (unchanged behavior).
+### Behaviour by phase
 
-## Layout / scroll behavior
+| Screen / phase | Exit behaviour |
+|---|---|
+| WorkoutPreview | Tap → exit immediately (no timer running). Replaces the existing header Exit pill with the new icon button for consistency. |
+| Block Ready (idle) | Tap → exit immediately. |
+| Between-blocks interstitial | Tap → exit immediately (already-completed blocks are still saved to the diary, matching today's `handleExitWorkout`). |
+| Running (timer active) | Tap → opens a "Stop workout?" confirmation sheet (Keep going / Stop workout). Pauses the timer while the sheet is open so the clock doesn't keep running behind it. |
+| Paused | Tap → opens the same confirmation sheet. The existing hold-to-exit gesture on the Resume/Exit button stays as an alternative. |
+| Rep block "done" (Continue screen) | Tap → exit immediately; the just-finished block is logged as today. |
 
-- The Ready screen scrolls as a whole when the exercise list is long. The header, list, and Start button live in a single vertically-scrolling main column. No fixed sub-panes.
-- On short lists, content centers naturally as today.
+### Visual treatment
 
-## Visuals
+- Small circular icon button (door-exit / `LogOut` icon from lucide-react), placed in the header's right cluster next to the mute button.
+- `aria-label="Exit workout"`.
+- Inherits current header tone (works on neutral, exercise, and rest backgrounds).
+- On the WorkoutPreview screen, drop the existing text "Exit" pill in favour of the same icon button so the header layout is identical everywhere in the runner.
 
-- Reuse existing tokens: `text-foreground`, `opacity-70/80` for muted, `border-current/15` for dividers, `tabular-nums` for numbers.
-- No new components or design tokens — all done with Tailwind utility classes already in use.
+### Confirm sheet (running / paused only)
 
-## Files to change
+Reuses the existing bottom-sheet pattern from `QuickStartShell`:
 
-- `src/components/runner/TimeBlockRunner.tsx` — replace the `t.phase === "idle"` block with the new header + compact exercise list + Start button. Use `blockTotalSeconds` and `formatDuration` from `src/lib/duration.ts` (already available).
-- `src/components/runner/RepBlockRunner.tsx` — restyle the existing rep list and add the matching header (mode tag + block name + meta line). Keep all timer/Start logic intact.
+- Title: **Stop workout?**
+- Body: **Progress for completed blocks will be saved to your log. The current block will be discarded.**
+- Buttons: **Keep going** (outline) · **Stop workout** (destructive)
+- While open, auto-pauses a running timer; on "Keep going" the user can resume manually (don't auto-resume — gives them a beat to decide).
+
+## Technical changes
+
+- **New component** `src/components/runner/ExitWorkoutButton.tsx` — icon button + optional confirm sheet. Props: `onExit: () => void`, `requireConfirm: boolean`, `onBeforeConfirm?: () => void` (used to pause the timer when opening the sheet).
+- **`TimeBlockRunner.tsx`** — add `<ExitWorkoutButton />` to the header's right cluster. `requireConfirm = t.phase === "running" || t.phase === "paused"`. When confirming from `running`, call `t.pause()` first via `onBeforeConfirm`.
+- **`RepBlockRunner.tsx`** — same addition. `requireConfirm = phase === "running" || phase === "paused"`. Pause via `setPhase("paused")` in `onBeforeConfirm` when running.
+- **`WorkoutPreview.tsx`** — replace the text "Exit" pill with `<ExitWorkoutButton requireConfirm={false} onExit={onExit} />`.
+- **`WorkoutRunner.tsx`** — render the same header (logo + workout name + ExitWorkoutButton) on the **between-blocks** interstitial so exit is reachable there too. Wire it to `handleExitWorkout`, `requireConfirm={false}`.
+- No changes to diary logging, audio session lifecycle, or the existing hold-to-exit button on the paused state.
 
 ## Out of scope
 
-- The "between-blocks" interstitial in `WorkoutRunner.tsx` (separate screen — not the Ready screen).
-- Any timer logic, audio, diary logging, or block sequencing — purely a presentational change to the idle/ready state.
+- Changing the hold-to-exit gesture itself.
+- Adding swipe-to-exit or hardware back-button handling.
+- Any new diary semantics — "exit" continues to save completed blocks and discard the in-progress one, exactly as today.
 
