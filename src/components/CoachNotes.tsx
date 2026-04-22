@@ -45,7 +45,7 @@ export function CoachNotes({
           {label}
         </span>
       </summary>
-      <div className="prose prose-sm mt-2 max-w-none break-words text-sm opacity-90 prose-headings:mb-1 prose-headings:mt-2 prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-a:underline">
+      <div className="mt-2 max-w-none break-words text-sm leading-relaxed opacity-90 [&_a]:underline [&_h1]:mb-1 [&_h1]:mt-2 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mb-1 [&_h2]:mt-2 [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-semibold [&_li]:my-0 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_strong]:font-semibold [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{trimmed}</ReactMarkdown>
       </div>
     </details>
