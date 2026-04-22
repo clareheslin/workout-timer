@@ -69,6 +69,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
   const mode: BlockMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+  const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
 
