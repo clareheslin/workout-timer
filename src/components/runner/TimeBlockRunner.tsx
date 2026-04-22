@@ -155,9 +155,9 @@ export function TimeBlockRunner({
                   return (
                     <li
                       key={it.exercise.id}
-                      className="flex items-center justify-between gap-3 px-1 py-3"
+                      className="flex items-start justify-between gap-3 px-1 py-3"
                     >
-                      <span className="truncate text-base">{it.exercise.name || "Exercise"}</span>
+                      <span className="min-w-0 flex-1 break-words text-base">{it.exercise.name || "Exercise"}</span>
                       <span className="shrink-0 text-sm tabular-nums opacity-80">{meta}</span>
                     </li>
                   );
