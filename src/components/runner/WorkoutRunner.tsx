@@ -5,6 +5,7 @@ import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { createId } from "@/lib/id";
 import { TimeBlockRunner } from "./TimeBlockRunner";
 import { RepBlockRunner } from "./RepBlockRunner";
+import { WorkoutPreview } from "./WorkoutPreview";
 
 interface Props {
   workout: Workout;
@@ -12,14 +13,18 @@ interface Props {
   onExit: (reason: "done" | "exit") => void;
 }
 
-type Phase = "running-block" | "between-blocks" | "done";
+type Phase = "workout-preview" | "running-block" | "between-blocks" | "done";
 
 export function WorkoutRunner({ workout, onExit }: Props) {
   const audio = useWorkoutAudio();
   const diary = useWorkoutDiary();
 
   const [blockIndex, setBlockIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>("running-block");
+  // Skip the workout preview when there's only a single block — the block's
+  // own Ready screen already previews everything.
+  const [phase, setPhase] = useState<Phase>(
+    workout.blocks.length > 1 ? "workout-preview" : "running-block",
+  );
   const startedAtRef = useRef<string>(new Date().toISOString());
   const logBlocksRef = useRef<WorkoutLogBlock[]>([]);
   const loggedRef = useRef(false);
@@ -79,6 +84,19 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return null;
   }
 
+  if (phase === "workout-preview") {
+    return (
+      <WorkoutPreview
+        workout={workout}
+        onBegin={() => {
+          audio.unlock();
+          setPhase("running-block");
+        }}
+        onExit={handleExitWorkout}
+      />
+    );
+  }
+
   if (phase === "done") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6 text-center text-foreground">
@@ -114,8 +132,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     );
   }
 
-  const blockType = currentBlock.type ?? "circuit";
-  const isRepBlock = blockType === "forTime" || blockType === "amrap";
+  const blockTypeKey = currentBlock.type ?? "circuit";
+  const isRepBlock = blockTypeKey === "forTime" || blockTypeKey === "amrap";
 
   if (isRepBlock) {
     return (
@@ -125,7 +143,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         blockIndex={blockIndex}
         totalBlocks={workout.blocks.length}
         workoutName={workout.name}
-        workoutNotes={blockIndex === 0 ? workout.notes : undefined}
         audio={audio}
         onComplete={handleBlockComplete}
         onExitWorkout={handleExitWorkout}
@@ -140,7 +157,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       blockIndex={blockIndex}
       totalBlocks={workout.blocks.length}
       workoutName={workout.name}
-      workoutNotes={blockIndex === 0 ? workout.notes : undefined}
       audio={audio}
       onComplete={handleBlockComplete}
       onExitWorkout={handleExitWorkout}
