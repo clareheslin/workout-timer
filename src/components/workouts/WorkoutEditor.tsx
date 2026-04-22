@@ -198,6 +198,20 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
         )}
       </div>
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="workout-notes" className="text-xs font-medium text-muted-foreground">
+          Coach notes <span className="opacity-70">(optional · markdown supported)</span>
+        </label>
+        <textarea
+          id="workout-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Overall intent, warm-up, equipment, scaling, etc."
+          rows={4}
+          className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
       {!canSave && blocks.length > 0 && (
         <p className="text-xs text-muted-foreground">
           Add at least one exercise to a block to enable saving.
