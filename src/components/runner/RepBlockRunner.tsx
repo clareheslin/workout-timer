@@ -45,6 +45,21 @@ export function RepBlockRunner({
   const elapsedRef = useRef(0);
   const remainingRef = useRef(timeCap);
 
+  // Hold a real media session while the block is active so iOS mixes our
+  // beeps over background music instead of silencing them via the ambient
+  // route.
+  useEffect(() => {
+    if (phase === "running" || phase === "paused") {
+      audio.startSession();
+    } else {
+      audio.endSession();
+    }
+    return () => {
+      audio.endSession();
+    };
+  }, [phase, audio]);
+
+
   useEffect(() => {
     elapsedRef.current = elapsed;
   }, [elapsed]);
