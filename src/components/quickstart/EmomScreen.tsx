@@ -11,7 +11,9 @@ interface Props {
   onBack: () => void;
 }
 
-type Phase = "idle" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done";
+
+const PREP_SECONDS = 10;
 
 export function EmomScreen({ onBack }: Props) {
   const { settings, updateEmom } = useQuickStartSettings();
@@ -22,31 +24,37 @@ export function EmomScreen({ onBack }: Props) {
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [remaining, setRemaining] = useState(interval);
+  const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const [round, setRound] = useState(1);
   const [elapsed, setElapsed] = useState(0);
 
   const tickRef = useRef<number | null>(null);
   const lastBeepRef = useRef<string | null>(null);
 
-  useWakeLock(phase === "running");
+  useWakeLock(phase === "running" || phase === "prep");
 
   useEffect(() => {
     if (phase === "idle") {
       setRemaining(interval);
       setRound(1);
       setElapsed(0);
+      setPrepRemaining(PREP_SECONDS);
     }
   }, [interval, rounds, phase]);
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" && phase !== "prep") {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
       tickRef.current = null;
       return;
     }
     tickRef.current = window.setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
-      setElapsed((e) => e + 1);
+      if (phase === "prep") {
+        setPrepRemaining((prev) => Math.max(0, prev - 1));
+      } else {
+        setRemaining((prev) => Math.max(0, prev - 1));
+        setElapsed((e) => e + 1);
+      }
     }, 1000);
     return () => {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -54,10 +62,27 @@ export function EmomScreen({ onBack }: Props) {
     };
   }, [phase]);
 
+  // Prep countdown.
+  useEffect(() => {
+    if (phase !== "prep") return;
+    if (prepRemaining > 0 && prepRemaining <= 3) {
+      const key = `prep:${prepRemaining}`;
+      if (lastBeepRef.current !== key) {
+        lastBeepRef.current = key;
+        audio.playCountdownBeep();
+      }
+    }
+    if (prepRemaining === 0) {
+      audio.playTransitionBeep();
+      lastBeepRef.current = null;
+      setPhase("running");
+    }
+  }, [phase, prepRemaining, audio]);
+
   // Countdown beeps + interval transitions.
   useEffect(() => {
     if (phase !== "running") {
-      lastBeepRef.current = null;
+      if (phase !== "prep") lastBeepRef.current = null;
       return;
     }
     if (remaining > 0 && remaining <= 3) {
@@ -84,7 +109,9 @@ export function EmomScreen({ onBack }: Props) {
     setRound(1);
     setRemaining(interval);
     setElapsed(0);
-    setPhase("running");
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("prep");
   };
 
   const handlePause = () => {
@@ -92,7 +119,7 @@ export function EmomScreen({ onBack }: Props) {
   };
 
   const handleSkip = () => {
-    if (phase !== "running" && phase !== "paused") return;
+    if (phase !== "running") return;
     audio.unlock();
     if (round >= rounds) {
       audio.playBlockEndBeep();
@@ -108,6 +135,14 @@ export function EmomScreen({ onBack }: Props) {
     }
   };
 
+  const handleSkipPrep = () => {
+    audio.unlock();
+    audio.playTransitionBeep();
+    lastBeepRef.current = null;
+    setPrepRemaining(0);
+    setPhase("running");
+  };
+
   const handleResume = () => {
     audio.unlock();
     setPhase("running");
@@ -118,6 +153,7 @@ export function EmomScreen({ onBack }: Props) {
     setRound(1);
     setRemaining(interval);
     setElapsed(0);
+    setPrepRemaining(PREP_SECONDS);
   };
 
   const handleRepeat = () => {
@@ -128,12 +164,15 @@ export function EmomScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  const isPrep = phase === "prep";
+  const isActive = phase === "prep" || phase === "running" || phase === "paused";
+
   return (
     <QuickStartShell
       title="EMOM"
-      guarded={phase === "running" || phase === "paused"}
+      guarded={isActive}
       onBack={onBack}
-      tone={phase === "running" || phase === "paused" ? "exercise" : "default"}
+      tone={isPrep ? "rest" : isActive ? "exercise" : "default"}
     >
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
@@ -164,12 +203,21 @@ export function EmomScreen({ onBack }: Props) {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
           <TimerCircle
-            label={`Round ${round} of ${rounds}`}
-            time={formatMMSS(remaining)}
-            hint={`Elapsed ${formatMMSS(elapsed)}`}
+            label={isPrep ? "Get Ready" : `Round ${round} of ${rounds}`}
+            time={formatMMSS(isPrep ? prepRemaining : remaining)}
+            hint={isPrep ? "\u00A0" : `Elapsed ${formatMMSS(elapsed)}`}
           />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
+            {phase === "prep" && (
+              <button
+                type="button"
+                onClick={handleSkipPrep}
+                className="rounded-full border border-current/40 bg-transparent py-4 text-base font-semibold"
+              >
+                Skip
+              </button>
+            )}
             {phase === "running" && (
               <div className="flex gap-3">
                 <button

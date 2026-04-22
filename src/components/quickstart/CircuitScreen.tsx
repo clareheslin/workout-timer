@@ -11,7 +11,9 @@ interface Props {
   onBack: () => void;
 }
 
-type Phase = "idle" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done";
+
+const PREP_SECONDS = 10;
 
 interface Step {
   kind: "work" | "rest";
@@ -47,6 +49,7 @@ export function CircuitScreen({ onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [stepIdx, setStepIdx] = useState(0);
   const [remaining, setRemaining] = useState(0);
+  const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
 
   const schedule = useMemo(
     () => buildSchedule(exerciseCount, workSeconds, restSeconds),
@@ -56,16 +59,20 @@ export function CircuitScreen({ onBack }: Props) {
   const tickRef = useRef<number | null>(null);
   const lastBeepRef = useRef<string | null>(null);
 
-  useWakeLock(phase === "running");
+  useWakeLock(phase === "running" || phase === "prep");
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" && phase !== "prep") {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
       tickRef.current = null;
       return;
     }
     tickRef.current = window.setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
+      if (phase === "prep") {
+        setPrepRemaining((prev) => Math.max(0, prev - 1));
+      } else {
+        setRemaining((prev) => Math.max(0, prev - 1));
+      }
     }, 1000);
     return () => {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -73,10 +80,31 @@ export function CircuitScreen({ onBack }: Props) {
     };
   }, [phase]);
 
+  // Prep countdown.
+  useEffect(() => {
+    if (phase !== "prep") return;
+    if (prepRemaining > 0 && prepRemaining <= 3) {
+      const key = `prep:${prepRemaining}`;
+      if (lastBeepRef.current !== key) {
+        lastBeepRef.current = key;
+        audio.playCountdownBeep();
+      }
+    }
+    if (prepRemaining === 0) {
+      audio.playTransitionBeep();
+      lastBeepRef.current = null;
+      if (schedule.length > 0) {
+        setStepIdx(0);
+        setRemaining(schedule[0].durationSeconds);
+      }
+      setPhase("running");
+    }
+  }, [phase, prepRemaining, schedule, audio]);
+
   // Beeps + transitions.
   useEffect(() => {
     if (phase !== "running") {
-      lastBeepRef.current = null;
+      if (phase !== "prep") lastBeepRef.current = null;
       return;
     }
     if (remaining > 0 && remaining <= 3) {
@@ -104,7 +132,9 @@ export function CircuitScreen({ onBack }: Props) {
     audio.unlock();
     setStepIdx(0);
     setRemaining(schedule[0].durationSeconds);
-    setPhase("running");
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("prep");
   };
 
   const handlePause = () => {
@@ -112,7 +142,7 @@ export function CircuitScreen({ onBack }: Props) {
   };
 
   const handleSkip = () => {
-    if (phase !== "running" && phase !== "paused") return;
+    if (phase !== "running") return;
     audio.unlock();
     const next = stepIdx + 1;
     if (next < schedule.length) {
@@ -127,6 +157,18 @@ export function CircuitScreen({ onBack }: Props) {
     }
   };
 
+  const handleSkipPrep = () => {
+    audio.unlock();
+    audio.playTransitionBeep();
+    lastBeepRef.current = null;
+    if (schedule.length > 0) {
+      setStepIdx(0);
+      setRemaining(schedule[0].durationSeconds);
+    }
+    setPrepRemaining(0);
+    setPhase("running");
+  };
+
   const handleResume = () => {
     audio.unlock();
     setPhase("running");
@@ -136,6 +178,7 @@ export function CircuitScreen({ onBack }: Props) {
     setPhase("idle");
     setStepIdx(0);
     setRemaining(0);
+    setPrepRemaining(PREP_SECONDS);
   };
 
   const handleRepeat = () => {
@@ -147,13 +190,15 @@ export function CircuitScreen({ onBack }: Props) {
 
   const current = schedule[stepIdx];
   const upNext = schedule[stepIdx + 1];
+  const isPrep = phase === "prep";
+  const isActive = phase === "prep" || phase === "running" || phase === "paused";
 
   return (
     <QuickStartShell
       title="Circuit"
-      guarded={phase === "running" || phase === "paused"}
+      guarded={isActive}
       onBack={onBack}
-      tone={phase === "running" || phase === "paused" ? "exercise" : "default"}
+      tone={isPrep ? "rest" : isActive ? "exercise" : "default"}
     >
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
@@ -197,18 +242,29 @@ export function CircuitScreen({ onBack }: Props) {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
           <TimerCircle
-            label={current ? stepLabel(current) : ""}
-            time={formatMMSS(remaining)}
+            label={isPrep ? "Get Ready" : current ? stepLabel(current) : ""}
+            time={formatMMSS(isPrep ? prepRemaining : remaining)}
             hint={
-              upNext
-                ? `Up next: ${stepLabel(upNext)} · ${formatMMSS(upNext.durationSeconds)}`
-                : phase === "done"
-                  ? "Complete"
-                  : "Last interval"
+              isPrep
+                ? `Up next: ${schedule[0] ? stepLabel(schedule[0]) : ""} · ${formatMMSS(schedule[0]?.durationSeconds ?? 0)}`
+                : upNext
+                  ? `Up next: ${stepLabel(upNext)} · ${formatMMSS(upNext.durationSeconds)}`
+                  : phase === "done"
+                    ? "Complete"
+                    : "Last interval"
             }
           />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
+            {phase === "prep" && (
+              <button
+                type="button"
+                onClick={handleSkipPrep}
+                className="rounded-full border border-current/40 bg-transparent py-4 text-base font-semibold"
+              >
+                Skip
+              </button>
+            )}
             {phase === "running" && (
               <div className="flex gap-3">
                 <button
