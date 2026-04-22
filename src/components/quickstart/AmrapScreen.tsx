@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
 import { TimerCircle } from "./TimerCircle";
 import { DurationInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useQuickStartSettings } from "@/hooks/useQuickStartSettings";
+import { useWallClockCountdown } from "@/hooks/useWallClockCountdown";
 import { formatMMSS } from "./time";
 
 interface Props {
@@ -23,13 +24,18 @@ export function AmrapScreen({ onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [remaining, setRemaining] = useState(duration);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
-  const intervalRef = useRef<number | null>(null);
+
   const lastBeepRef = useRef<string | null>(null);
+  const phaseRef = useRef(phase);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
+  const wc = useWallClockCountdown();
 
   useWakeLock(phase === "running" || phase === "prep");
 
-  // Hold a real media session while a timer is active so iOS mixes our beeps
-  // over background music instead of silencing them via the ambient route.
+  // Hold a real media session while a timer is active.
   useEffect(() => {
     if (phase === "prep" || phase === "running" || phase === "paused") {
       audio.startSession();
@@ -47,26 +53,7 @@ export function AmrapScreen({ onBack }: Props) {
     if (phase === "idle") setRemaining(duration);
   }, [duration, phase]);
 
-  useEffect(() => {
-    if (phase !== "running" && phase !== "prep") {
-      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-      return;
-    }
-    intervalRef.current = window.setInterval(() => {
-      if (phase === "prep") {
-        setPrepRemaining((prev) => Math.max(0, prev - 1));
-      } else {
-        setRemaining((prev) => Math.max(0, prev - 1));
-      }
-    }, 1000);
-    return () => {
-      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    };
-  }, [phase]);
-
-  // Prep countdown beeps + transition into running.
+  // Countdown beeps for prep.
   useEffect(() => {
     if (phase !== "prep") return;
     if (prepRemaining > 0 && prepRemaining <= 3) {
@@ -76,14 +63,9 @@ export function AmrapScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (prepRemaining === 0) {
-      audio.playTransitionBeep();
-      lastBeepRef.current = null;
-      setPhase("running");
-    }
   }, [phase, prepRemaining, audio]);
 
-  // Running countdown beeps + finish beep.
+  // Countdown beeps for running.
   useEffect(() => {
     if (phase !== "running") {
       if (phase !== "prep") lastBeepRef.current = null;
@@ -96,11 +78,37 @@ export function AmrapScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (remaining === 0) {
-      audio.playBlockEndBeep();
-      setPhase("done");
-    }
   }, [remaining, phase, audio]);
+
+  const startRunning = useCallback(
+    (seconds: number) => {
+      wc.start(seconds, {
+        onTick: (r) => setRemaining(r),
+        onComplete: () => {
+          audio.playBlockEndBeep();
+          setRemaining(0);
+          setPhase("done");
+        },
+      });
+    },
+    [wc, audio],
+  );
+
+  const startPrep = useCallback(
+    (seconds: number) => {
+      wc.start(seconds, {
+        onTick: (r) => setPrepRemaining(r),
+        onComplete: () => {
+          audio.playTransitionBeep();
+          lastBeepRef.current = null;
+          setPrepRemaining(0);
+          setPhase("running");
+          startRunning(duration);
+        },
+      });
+    },
+    [wc, audio, duration, startRunning],
+  );
 
   const handleStart = () => {
     audio.unlock();
@@ -108,18 +116,22 @@ export function AmrapScreen({ onBack }: Props) {
     setPrepRemaining(PREP_SECONDS);
     lastBeepRef.current = null;
     setPhase("prep");
+    startPrep(PREP_SECONDS);
   };
 
   const handlePause = () => {
+    wc.pause();
     setPhase("paused");
   };
 
   const handleResume = () => {
     audio.unlock();
     setPhase("running");
+    wc.resume();
   };
 
   const handleReset = () => {
+    wc.stop();
     setPhase("idle");
     setRemaining(duration);
     setPrepRemaining(PREP_SECONDS);
@@ -129,14 +141,17 @@ export function AmrapScreen({ onBack }: Props) {
     audio.unlock();
     audio.playTransitionBeep();
     lastBeepRef.current = null;
+    wc.stop();
     setPrepRemaining(0);
     setPhase("running");
+    startRunning(duration);
   };
 
   const handleRepeat = () => {
     audio.unlock();
     setRemaining(duration);
     setPhase("running");
+    startRunning(duration);
   };
 
   const isPrep = phase === "prep";
