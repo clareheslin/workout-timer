@@ -3,6 +3,7 @@ import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import { ExitWorkoutButton } from "./ExitWorkoutButton";
 import { CoachNotes } from "@/components/CoachNotes";
 import femLogo from "@/assets/fem-logo.png";
 
@@ -178,6 +179,13 @@ export function RepBlockRunner({
             Block {blockIndex + 1} of {totalBlocks}
           </p>
           <MuteButton audio={audio} />
+          <ExitWorkoutButton
+            onExit={onExitWorkout}
+            requireConfirm={phase === "running" || phase === "paused"}
+            onBeforeConfirm={() => {
+              if (phase === "running") setPhase("paused");
+            }}
+          />
         </div>
       </header>
 

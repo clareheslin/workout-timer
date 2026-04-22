@@ -6,6 +6,8 @@ import { createId } from "@/lib/id";
 import { TimeBlockRunner } from "./TimeBlockRunner";
 import { RepBlockRunner } from "./RepBlockRunner";
 import { WorkoutPreview } from "./WorkoutPreview";
+import { ExitWorkoutButton } from "./ExitWorkoutButton";
+import femLogo from "@/assets/fem-logo.png";
 
 interface Props {
   workout: Workout;
@@ -116,18 +118,27 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   if (phase === "between-blocks") {
     const next = workout.blocks[blockIndex + 1];
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center text-foreground">
-        <h2 className="text-2xl font-semibold">
-          {currentBlock.name || `Block ${blockIndex + 1}`} complete.
-        </h2>
-        <p className="text-sm opacity-80">Ready for {next?.name ?? `Block ${blockIndex + 2}`}?</p>
-        <button
-          type="button"
-          onClick={handleNextBlock}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-        >
-          Preview
-        </button>
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <header className="flex items-center justify-between gap-3 p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
+            <p className="truncate text-sm font-semibold opacity-80">{workout.name}</p>
+          </div>
+          <ExitWorkoutButton onExit={handleExitWorkout} requireConfirm={false} />
+        </header>
+        <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
+          <h2 className="text-2xl font-semibold">
+            {currentBlock.name || `Block ${blockIndex + 1}`} complete.
+          </h2>
+          <p className="text-sm opacity-80">Ready for {next?.name ?? `Block ${blockIndex + 2}`}?</p>
+          <button
+            type="button"
+            onClick={handleNextBlock}
+            className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          >
+            Preview
+          </button>
+        </main>
       </div>
     );
   }

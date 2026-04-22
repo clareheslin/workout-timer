@@ -1,6 +1,7 @@
 import type { Workout } from "@/types";
 import { blockTotalSeconds, blockType, formatDuration } from "@/lib/duration";
 import { CoachNotes } from "@/components/CoachNotes";
+import { ExitWorkoutButton } from "./ExitWorkoutButton";
 import femLogo from "@/assets/fem-logo.png";
 
 interface Props {
@@ -27,13 +28,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
           <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
           <p className="truncate text-sm font-semibold opacity-80">{workout.name}</p>
         </div>
-        <button
-          type="button"
-          onClick={onExit}
-          className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-        >
-          Exit
-        </button>
+        <ExitWorkoutButton onExit={onExit} requireConfirm={false} />
       </header>
 
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
