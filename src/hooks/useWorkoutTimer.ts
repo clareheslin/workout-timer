@@ -276,88 +276,11 @@ export function useWorkoutTimer(
   }, []);
 
   /**
-   * Compute the true state from wall-clock time and reconcile React state.
-   * Cascades through any intervals that fully elapsed while the page was
-   * throttled / backgrounded, firing transition + block-end cues for each.
+   * Flush block/schedule index updates to refs + React state when a cascade
+   * crossed at least one interval boundary.
    */
-  const recompute = useCallback(() => {
-    if (phaseRef.current !== "running") return;
-
-    let bIdx = blockIndexRef.current;
-    let sIdx = scheduleIndexRef.current;
-    let schedule = blockSchedulesRef.current[bIdx] ?? [];
-    let anchorAt = anchorAtRef.current;
-    let anchorRemaining = anchorRemainingRef.current;
-    if (!schedule.length || anchorAt === 0) return;
-
-    while (true) {
-      const elapsed = Math.floor((Date.now() - anchorAt) / 1000);
-      const newRemaining = anchorRemaining - elapsed;
-      if (newRemaining > 0) {
-        // Still inside this interval — publish remaining and stop.
-        setTimeRemaining(newRemaining);
-        return;
-      }
-
-      // This interval has fully elapsed. Log it (unless prep) and advance.
-      const justFinished = schedule[sIdx];
-      if (justFinished && !justFinished.isPrep) {
-        const bucket = playedRef.current[justFinished.blockIndex] ?? [];
-        bucket.push(justFinished);
-        playedRef.current[justFinished.blockIndex] = bucket;
-      }
-
-      // The moment this interval ended on the wall clock.
-      const intervalEndedAt = anchorAt + anchorRemaining * 1000;
-
-      const nextIdx = sIdx + 1;
-      if (nextIdx < schedule.length) {
-        // Advance to next interval within the same block.
-        sIdx = nextIdx;
-        const next = schedule[sIdx];
-        anchorAt = intervalEndedAt;
-        anchorRemaining = next.durationSeconds;
-        callbacksRef.current?.onTransition?.();
-        // Loop again — if even more time has elapsed than the new interval,
-        // we'll cascade through that too.
-        continue;
-      }
-
-      // End of block.
-      callbacksRef.current?.onTransition?.();
-      callbacksRef.current?.onBlockEnd?.();
-      const isLastBlock = bIdx >= blocksLengthRef.current - 1;
-      // Persist final state and stop.
-      blockIndexRef.current = bIdx;
-      scheduleIndexRef.current = sIdx;
-      anchorAtRef.current = 0;
-      anchorRemainingRef.current = 0;
-      setBlockIndex(bIdx);
-      setScheduleIndex(sIdx);
-      setTimeRemaining(0);
-      setPhase(isLastBlock ? "done" : "block-complete");
-      return;
-    }
-
-    // Unreachable — loop returns from inside.
-    // Mirror updates back to refs + state for the in-block path.
-    // (Reached only via `continue` exits; handled below by returns.)
-    void bIdx;
-    void sIdx;
-    void schedule;
-    void anchorAt;
-    void anchorRemaining;
-  }, []);
-
-  // After the cascade above settles inside an interval, we need to flush the
-  // updated indices/anchors back to refs + React state. We do that in-line by
-  // wrapping the loop. To keep the logic readable, we factor that flush into
-  // a separate helper used by the in-interval branch above.
-  //
-  // (Implementation detail: we update refs eagerly inside the loop but only
-  // flush React state for the current display values. The block/schedule
-  // indices are written via setBlockIndex/setScheduleIndex below as needed.)
-  const flushIndices = useCallback((bIdx: number, sIdx: number, anchorAt: number, anchorRemaining: number) => {
+  const flushIndices = useCallback(
+    (bIdx: number, sIdx: number, anchorAt: number, anchorRemaining: number) => {
     blockIndexRef.current = bIdx;
     scheduleIndexRef.current = sIdx;
     anchorAtRef.current = anchorAt;
