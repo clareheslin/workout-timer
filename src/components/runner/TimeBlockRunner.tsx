@@ -141,6 +141,11 @@ export function TimeBlockRunner({
               </p>
             </div>
 
+            {workoutNotes && (
+              <CoachNotes notes={workoutNotes} label="Workout notes" defaultOpen />
+            )}
+            {block.notes && <CoachNotes notes={block.notes} label="Block notes" />}
+
             <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
               {block.items.length === 0 ? (
                 <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
