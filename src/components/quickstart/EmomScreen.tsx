@@ -91,6 +91,23 @@ export function EmomScreen({ onBack }: Props) {
     setPhase("paused");
   };
 
+  const handleSkip = () => {
+    if (phase !== "running" && phase !== "paused") return;
+    audio.unlock();
+    if (round >= rounds) {
+      audio.playBlockEndBeep();
+      setElapsed((e) => e + remaining);
+      setRemaining(0);
+      setPhase("done");
+    } else {
+      audio.playTransitionBeep();
+      setElapsed((e) => e + remaining);
+      setRound((r) => r + 1);
+      setRemaining(interval);
+      lastBeepRef.current = null;
+    }
+  };
+
   const handleResume = () => {
     audio.unlock();
     setPhase("running");
@@ -154,29 +171,47 @@ export function EmomScreen({ onBack }: Props) {
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
             {phase === "running" && (
-              <button
-                type="button"
-                onClick={handlePause}
-                className="rounded-full bg-foreground py-4 text-base font-semibold text-background"
-              >
-                Pause
-              </button>
-            )}
-            {phase === "paused" && (
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={handleResume}
+                  onClick={handlePause}
                   className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
                 >
-                  Resume
+                  Pause
                 </button>
                 <button
                   type="button"
-                  onClick={handleReset}
+                  onClick={handleSkip}
                   className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
                 >
-                  Reset
+                  Skip
+                </button>
+              </div>
+            )}
+            {phase === "paused" && (
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResume}
+                    className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
+                  >
+                    Resume
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                >
+                  Skip
                 </button>
               </div>
             )}
