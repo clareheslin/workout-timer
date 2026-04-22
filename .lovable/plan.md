@@ -1,49 +1,55 @@
 
-The user wants easier duration editing on AMRAP and EMOM quick start timers. The current `DurationInput` shows a single MM:SS text field with a numeric keyboard, which makes typing the colon impossible on mobile. They've suggested splitting into separate MM and SS fields.
 
-## Current state
+## Goal
 
-- `DurationInput` (in `src/components/quickstart/Inputs.tsx`) renders one text input with `inputMode="numeric"`. Users can't type `:` from the numeric keyboard, so editing is awkward.
-- Used in:
-  - `AmrapScreen` — "Duration"
-  - `EmomScreen` — "Every"
-  - (Circuit uses `SecondsInput`, not `DurationInput`, so it's already plain seconds.)
+On the Ready screen of every block type in the workout runner, show the user a clear preview of what they're about to do — exercises, durations, rest, rounds (or reps for AMRAP / For Time) — so they can mentally prepare before tapping Start.
 
-## Proposal
+## What changes (per block type)
 
-Replace the single MM:SS field with two side-by-side numeric inputs: **Min** and **Sec**. Both use `inputMode="numeric"` so the numeric keypad works perfectly with no colon needed.
+**Circuit / Sets (TimeBlockRunner — currently just shows "block name · N exercises")**
 
-### Layout
+Replace the sparse Ready content with:
 
-```text
-┌──────────────────────────────────────────────┐
-│ Duration              [  5 ] min  [ 00 ] sec │
-└──────────────────────────────────────────────┘
-```
+- **Header block** (centered, above the list)
+  - Mode tag: `CIRCUIT` or `SETS` (small, uppercase, muted)
+  - Block name (large, semibold)
+  - Meta line: `N exercises · {total time formatted M:SS}` using `blockTotalSeconds(block)`
+- **Compact exercise list** (one row per exercise, vertical stack, full content width)
+  - Left: exercise name (truncates if long)
+  - Right: `40s · rest 20s · ×3` style — work seconds, rest seconds (omitted if 0), rounds (omitted if 1)
+  - Subtle divider between rows; no card chrome — keep it lean and scannable
+- **Start button** below the list (unchanged styling)
 
-- Each field is a small tabular-numeric input (~3ch wide).
-- Minutes: min `0`, no hard max (typical: 0–99).
-- Seconds: min `0`, max `59`. On commit, values >59 are rejected and reverted (consistent with current `parseMMSS` behavior).
-- Combined value must satisfy `minSeconds` (e.g. ≥1s for AMRAP/EMOM). If the user enters 0:00, revert to last valid value on blur.
-- Commit on blur or Enter (matches existing pattern).
-- Live-sync from external value changes (matches existing `useEffect` pattern for hydration).
+**For Time / AMRAP (RepBlockRunner — already lists exercises)**
 
-### Implementation
+Restyle for consistency with the new time-block layout:
 
-In `src/components/quickstart/Inputs.tsx`, rewrite `DurationInput`:
+- **Header block**
+  - Mode tag: `FOR TIME` or `AMRAP`
+  - Block name
+  - Meta line: AMRAP → `Cap {timeCap}`; For Time → `{N} exercises`
+- **Compact exercise list** in the same row style
+  - Left: exercise name
+  - Right: `×{reps}`
+- The existing live timer + Start button remain below the list (unchanged behavior).
 
-- Internal state: `minText` and `secText` strings.
-- On any commit: parse both, validate (`mins >= 0`, `0 <= secs <= 59`, `total >= minSeconds`), then call `onChange(total)` if changed; otherwise revert both fields to reflect the last valid `valueSeconds`.
-- Sync effect: when `valueSeconds` changes externally, recompute `minText` = `Math.floor(v/60)`, `secText` = zero-padded `v%60`.
-- Keep the same outer label/card styling so AMRAP and EMOM screens need no changes.
+## Layout / scroll behavior
 
-No changes needed in `AmrapScreen.tsx` or `EmomScreen.tsx` — the public API of `DurationInput` (label, valueSeconds, minSeconds, onChange) stays identical.
+- The Ready screen scrolls as a whole when the exercise list is long. The header, list, and Start button live in a single vertically-scrolling main column. No fixed sub-panes.
+- On short lists, content centers naturally as today.
 
-### Files to change
+## Visuals
 
-- `src/components/quickstart/Inputs.tsx` — rewrite `DurationInput` to use two fields.
+- Reuse existing tokens: `text-foreground`, `opacity-70/80` for muted, `border-current/15` for dividers, `tabular-nums` for numbers.
+- No new components or design tokens — all done with Tailwind utility classes already in use.
 
-### Out of scope
+## Files to change
 
-- `SecondsInput` / `NumberInput` (used by Circuit) — already single numeric fields, no change needed.
-- `parseMMSS` / `formatMMSS` helpers in `time.ts` — still used elsewhere (e.g. timer display), leave as-is.
+- `src/components/runner/TimeBlockRunner.tsx` — replace the `t.phase === "idle"` block with the new header + compact exercise list + Start button. Use `blockTotalSeconds` and `formatDuration` from `src/lib/duration.ts` (already available).
+- `src/components/runner/RepBlockRunner.tsx` — restyle the existing rep list and add the matching header (mode tag + block name + meta line). Keep all timer/Start logic intact.
+
+## Out of scope
+
+- The "between-blocks" interstitial in `WorkoutRunner.tsx` (separate screen — not the Ready screen).
+- Any timer logic, audio, diary logging, or block sequencing — purely a presentational change to the idle/ready state.
+
