@@ -11,8 +11,6 @@ interface Props {
   blockIndex: number;
   totalBlocks: number;
   workoutName: string;
-  /** Workout-level coach notes. Shown on the Ready screen of the first block. */
-  workoutNotes?: string;
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
@@ -28,7 +26,6 @@ export function RepBlockRunner({
   blockIndex,
   totalBlocks,
   workoutName,
-  workoutNotes,
   audio,
   onComplete,
   onExitWorkout,
@@ -194,9 +191,6 @@ export function RepBlockRunner({
           </p>
         </div>
 
-        {phase === "idle" && workoutNotes && (
-          <CoachNotes notes={workoutNotes} label="Workout notes" defaultOpen />
-        )}
         {phase === "idle" && block.notes && (
           <CoachNotes notes={block.notes} label="Block notes" />
         )}
