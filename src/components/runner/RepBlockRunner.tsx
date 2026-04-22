@@ -182,9 +182,6 @@ export function RepBlockRunner({
 
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {isAmrap ? "AMRAP" : "For Time"}
-          </p>
           <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
           <p className="text-xs text-muted-foreground">
             {isAmrap
