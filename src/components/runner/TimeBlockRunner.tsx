@@ -130,9 +130,6 @@ export function TimeBlockRunner({
         {t.phase === "idle" && (
           <>
             <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-xs font-medium uppercase tracking-wider opacity-70">
-                {(block.type ?? "circuit") === "sets" ? "Sets" : "Circuit"}
-              </p>
               <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
               <p className="text-xs opacity-70">
                 {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
