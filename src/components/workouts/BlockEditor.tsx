@@ -164,6 +164,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
 
   const handleDone = () => {
     if (!canDone) return;
+    const trimmedNotes = notes.trim();
     if (isRepBased) {
       onDone({
         ...initial,
@@ -174,6 +175,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
         // mode is irrelevant for rep blocks but kept for back-compat
         mode,
+        notes: trimmedNotes ? trimmedNotes : undefined,
       });
     } else {
       onDone({
@@ -185,6 +187,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
+        notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
   };
