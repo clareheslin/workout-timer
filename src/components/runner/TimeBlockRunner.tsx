@@ -4,6 +4,7 @@ import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutT
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { blockTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import { CoachNotes } from "@/components/CoachNotes";
 import femLogo from "@/assets/fem-logo.png";
 import femLogoWhite from "@/assets/fem-logo-white.png";
 
@@ -12,6 +13,8 @@ interface Props {
   blockIndex: number;
   totalBlocks: number;
   workoutName: string;
+  /** Workout-level coach notes. Shown on the Ready screen of the first block. */
+  workoutNotes?: string;
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
@@ -25,6 +28,7 @@ export function TimeBlockRunner({
   blockIndex,
   totalBlocks,
   workoutName,
+  workoutNotes,
   audio,
   onComplete,
   onExitWorkout,
@@ -136,6 +140,11 @@ export function TimeBlockRunner({
                 {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
               </p>
             </div>
+
+            {workoutNotes && (
+              <CoachNotes notes={workoutNotes} label="Workout notes" defaultOpen />
+            )}
+            {block.notes && <CoachNotes notes={block.notes} label="Block notes" />}
 
             <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
               {block.items.length === 0 ? (

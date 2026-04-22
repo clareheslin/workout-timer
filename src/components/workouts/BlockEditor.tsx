@@ -69,6 +69,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
   const mode: BlockMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+  const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
 
@@ -81,11 +82,12 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         mode: initial.mode ?? "circuit",
         type: initial.type ?? "circuit",
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
+        notes: initial.notes ?? "",
       }),
     [initial],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap }) !== initialSnapshot;
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, notes }) !== initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
@@ -162,6 +164,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
 
   const handleDone = () => {
     if (!canDone) return;
+    const trimmedNotes = notes.trim();
     if (isRepBased) {
       onDone({
         ...initial,
@@ -172,6 +175,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
         // mode is irrelevant for rep blocks but kept for back-compat
         mode,
+        notes: trimmedNotes ? trimmedNotes : undefined,
       });
     } else {
       onDone({
@@ -183,6 +187,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
+        notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
   };
@@ -371,6 +376,20 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
             </SortableContext>
           </DndContext>
         )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="block-notes" className="text-xs font-medium text-muted-foreground">
+          Coach notes <span className="opacity-70">(optional · markdown supported)</span>
+        </label>
+        <textarea
+          id="block-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="How to perform this block, scaling options, cues, etc."
+          rows={4}
+          className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
+        />
       </div>
     </div>
   );

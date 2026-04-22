@@ -125,6 +125,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         blockIndex={blockIndex}
         totalBlocks={workout.blocks.length}
         workoutName={workout.name}
+        workoutNotes={blockIndex === 0 ? workout.notes : undefined}
         audio={audio}
         onComplete={handleBlockComplete}
         onExitWorkout={handleExitWorkout}
@@ -139,6 +140,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       blockIndex={blockIndex}
       totalBlocks={workout.blocks.length}
       workoutName={workout.name}
+      workoutNotes={blockIndex === 0 ? workout.notes : undefined}
       audio={audio}
       onComplete={handleBlockComplete}
       onExitWorkout={handleExitWorkout}

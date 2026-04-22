@@ -38,13 +38,19 @@ function makeEmptyBlock(index: number): Block {
 export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [blocks, setBlocks] = useState<Block[]>(initial?.blocks ?? []);
+  const [notes, setNotes] = useState<string>(initial?.notes ?? "");
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
   const initialSnapshot = useMemo(
-    () => JSON.stringify({ name: initial?.name ?? "", blocks: initial?.blocks ?? [] }),
+    () =>
+      JSON.stringify({
+        name: initial?.name ?? "",
+        blocks: initial?.blocks ?? [],
+        notes: initial?.notes ?? "",
+      }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, blocks }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, blocks, notes }) !== initialSnapshot;
 
   const canSave =
     blocks.length > 0 &&
@@ -106,12 +112,14 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const handleSave = () => {
     if (!canSave) return;
     const now = new Date().toISOString();
+    const trimmedNotes = notes.trim();
     const workout: Workout = {
       id: initial?.id ?? createId("workout"),
       name: name.trim() || "My Workout",
       blocks,
       createdAt: initial?.createdAt ?? now,
       updatedAt: now,
+      notes: trimmedNotes ? trimmedNotes : undefined,
     };
     onSave(workout);
   };
@@ -188,6 +196,20 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
             </SortableContext>
           </DndContext>
         )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="workout-notes" className="text-xs font-medium text-muted-foreground">
+          Coach notes <span className="opacity-70">(optional · markdown supported)</span>
+        </label>
+        <textarea
+          id="workout-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Overall intent, warm-up, equipment, scaling, etc."
+          rows={4}
+          className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
+        />
       </div>
 
       {!canSave && blocks.length > 0 && (
