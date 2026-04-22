@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
 import { TimerCircle } from "./TimerCircle";
 import { DurationInput, NumberInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useQuickStartSettings } from "@/hooks/useQuickStartSettings";
+import { useWallClockCountdown } from "@/hooks/useWallClockCountdown";
 import { formatMMSS } from "./time";
 
 interface Props {
@@ -28,13 +29,22 @@ export function EmomScreen({ onBack }: Props) {
   const [round, setRound] = useState(1);
   const [elapsed, setElapsed] = useState(0);
 
-  const tickRef = useRef<number | null>(null);
   const lastBeepRef = useRef<string | null>(null);
+
+  // Wall-clock anchor for the running EMOM. `sessionAnchorAt` is the wall-clock
+  // ms at which `elapsedAtAnchor` seconds had been completed. While running we
+  // derive (round, remaining, elapsed) from Date.now() against this anchor.
+  // While paused, sessionAnchorAt = 0 and elapsedAtAnchor holds the frozen total.
+  const sessionAnchorAtRef = useRef<number>(0);
+  const elapsedAtAnchorRef = useRef<number>(0);
+  const intervalRef = useRef<number | null>(null);
+
+  // Prep uses the shared single-interval countdown hook.
+  const prep = useWallClockCountdown();
 
   useWakeLock(phase === "running" || phase === "prep");
 
-  // Hold a real media session while a timer is active so iOS mixes our beeps
-  // over background music instead of silencing them via the ambient route.
+  // Hold a real media session while a timer is active.
   useEffect(() => {
     if (phase === "prep" || phase === "running" || phase === "paused") {
       audio.startSession();
@@ -46,7 +56,7 @@ export function EmomScreen({ onBack }: Props) {
     };
   }, [phase, audio]);
 
-
+  // Reset display values when going to idle.
   useEffect(() => {
     if (phase === "idle") {
       setRemaining(interval);
@@ -56,27 +66,73 @@ export function EmomScreen({ onBack }: Props) {
     }
   }, [interval, rounds, phase]);
 
-  useEffect(() => {
-    if (phase !== "running" && phase !== "prep") {
-      if (tickRef.current !== null) window.clearInterval(tickRef.current);
-      tickRef.current = null;
+  const totalDuration = interval * rounds;
+
+  /** Compute the true (round, remaining, elapsed) from wall-clock state. */
+  const recomputeRunning = useCallback(() => {
+    if (sessionAnchorAtRef.current === 0) return;
+    const liveElapsed = Math.min(
+      totalDuration,
+      elapsedAtAnchorRef.current +
+        Math.floor((Date.now() - sessionAnchorAtRef.current) / 1000),
+    );
+
+    if (liveElapsed >= totalDuration) {
+      // EMOM complete (possibly after a long background interval).
+      audio.playBlockEndBeep();
+      sessionAnchorAtRef.current = 0;
+      elapsedAtAnchorRef.current = totalDuration;
+      setElapsed(totalDuration);
+      setRound(rounds);
+      setRemaining(0);
+      setPhase("done");
       return;
     }
-    tickRef.current = window.setInterval(() => {
-      if (phase === "prep") {
-        setPrepRemaining((prev) => Math.max(0, prev - 1));
-      } else {
-        setRemaining((prev) => Math.max(0, prev - 1));
-        setElapsed((e) => e + 1);
-      }
-    }, 1000);
-    return () => {
-      if (tickRef.current !== null) window.clearInterval(tickRef.current);
-      tickRef.current = null;
-    };
-  }, [phase]);
 
-  // Prep countdown.
+    const newRound = Math.min(rounds, Math.floor(liveElapsed / interval) + 1);
+    const intoRound = liveElapsed - (newRound - 1) * interval;
+    const newRemaining = Math.max(0, interval - intoRound);
+
+    // Detect a round boundary crossing (one or more rounds completed since
+    // the last paint) and fire a transition cue.
+    setRound((prevRound) => {
+      if (newRound > prevRound) {
+        audio.playTransitionBeep();
+        lastBeepRef.current = null;
+      }
+      return newRound;
+    });
+    setRemaining(newRemaining);
+    setElapsed(liveElapsed);
+  }, [audio, interval, rounds, totalDuration]);
+
+  // Tick loop while running — pure re-render trigger; truth comes from wall clock.
+  useEffect(() => {
+    if (phase !== "running") {
+      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      return;
+    }
+    intervalRef.current = window.setInterval(() => recomputeRunning(), 1000);
+    return () => {
+      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+  }, [phase, recomputeRunning]);
+
+  // Snap on tab return.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      if (document.visibilityState === "visible" && phase === "running") {
+        recomputeRunning();
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [phase, recomputeRunning]);
+
+  // Countdown beeps for prep.
   useEffect(() => {
     if (phase !== "prep") return;
     if (prepRemaining > 0 && prepRemaining <= 3) {
@@ -86,14 +142,9 @@ export function EmomScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (prepRemaining === 0) {
-      audio.playTransitionBeep();
-      lastBeepRef.current = null;
-      setPhase("running");
-    }
   }, [phase, prepRemaining, audio]);
 
-  // Countdown beeps + interval transitions.
+  // Countdown beeps for the running interval.
   useEffect(() => {
     if (phase !== "running") {
       if (phase !== "prep") lastBeepRef.current = null;
@@ -106,17 +157,28 @@ export function EmomScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (remaining === 0) {
-      if (round >= rounds) {
-        audio.playBlockEndBeep();
-        setPhase("done");
-      } else {
+  }, [remaining, phase, round, audio]);
+
+  const startRunningFromZero = useCallback(() => {
+    sessionAnchorAtRef.current = Date.now();
+    elapsedAtAnchorRef.current = 0;
+    setRound(1);
+    setRemaining(interval);
+    setElapsed(0);
+    setPhase("running");
+  }, [interval]);
+
+  const startPrep = useCallback(() => {
+    prep.start(PREP_SECONDS, {
+      onTick: (r) => setPrepRemaining(r),
+      onComplete: () => {
         audio.playTransitionBeep();
-        setRound((r) => r + 1);
-        setRemaining(interval);
-      }
-    }
-  }, [remaining, phase, round, rounds, interval, audio]);
+        lastBeepRef.current = null;
+        setPrepRemaining(0);
+        startRunningFromZero();
+      },
+    });
+  }, [prep, audio, startRunningFromZero]);
 
   const handleStart = () => {
     audio.unlock();
@@ -126,26 +188,48 @@ export function EmomScreen({ onBack }: Props) {
     setPrepRemaining(PREP_SECONDS);
     lastBeepRef.current = null;
     setPhase("prep");
+    startPrep();
   };
 
   const handlePause = () => {
+    if (sessionAnchorAtRef.current !== 0) {
+      const liveElapsed = Math.min(
+        totalDuration,
+        elapsedAtAnchorRef.current +
+          Math.floor((Date.now() - sessionAnchorAtRef.current) / 1000),
+      );
+      elapsedAtAnchorRef.current = liveElapsed;
+      sessionAnchorAtRef.current = 0;
+      const newRound = Math.min(rounds, Math.floor(liveElapsed / interval) + 1);
+      const intoRound = liveElapsed - (newRound - 1) * interval;
+      setRound(newRound);
+      setRemaining(Math.max(0, interval - intoRound));
+      setElapsed(liveElapsed);
+    }
     setPhase("paused");
   };
 
   const handleSkip = () => {
     if (phase !== "running") return;
     audio.unlock();
-    if (round >= rounds) {
+    // Jump elapsed forward to the next round boundary (or finish).
+    const targetElapsed = round * interval;
+    if (targetElapsed >= totalDuration) {
       audio.playBlockEndBeep();
-      setElapsed((e) => e + remaining);
+      sessionAnchorAtRef.current = 0;
+      elapsedAtAnchorRef.current = totalDuration;
+      setElapsed(totalDuration);
+      setRound(rounds);
       setRemaining(0);
       setPhase("done");
     } else {
       audio.playTransitionBeep();
-      setElapsed((e) => e + remaining);
-      setRound((r) => r + 1);
-      setRemaining(interval);
       lastBeepRef.current = null;
+      sessionAnchorAtRef.current = Date.now();
+      elapsedAtAnchorRef.current = targetElapsed;
+      setElapsed(targetElapsed);
+      setRound(round + 1);
+      setRemaining(interval);
     }
   };
 
@@ -153,16 +237,21 @@ export function EmomScreen({ onBack }: Props) {
     audio.unlock();
     audio.playTransitionBeep();
     lastBeepRef.current = null;
+    prep.stop();
     setPrepRemaining(0);
-    setPhase("running");
+    startRunningFromZero();
   };
 
   const handleResume = () => {
     audio.unlock();
+    sessionAnchorAtRef.current = Date.now();
     setPhase("running");
   };
 
   const handleReset = () => {
+    prep.stop();
+    sessionAnchorAtRef.current = 0;
+    elapsedAtAnchorRef.current = 0;
     setPhase("idle");
     setRound(1);
     setRemaining(interval);
@@ -172,10 +261,7 @@ export function EmomScreen({ onBack }: Props) {
 
   const handleRepeat = () => {
     audio.unlock();
-    setRound(1);
-    setRemaining(interval);
-    setElapsed(0);
-    setPhase("running");
+    startRunningFromZero();
   };
 
   const isPrep = phase === "prep";

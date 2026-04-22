@@ -182,6 +182,14 @@ export function useWorkoutTimer(
   const [scheduleIndex, setScheduleIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
+  // --- Wall-clock anchors. setInterval is now only a re-render trigger; the
+  // truth is derived from Date.now() so background-throttled tabs catch up
+  // accurately on return.
+  // anchorAtRef = wall-clock ms at which the *current* interval started ticking.
+  // anchorRemainingRef = seconds remaining in the *current* interval at that moment.
+  const anchorAtRef = useRef<number>(0);
+  const anchorRemainingRef = useRef<number>(0);
+
   const intervalRef = useRef<number | null>(null);
 
   // First-Start timestamp + per-block tally of intervals that fully played.
@@ -199,6 +207,30 @@ export function useWorkoutTimer(
   // Track which (phase, second) we've already chimed for, to guard against
   // double-fires from React re-renders or strict-mode double-invocation.
   const lastCountdownKey = useRef<string | null>(null);
+
+  // Keep the latest schedule/index in refs so the recompute loop can read
+  // the freshest values without stale closures.
+  const blockSchedulesRef = useRef(blockSchedules);
+  const blockIndexRef = useRef(blockIndex);
+  const scheduleIndexRef = useRef(scheduleIndex);
+  const phaseRef = useRef(phase);
+  const blocksLength = workout.blocks.length;
+  const blocksLengthRef = useRef(blocksLength);
+  useEffect(() => {
+    blockSchedulesRef.current = blockSchedules;
+  }, [blockSchedules]);
+  useEffect(() => {
+    blockIndexRef.current = blockIndex;
+  }, [blockIndex]);
+  useEffect(() => {
+    scheduleIndexRef.current = scheduleIndex;
+  }, [scheduleIndex]);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  useEffect(() => {
+    blocksLengthRef.current = blocksLength;
+  }, [blocksLength]);
 
   const currentBlock = workout.blocks[blockIndex] ?? null;
   const currentSchedule = blockSchedules[blockIndex] ?? [];
@@ -243,7 +275,87 @@ export function useWorkoutTimer(
     }
   }, []);
 
-  // The tick: decrement, and when we hit 0, advance to the next interval.
+  /**
+   * Flush block/schedule index updates to refs + React state when a cascade
+   * crossed at least one interval boundary.
+   */
+  const flushIndices = useCallback(
+    (bIdx: number, sIdx: number, anchorAt: number, anchorRemaining: number) => {
+    blockIndexRef.current = bIdx;
+    scheduleIndexRef.current = sIdx;
+    anchorAtRef.current = anchorAt;
+    anchorRemainingRef.current = anchorRemaining;
+    setBlockIndex(bIdx);
+    setScheduleIndex(sIdx);
+  }, []);
+
+  // The advance logic actually needs to flush indices when it crosses an
+  // interval boundary. Re-implement recompute to use flushIndices so React
+  // sees the new schedule index and re-renders the up-next/current panel.
+  const recomputeFull = useCallback(() => {
+    if (phaseRef.current !== "running") return;
+
+    let bIdx = blockIndexRef.current;
+    let sIdx = scheduleIndexRef.current;
+    const schedule = blockSchedulesRef.current[bIdx] ?? [];
+    let anchorAt = anchorAtRef.current;
+    let anchorRemaining = anchorRemainingRef.current;
+    if (!schedule.length || anchorAt === 0) return;
+
+    let crossed = false;
+
+    while (true) {
+      const elapsed = Math.floor((Date.now() - anchorAt) / 1000);
+      const newRemaining = anchorRemaining - elapsed;
+
+      if (newRemaining > 0) {
+        if (crossed) flushIndices(bIdx, sIdx, anchorAt, anchorRemaining);
+        else {
+          anchorAtRef.current = anchorAt;
+          anchorRemainingRef.current = anchorRemaining;
+        }
+        setTimeRemaining(newRemaining);
+        return;
+      }
+
+      // Interval fully elapsed.
+      const justFinished = schedule[sIdx];
+      if (justFinished && !justFinished.isPrep) {
+        const bucket = playedRef.current[justFinished.blockIndex] ?? [];
+        bucket.push(justFinished);
+        playedRef.current[justFinished.blockIndex] = bucket;
+      }
+      const intervalEndedAt = anchorAt + anchorRemaining * 1000;
+      const nextIdx = sIdx + 1;
+
+      if (nextIdx < schedule.length) {
+        sIdx = nextIdx;
+        const next = schedule[sIdx];
+        anchorAt = intervalEndedAt;
+        anchorRemaining = next.durationSeconds;
+        crossed = true;
+        callbacksRef.current?.onTransition?.();
+        continue;
+      }
+
+      // End of block.
+      callbacksRef.current?.onTransition?.();
+      callbacksRef.current?.onBlockEnd?.();
+      const isLastBlock = bIdx >= blocksLengthRef.current - 1;
+      anchorAtRef.current = 0;
+      anchorRemainingRef.current = 0;
+      blockIndexRef.current = bIdx;
+      scheduleIndexRef.current = sIdx;
+      setBlockIndex(bIdx);
+      setScheduleIndex(sIdx);
+      setTimeRemaining(0);
+      setPhase(isLastBlock ? "done" : "block-complete");
+      return;
+    }
+  }, [flushIndices]);
+
+  // Tick loop — only when running. Pure re-render trigger; truth is derived
+  // from Date.now() inside recomputeFull.
   useEffect(() => {
     if (phase !== "running") {
       clearTick();
@@ -251,15 +363,24 @@ export function useWorkoutTimer(
     }
 
     intervalRef.current = window.setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev > 1) return prev - 1;
-        // Interval ended — advance synchronously below.
-        return 0;
-      });
+      recomputeFull();
     }, 1000);
 
     return clearTick;
-  }, [phase, clearTick]);
+  }, [phase, clearTick, recomputeFull]);
+
+  // Snap to true time as soon as the tab regains visibility, instead of
+  // waiting for the next setInterval tick.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      if (document.visibilityState === "visible" && phaseRef.current === "running") {
+        recomputeFull();
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [recomputeFull]);
 
   // Countdown beeps at 3, 2, 1 seconds remaining (running phase, > 0).
   useEffect(() => {
@@ -276,34 +397,6 @@ export function useWorkoutTimer(
     }
   }, [phase, timeRemaining, blockIndex, scheduleIndex]);
 
-  // When timeRemaining hits 0 while running, advance to the next interval.
-  useEffect(() => {
-    if (phase !== "running" || timeRemaining > 0) return;
-
-    // Record the interval that just completed (skip the prep "Get Ready").
-    const justFinished = currentSchedule[scheduleIndex];
-    if (justFinished && !justFinished.isPrep) {
-      const bucket = playedRef.current[justFinished.blockIndex] ?? [];
-      bucket.push(justFinished);
-      playedRef.current[justFinished.blockIndex] = bucket;
-    }
-
-    const nextIdx = scheduleIndex + 1;
-    if (nextIdx < currentSchedule.length) {
-      const next = currentSchedule[nextIdx];
-      setScheduleIndex(nextIdx);
-      setTimeRemaining(next.durationSeconds);
-      callbacksRef.current?.onTransition?.();
-      return;
-    }
-
-    // Block finished — fire transition + block-end (per product decision).
-    callbacksRef.current?.onTransition?.();
-    callbacksRef.current?.onBlockEnd?.();
-    const isLastBlock = blockIndex >= workout.blocks.length - 1;
-    setPhase(isLastBlock ? "done" : "block-complete");
-  }, [phase, timeRemaining, scheduleIndex, currentSchedule, blockIndex, workout.blocks.length]);
-
   const start = useCallback(() => {
     if (phase !== "idle" && phase !== "block-complete") return;
     const schedule = blockSchedules[blockIndex];
@@ -317,17 +410,36 @@ export function useWorkoutTimer(
       playedRef.current = workout.blocks.map(() => []);
       setStartedAtTick((n) => n + 1);
     }
+    const first = schedule[0];
     setScheduleIndex(0);
-    setTimeRemaining(schedule[0].durationSeconds);
+    setTimeRemaining(first.durationSeconds);
+    scheduleIndexRef.current = 0;
+    anchorAtRef.current = Date.now();
+    anchorRemainingRef.current = first.durationSeconds;
     setPhase("running");
   }, [phase, blockSchedules, blockIndex, workout.blocks]);
 
   const pause = useCallback(() => {
-    setPhase((p) => (p === "running" ? "paused" : p));
+    setPhase((p) => {
+      if (p !== "running") return p;
+      // Capture remaining time at the moment of pause so resume can re-anchor
+      // without drift.
+      const elapsed = Math.floor((Date.now() - anchorAtRef.current) / 1000);
+      const remaining = Math.max(0, anchorRemainingRef.current - elapsed);
+      anchorRemainingRef.current = remaining;
+      anchorAtRef.current = 0;
+      setTimeRemaining(remaining);
+      return "paused";
+    });
   }, []);
 
   const resume = useCallback(() => {
-    setPhase((p) => (p === "paused" ? "running" : p));
+    setPhase((p) => {
+      if (p !== "paused") return p;
+      anchorAtRef.current = Date.now();
+      // anchorRemainingRef already holds the value captured at pause time.
+      return "running";
+    });
   }, []);
 
   const nextBlock = useCallback(() => {
@@ -339,13 +451,20 @@ export function useWorkoutTimer(
     }
     setBlockIndex(next);
     const schedule = blockSchedules[next];
+    const first = schedule[0];
     setScheduleIndex(0);
-    setTimeRemaining(schedule[0]?.durationSeconds ?? 0);
+    setTimeRemaining(first?.durationSeconds ?? 0);
+    blockIndexRef.current = next;
+    scheduleIndexRef.current = 0;
+    anchorAtRef.current = Date.now();
+    anchorRemainingRef.current = first?.durationSeconds ?? 0;
     setPhase("running");
   }, [phase, blockIndex, blockSchedules, workout.blocks.length]);
 
   const finish = useCallback(() => {
     clearTick();
+    anchorAtRef.current = 0;
+    anchorRemainingRef.current = 0;
     setPhase("done");
   }, [clearTick]);
 
@@ -358,6 +477,9 @@ export function useWorkoutTimer(
       const next = schedule[nextIdx];
       setScheduleIndex(nextIdx);
       setTimeRemaining(next.durationSeconds);
+      scheduleIndexRef.current = nextIdx;
+      anchorAtRef.current = phase === "running" ? Date.now() : 0;
+      anchorRemainingRef.current = next.durationSeconds;
       callbacksRef.current?.onTransition?.();
       return;
     }
@@ -365,6 +487,8 @@ export function useWorkoutTimer(
     callbacksRef.current?.onTransition?.();
     callbacksRef.current?.onBlockEnd?.();
     const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    anchorAtRef.current = 0;
+    anchorRemainingRef.current = 0;
     setPhase(isLastBlock ? "done" : "block-complete");
   }, [phase, blockSchedules, blockIndex, scheduleIndex, workout.blocks.length]);
 
@@ -372,6 +496,8 @@ export function useWorkoutTimer(
     if (phase !== "running" && phase !== "paused") return;
     callbacksRef.current?.onBlockEnd?.();
     const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    anchorAtRef.current = 0;
+    anchorRemainingRef.current = 0;
     setPhase(isLastBlock ? "done" : "block-complete");
   }, [phase, blockIndex, workout.blocks.length]);
 
