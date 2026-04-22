@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { Block, Workout, WorkoutLogBlock } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
-import { formatDuration } from "@/lib/duration";
+import { blockTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
 import femLogo from "@/assets/fem-logo.png";
 import femLogoWhite from "@/assets/fem-logo-white.png";
@@ -120,20 +120,63 @@ export function TimeBlockRunner({
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
+      <main
+        className={
+          t.phase === "idle"
+            ? "flex flex-1 flex-col gap-6 px-6 pb-8 pt-4"
+            : "flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center"
+        }
+      >
         {t.phase === "idle" && (
           <>
-            <h2 className="text-2xl font-semibold">Ready</h2>
-            <p className="text-sm opacity-70">
-              {block.name} · {block.items.length} exercises
-            </p>
-            <button
-              type="button"
-              onClick={handleStart}
-              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-            >
-              Start
-            </button>
+            <div className="flex flex-col items-center gap-1 text-center">
+              <p className="text-xs font-medium uppercase tracking-wider opacity-70">
+                {(block.type ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+              </p>
+              <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+              <p className="text-xs opacity-70">
+                {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+                {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
+              </p>
+            </div>
+
+            <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
+              {block.items.length === 0 ? (
+                <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
+              ) : (
+                block.items.map((it) => {
+                  const work = Math.max(0, it.exercise.durationSeconds);
+                  const rest = Math.max(0, it.rest.durationSeconds);
+                  const rounds = exerciseRounds(it);
+                  const meta = [
+                    `${work}s`,
+                    rest > 0 ? `rest ${rest}s` : null,
+                    rounds > 1 ? `×${rounds}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li
+                      key={it.exercise.id}
+                      className="flex items-center justify-between gap-3 px-1 py-3"
+                    >
+                      <span className="truncate text-base">{it.exercise.name || "Exercise"}</span>
+                      <span className="shrink-0 text-sm tabular-nums opacity-80">{meta}</span>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleStart}
+                className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+              >
+                Start
+              </button>
+            </div>
           </>
         )}
 

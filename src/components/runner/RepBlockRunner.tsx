@@ -185,22 +185,25 @@ export function RepBlockRunner({
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {isAmrap ? "AMRAP" : "For Time"}
           </p>
-          <h2 className="text-xl font-semibold">{block.name}</h2>
+          <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+          <p className="text-xs text-muted-foreground">
+            {isAmrap
+              ? `Cap ${formatDuration(timeCap)}`
+              : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`}
+          </p>
         </div>
 
-        <ul className="flex flex-1 flex-col gap-2">
+        <ul className="flex flex-col divide-y divide-border border-y border-border">
           {repExercises.length === 0 ? (
-            <li className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
-              No exercises.
-            </li>
+            <li className="px-1 py-3 text-sm text-muted-foreground">No exercises.</li>
           ) : (
             repExercises.map((ex) => (
               <li
                 key={ex.id}
-                className="flex flex-1 items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground"
+                className="flex items-center justify-between gap-3 px-1 py-3"
               >
                 <span className="truncate text-base">{ex.name}</span>
-                <span className="shrink-0 text-base font-semibold tabular-nums">x{ex.reps}</span>
+                <span className="shrink-0 text-sm tabular-nums opacity-80">×{ex.reps}</span>
               </li>
             ))
           )}
