@@ -108,7 +108,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
           onClick={handleNextBlock}
           className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
         >
-          Preview {next?.name ?? `Block ${blockIndex + 2}`}
+          Preview
         </button>
       </div>
     );
