@@ -189,29 +189,20 @@ export function EmomScreen({ onBack }: Props) {
               </div>
             )}
             {phase === "paused" && (
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={handleResume}
-                    className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
-                  >
-                    Resume
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
-                  >
-                    Reset
-                  </button>
-                </div>
+              <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={handleSkip}
-                  className="rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                  onClick={handleResume}
+                  className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
                 >
-                  Skip
+                  Resume
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
+                >
+                  Reset
                 </button>
               </div>
             )}
