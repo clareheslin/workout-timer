@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuickStartShell } from "./QuickStartShell";
 import { TimerCircle } from "./TimerCircle";
 import { NumberInput, SecondsInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useQuickStartSettings } from "@/hooks/useQuickStartSettings";
+import { useWallClockCountdown } from "@/hooks/useWallClockCountdown";
 import { formatMMSS } from "./time";
 
 interface Props {
@@ -56,13 +57,29 @@ export function CircuitScreen({ onBack }: Props) {
     [exerciseCount, workSeconds, restSeconds],
   );
 
-  const tickRef = useRef<number | null>(null);
   const lastBeepRef = useRef<string | null>(null);
+  // Wall-clock anchors for the current step.
+  const anchorAtRef = useRef<number>(0);
+  const anchorRemainingRef = useRef<number>(0);
+  const tickRef = useRef<number | null>(null);
+  const stepIdxRef = useRef(0);
+  const phaseRef = useRef(phase);
+  const scheduleRef = useRef(schedule);
+  useEffect(() => {
+    stepIdxRef.current = stepIdx;
+  }, [stepIdx]);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  useEffect(() => {
+    scheduleRef.current = schedule;
+  }, [schedule]);
+
+  const prep = useWallClockCountdown();
 
   useWakeLock(phase === "running" || phase === "prep");
 
-  // Hold a real media session while a timer is active so iOS mixes our beeps
-  // over background music instead of silencing them via the ambient route.
+  // Hold a real media session while a timer is active.
   useEffect(() => {
     if (phase === "prep" || phase === "running" || phase === "paused") {
       audio.startSession();
@@ -74,27 +91,81 @@ export function CircuitScreen({ onBack }: Props) {
     };
   }, [phase, audio]);
 
+  /** Advance through any fully-elapsed steps using wall-clock truth. */
+  const recomputeRunning = useCallback(() => {
+    if (phaseRef.current !== "running") return;
+    if (anchorAtRef.current === 0) return;
 
+    let sIdx = stepIdxRef.current;
+    let anchorAt = anchorAtRef.current;
+    let anchorRemaining = anchorRemainingRef.current;
+    const sched = scheduleRef.current;
+
+    while (true) {
+      const elapsed = Math.floor((Date.now() - anchorAt) / 1000);
+      const newRemaining = anchorRemaining - elapsed;
+
+      if (newRemaining > 0) {
+        anchorAtRef.current = anchorAt;
+        anchorRemainingRef.current = anchorRemaining;
+        if (sIdx !== stepIdxRef.current) {
+          stepIdxRef.current = sIdx;
+          setStepIdx(sIdx);
+        }
+        setRemaining(newRemaining);
+        return;
+      }
+
+      const intervalEndedAt = anchorAt + anchorRemaining * 1000;
+      const nextIdx = sIdx + 1;
+      if (nextIdx < sched.length) {
+        sIdx = nextIdx;
+        anchorAt = intervalEndedAt;
+        anchorRemaining = sched[sIdx].durationSeconds;
+        audio.playTransitionBeep();
+        lastBeepRef.current = null;
+        continue;
+      }
+
+      // End of circuit.
+      audio.playBlockEndBeep();
+      anchorAtRef.current = 0;
+      anchorRemainingRef.current = 0;
+      stepIdxRef.current = sIdx;
+      setStepIdx(sIdx);
+      setRemaining(0);
+      setPhase("done");
+      return;
+    }
+  }, [audio]);
+
+  // Tick loop while running — pure re-render trigger.
   useEffect(() => {
-    if (phase !== "running" && phase !== "prep") {
+    if (phase !== "running") {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
       tickRef.current = null;
       return;
     }
-    tickRef.current = window.setInterval(() => {
-      if (phase === "prep") {
-        setPrepRemaining((prev) => Math.max(0, prev - 1));
-      } else {
-        setRemaining((prev) => Math.max(0, prev - 1));
-      }
-    }, 1000);
+    tickRef.current = window.setInterval(() => recomputeRunning(), 1000);
     return () => {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
       tickRef.current = null;
     };
-  }, [phase]);
+  }, [phase, recomputeRunning]);
 
-  // Prep countdown.
+  // Snap on tab return.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      if (document.visibilityState === "visible" && phase === "running") {
+        recomputeRunning();
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [phase, recomputeRunning]);
+
+  // Countdown beeps for prep.
   useEffect(() => {
     if (phase !== "prep") return;
     if (prepRemaining > 0 && prepRemaining <= 3) {
@@ -104,18 +175,9 @@ export function CircuitScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (prepRemaining === 0) {
-      audio.playTransitionBeep();
-      lastBeepRef.current = null;
-      if (schedule.length > 0) {
-        setStepIdx(0);
-        setRemaining(schedule[0].durationSeconds);
-      }
-      setPhase("running");
-    }
-  }, [phase, prepRemaining, schedule, audio]);
+  }, [phase, prepRemaining, audio]);
 
-  // Beeps + transitions.
+  // Countdown beeps for running interval.
   useEffect(() => {
     if (phase !== "running") {
       if (phase !== "prep") lastBeepRef.current = null;
@@ -128,18 +190,30 @@ export function CircuitScreen({ onBack }: Props) {
         audio.playCountdownBeep();
       }
     }
-    if (remaining === 0) {
-      const next = stepIdx + 1;
-      if (next < schedule.length) {
+  }, [remaining, phase, stepIdx, audio]);
+
+  const startStep = useCallback((idx: number) => {
+    const sched = scheduleRef.current;
+    if (idx >= sched.length) return;
+    stepIdxRef.current = idx;
+    anchorAtRef.current = Date.now();
+    anchorRemainingRef.current = sched[idx].durationSeconds;
+    setStepIdx(idx);
+    setRemaining(sched[idx].durationSeconds);
+  }, []);
+
+  const startPrep = useCallback(() => {
+    prep.start(PREP_SECONDS, {
+      onTick: (r) => setPrepRemaining(r),
+      onComplete: () => {
         audio.playTransitionBeep();
-        setStepIdx(next);
-        setRemaining(schedule[next].durationSeconds);
-      } else {
-        audio.playBlockEndBeep();
-        setPhase("done");
-      }
-    }
-  }, [remaining, phase, stepIdx, schedule, audio]);
+        lastBeepRef.current = null;
+        setPrepRemaining(0);
+        setPhase("running");
+        startStep(0);
+      },
+    });
+  }, [prep, audio, startStep]);
 
   const handleStart = () => {
     if (schedule.length === 0) return;
@@ -149,9 +223,16 @@ export function CircuitScreen({ onBack }: Props) {
     setPrepRemaining(PREP_SECONDS);
     lastBeepRef.current = null;
     setPhase("prep");
+    startPrep();
   };
 
   const handlePause = () => {
+    if (anchorAtRef.current !== 0) {
+      const elapsed = Math.floor((Date.now() - anchorAtRef.current) / 1000);
+      anchorRemainingRef.current = Math.max(0, anchorRemainingRef.current - elapsed);
+      anchorAtRef.current = 0;
+      setRemaining(anchorRemainingRef.current);
+    }
     setPhase("paused");
   };
 
@@ -161,11 +242,12 @@ export function CircuitScreen({ onBack }: Props) {
     const next = stepIdx + 1;
     if (next < schedule.length) {
       audio.playTransitionBeep();
-      setStepIdx(next);
-      setRemaining(schedule[next].durationSeconds);
       lastBeepRef.current = null;
+      startStep(next);
     } else {
       audio.playBlockEndBeep();
+      anchorAtRef.current = 0;
+      anchorRemainingRef.current = 0;
       setRemaining(0);
       setPhase("done");
     }
@@ -175,20 +257,22 @@ export function CircuitScreen({ onBack }: Props) {
     audio.unlock();
     audio.playTransitionBeep();
     lastBeepRef.current = null;
-    if (schedule.length > 0) {
-      setStepIdx(0);
-      setRemaining(schedule[0].durationSeconds);
-    }
+    prep.stop();
     setPrepRemaining(0);
     setPhase("running");
+    startStep(0);
   };
 
   const handleResume = () => {
     audio.unlock();
+    anchorAtRef.current = Date.now();
     setPhase("running");
   };
 
   const handleReset = () => {
+    prep.stop();
+    anchorAtRef.current = 0;
+    anchorRemainingRef.current = 0;
     setPhase("idle");
     setStepIdx(0);
     setRemaining(0);
@@ -197,9 +281,8 @@ export function CircuitScreen({ onBack }: Props) {
 
   const handleRepeat = () => {
     audio.unlock();
-    setStepIdx(0);
-    setRemaining(schedule[0]?.durationSeconds ?? 0);
     setPhase("running");
+    startStep(0);
   };
 
   const current = schedule[stepIdx];
