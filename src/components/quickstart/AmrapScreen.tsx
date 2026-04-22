@@ -11,7 +11,9 @@ interface Props {
   onBack: () => void;
 }
 
-type Phase = "idle" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done";
+
+const PREP_SECONDS = 10;
 
 export function AmrapScreen({ onBack }: Props) {
   const { settings, updateAmrap } = useQuickStartSettings();
@@ -20,10 +22,11 @@ export function AmrapScreen({ onBack }: Props) {
   const duration = settings.amrap.durationSeconds;
   const [phase, setPhase] = useState<Phase>("idle");
   const [remaining, setRemaining] = useState(duration);
+  const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const intervalRef = useRef<number | null>(null);
-  const lastBeepRef = useRef<number | null>(null);
+  const lastBeepRef = useRef<string | null>(null);
 
-  useWakeLock(phase === "running");
+  useWakeLock(phase === "running" || phase === "prep");
 
   // Keep remaining in sync with last duration while idle.
   useEffect(() => {
@@ -31,13 +34,17 @@ export function AmrapScreen({ onBack }: Props) {
   }, [duration, phase]);
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" && phase !== "prep") {
       if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
       intervalRef.current = null;
       return;
     }
     intervalRef.current = window.setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
+      if (phase === "prep") {
+        setPrepRemaining((prev) => Math.max(0, prev - 1));
+      } else {
+        setRemaining((prev) => Math.max(0, prev - 1));
+      }
     }, 1000);
     return () => {
       if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
@@ -45,15 +52,35 @@ export function AmrapScreen({ onBack }: Props) {
     };
   }, [phase]);
 
-  // Countdown beeps + finish beep.
+  // Prep countdown beeps + transition into running.
+  useEffect(() => {
+    if (phase !== "prep") return;
+    if (prepRemaining > 0 && prepRemaining <= 3) {
+      const key = `prep:${prepRemaining}`;
+      if (lastBeepRef.current !== key) {
+        lastBeepRef.current = key;
+        audio.playCountdownBeep();
+      }
+    }
+    if (prepRemaining === 0) {
+      audio.playTransitionBeep();
+      lastBeepRef.current = null;
+      setPhase("running");
+    }
+  }, [phase, prepRemaining, audio]);
+
+  // Running countdown beeps + finish beep.
   useEffect(() => {
     if (phase !== "running") {
-      lastBeepRef.current = null;
+      if (phase !== "prep") lastBeepRef.current = null;
       return;
     }
-    if (remaining > 0 && remaining <= 3 && lastBeepRef.current !== remaining) {
-      lastBeepRef.current = remaining;
-      audio.playCountdownBeep();
+    if (remaining > 0 && remaining <= 3) {
+      const key = `run:${remaining}`;
+      if (lastBeepRef.current !== key) {
+        lastBeepRef.current = key;
+        audio.playCountdownBeep();
+      }
     }
     if (remaining === 0) {
       audio.playBlockEndBeep();
@@ -64,7 +91,9 @@ export function AmrapScreen({ onBack }: Props) {
   const handleStart = () => {
     audio.unlock();
     setRemaining(duration);
-    setPhase("running");
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("prep");
   };
 
   const handlePause = () => {
@@ -79,6 +108,15 @@ export function AmrapScreen({ onBack }: Props) {
   const handleReset = () => {
     setPhase("idle");
     setRemaining(duration);
+    setPrepRemaining(PREP_SECONDS);
+  };
+
+  const handleSkipPrep = () => {
+    audio.unlock();
+    audio.playTransitionBeep();
+    lastBeepRef.current = null;
+    setPrepRemaining(0);
+    setPhase("running");
   };
 
   const handleRepeat = () => {
@@ -87,12 +125,15 @@ export function AmrapScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  const isPrep = phase === "prep";
+  const isActive = phase === "prep" || phase === "running" || phase === "paused";
+
   return (
     <QuickStartShell
       title="AMRAP"
-      guarded={phase === "running" || phase === "paused"}
+      guarded={isActive}
       onBack={onBack}
-      tone={phase === "running" || phase === "paused" ? "exercise" : "default"}
+      tone={isPrep ? "rest" : isActive ? "exercise" : "default"}
     >
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
@@ -116,9 +157,21 @@ export function AmrapScreen({ onBack }: Props) {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-12">
-          <TimerCircle label="Time remaining" time={formatMMSS(remaining)} />
+          <TimerCircle
+            label={isPrep ? "Get Ready" : "Time remaining"}
+            time={formatMMSS(isPrep ? prepRemaining : remaining)}
+          />
 
           <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
+            {phase === "prep" && (
+              <button
+                type="button"
+                onClick={handleSkipPrep}
+                className="rounded-full border border-current/40 bg-transparent py-4 text-base font-semibold"
+              >
+                Skip
+              </button>
+            )}
             {phase === "running" && (
               <button
                 type="button"

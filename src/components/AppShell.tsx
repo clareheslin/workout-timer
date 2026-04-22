@@ -60,24 +60,28 @@ export function AppShell() {
 
   const tone = headerState.tone ?? "default";
   const isExercise = tone === "exercise";
+  const isRest = tone === "rest";
+  const isImmersive = isExercise || isRest;
   const toneClass = isExercise
     ? "bg-exercise text-exercise-foreground"
-    : "bg-background text-foreground";
+    : isRest
+      ? "bg-rest text-rest-foreground"
+      : "bg-background text-foreground";
 
   return (
     <PageHeaderProvider value={ctxValue}>
       <div
         className={`min-h-screen flex justify-center transition-colors ${
-          isExercise ? "bg-exercise" : "bg-background text-foreground"
+          isExercise ? "bg-exercise" : isRest ? "bg-rest" : "bg-background text-foreground"
         }`}
       >
         <div
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
           <AppHeader tone={tone} />
-          <main className={`flex flex-1 flex-col px-6 pt-4 ${isExercise ? "pb-6" : "pb-24"}`}>{renderTab()}</main>
+          <main className={`flex flex-1 flex-col px-6 pt-4 ${isImmersive ? "pb-6" : "pb-24"}`}>{renderTab()}</main>
 
-          {!isExercise && (
+          {!isImmersive && (
             <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
               <TabButton
                 label="Quick Start"
@@ -106,16 +110,20 @@ export function AppShell() {
   );
 }
 
-function AppHeader({ tone }: { tone: "default" | "exercise" }) {
+function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
   const { title, onBack } = usePageHeaderState();
   const isExercise = tone === "exercise";
+  const isRest = tone === "rest";
+  const isImmersive = isExercise || isRest;
   const logo = isExercise ? femLogoWhite : femLogo;
   return (
     <header
       className={`sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 transition-colors ${
         isExercise
           ? "border-exercise-foreground/20 bg-exercise text-exercise-foreground"
-          : "border-border bg-background text-foreground"
+          : isRest
+            ? "border-rest-foreground/20 bg-rest text-rest-foreground"
+            : "border-border bg-background text-foreground"
       }`}
     >
       <img src={logo} alt="FEM" className="h-7 w-auto shrink-0" />
@@ -127,7 +135,9 @@ function AppHeader({ tone }: { tone: "default" | "exercise" }) {
           className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
             isExercise
               ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              : isRest
+                ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           <ChevronLeft className="h-5 w-5" />
