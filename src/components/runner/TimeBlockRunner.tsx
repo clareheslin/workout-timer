@@ -4,10 +4,10 @@ import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutT
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { blockTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
-import { ExitWorkoutButton } from "./ExitWorkoutButton";
+import { MuteButton } from "./MuteButton";
+import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
-import femLogo from "@/assets/fem-logo.png";
-import femLogoWhite from "@/assets/fem-logo-white.png";
+import { usePageHeader } from "@/components/PageHeaderContext";
 
 interface Props {
   block: Block;
@@ -86,49 +86,53 @@ export function TimeBlockRunner({
   }, [t.phase, t.getRunSummary, onComplete, block.type, block.name, blockIndex]);
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
-  const bgClass =
-    t.phase === "running" || t.phase === "paused"
-      ? isExerciseInterval
-        ? "bg-exercise text-exercise-foreground"
-        : "bg-rest text-rest-foreground"
-      : "bg-background text-foreground";
-
-  const isOnExerciseBg =
-    (t.phase === "running" || t.phase === "paused") && isExerciseInterval;
-  const headerLogo = isOnExerciseBg ? femLogoWhite : femLogo;
-
-  const handleStart = () => {
-    audio.unlock();
-    t.start();
-  };
+  const isActive = t.phase === "running" || t.phase === "paused";
+  const tone = isActive
+    ? isExerciseInterval
+      ? "exercise"
+      : "rest"
+    : "default";
 
   const handleExit = () => {
     t.finish();
     onExitWorkout();
   };
 
-  return (
-    <div className={`flex min-h-screen flex-col transition-colors ${bgClass}`}>
-      <header className="flex items-center justify-between gap-3 p-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <img src={headerLogo} alt="FEM" className="h-7 w-auto shrink-0" />
-          <p className="truncate text-sm font-semibold opacity-80">{workoutName}</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
+  const { handleBack, sheet } = useExitConfirm(isActive, {
+    title: "Stop workout?",
+    description:
+      "Progress for completed blocks will be saved to your log. The current block will be discarded.",
+    confirmLabel: "Stop workout",
+    onConfirm: handleExit,
+    onOpen: () => {
+      if (t.phase === "running") t.pause();
+    },
+  });
+
+  const headerOpts = useMemo(
+    () => ({
+      onBack: handleBack,
+      tone,
+      headerRight: (
+        <>
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
           <MuteButton audio={audio} />
-          <ExitWorkoutButton
-            onExit={handleExit}
-            requireConfirm={t.phase === "running" || t.phase === "paused"}
-            onBeforeConfirm={() => {
-              if (t.phase === "running") t.pause();
-            }}
-          />
-        </div>
-      </header>
+        </>
+      ),
+    }),
+    [handleBack, tone, blockIndex, totalBlocks, audio],
+  );
+  usePageHeader(workoutName, headerOpts);
 
+  const handleStart = () => {
+    audio.unlock();
+    t.start();
+  };
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col">
       <main
         className={
           t.phase === "idle"
@@ -249,52 +253,7 @@ export function TimeBlockRunner({
           </>
         )}
       </main>
+      {sheet}
     </div>
-  );
-}
-
-function MuteButton({ audio }: { audio: UseWorkoutAudioResult }) {
-  return (
-    <button
-      type="button"
-      onClick={audio.toggleMute}
-      aria-label={audio.muted ? "Unmute audio" : "Mute audio"}
-      aria-pressed={audio.muted}
-      className="rounded-full p-1.5 opacity-80 hover:opacity-100"
-    >
-      {audio.muted ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5"
-          aria-hidden="true"
-        >
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-          <line x1="23" y1="9" x2="17" y2="15" />
-          <line x1="17" y1="9" x2="23" y2="15" />
-        </svg>
-      ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5"
-          aria-hidden="true"
-        >
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-        </svg>
-      )}
-    </button>
   );
 }

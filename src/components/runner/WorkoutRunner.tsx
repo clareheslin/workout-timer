@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { Workout, WorkoutLog, WorkoutLogBlock } from "@/types";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
@@ -6,8 +6,8 @@ import { createId } from "@/lib/id";
 import { TimeBlockRunner } from "./TimeBlockRunner";
 import { RepBlockRunner } from "./RepBlockRunner";
 import { WorkoutPreview } from "./WorkoutPreview";
-import { ExitWorkoutButton } from "./ExitWorkoutButton";
-import femLogo from "@/assets/fem-logo.png";
+import { useExitConfirm } from "./useExitConfirm";
+import { usePageHeader } from "@/components/PageHeaderContext";
 
 interface Props {
   workout: Workout;
@@ -76,11 +76,11 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     setPhase("running-block");
   };
 
-  const handleExitWorkout = () => {
+  const handleExitWorkout = useCallback(() => {
     // Write whatever has been completed so far.
     if (logBlocksRef.current.length > 0) writeDiary();
     onExit("exit");
-  };
+  }, [onExit, writeDiary]);
 
   if (!currentBlock) {
     return null;
@@ -101,45 +101,23 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
   if (phase === "done") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6 text-center text-foreground">
-        <h2 className="text-3xl font-bold">Workout complete!</h2>
-        <p className="text-sm opacity-70">Returning to Diary…</p>
-        <button
-          type="button"
-          onClick={() => onExit("done")}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-        >
-          Finish
-        </button>
-      </div>
+      <DoneScreen
+        workoutName={workout.name}
+        onExit={() => onExit("done")}
+      />
     );
   }
 
   if (phase === "between-blocks") {
     const next = workout.blocks[blockIndex + 1];
     return (
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
-        <header className="flex items-center justify-between gap-3 p-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
-            <p className="truncate text-sm font-semibold opacity-80">{workout.name}</p>
-          </div>
-          <ExitWorkoutButton onExit={handleExitWorkout} requireConfirm={false} />
-        </header>
-        <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-          <h2 className="text-2xl font-semibold">
-            {currentBlock.name || `Block ${blockIndex + 1}`} complete.
-          </h2>
-          <p className="text-sm opacity-80">Ready for {next?.name ?? `Block ${blockIndex + 2}`}?</p>
-          <button
-            type="button"
-            onClick={handleNextBlock}
-            className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-          >
-            Preview
-          </button>
-        </main>
-      </div>
+      <BetweenBlocksScreen
+        workoutName={workout.name}
+        currentBlockName={currentBlock.name || `Block ${blockIndex + 1}`}
+        nextBlockName={next?.name ?? `Block ${blockIndex + 2}`}
+        onNext={handleNextBlock}
+        onExit={handleExitWorkout}
+      />
     );
   }
 
@@ -172,5 +150,73 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       onComplete={handleBlockComplete}
       onExitWorkout={handleExitWorkout}
     />
+  );
+}
+
+interface BetweenBlocksScreenProps {
+  workoutName: string;
+  currentBlockName: string;
+  nextBlockName: string;
+  onNext: () => void;
+  onExit: () => void;
+}
+
+function BetweenBlocksScreen({
+  workoutName,
+  currentBlockName,
+  nextBlockName,
+  onNext,
+  onExit,
+}: BetweenBlocksScreenProps) {
+  const { handleBack, sheet } = useExitConfirm(false, {
+    title: "Stop workout?",
+    description:
+      "Progress for completed blocks will be saved to your log.",
+    confirmLabel: "Stop workout",
+    onConfirm: onExit,
+  });
+  const headerOpts = useMemo(() => ({ onBack: handleBack }), [handleBack]);
+  usePageHeader(workoutName, headerOpts);
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col">
+      <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
+        <h2 className="text-2xl font-semibold">{currentBlockName} complete.</h2>
+        <p className="text-sm opacity-80">Ready for {nextBlockName}?</p>
+        <button
+          type="button"
+          onClick={onNext}
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        >
+          Preview
+        </button>
+      </main>
+      {sheet}
+    </div>
+  );
+}
+
+function DoneScreen({
+  workoutName,
+  onExit,
+}: {
+  workoutName: string;
+  onExit: () => void;
+}) {
+  const headerOpts = useMemo(() => ({ onBack: onExit }), [onExit]);
+  usePageHeader(workoutName, headerOpts);
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+      <h2 className="text-3xl font-bold">Workout complete!</h2>
+      <p className="text-sm opacity-70">Returning to Diary…</p>
+      <button
+        type="button"
+        onClick={onExit}
+        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+      >
+        Finish
+      </button>
+    </div>
   );
 }
