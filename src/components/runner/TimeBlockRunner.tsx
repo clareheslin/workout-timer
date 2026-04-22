@@ -7,7 +7,7 @@ import { HoldToExitButton } from "./HoldToExitButton";
 import { MuteButton } from "./MuteButton";
 import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
-import { usePageHeader } from "@/components/PageHeaderContext";
+import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
   block: Block;
@@ -87,7 +87,7 @@ export function TimeBlockRunner({
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
   const isActive = t.phase === "running" || t.phase === "paused";
-  const tone = isActive
+  const tone: PageHeaderTone = isActive
     ? isExerciseInterval
       ? "exercise"
       : "rest"
