@@ -115,7 +115,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
   const isImmersive = isExercise || isRest;
-  const logo = isImmersive ? femLogoWhite : femLogo;
+  const logo = isExercise ? femLogoWhite : femLogo;
   return (
     <header
       className={`sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 transition-colors ${
@@ -133,9 +133,11 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
           onClick={onBack}
           aria-label="Back"
           className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
-            isImmersive
+            isExercise
               ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              : isRest
+                ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           <ChevronLeft className="h-5 w-5" />
