@@ -4,6 +4,7 @@ import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutT
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { blockTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import { ExitWorkoutButton } from "./ExitWorkoutButton";
 import { CoachNotes } from "@/components/CoachNotes";
 import femLogo from "@/assets/fem-logo.png";
 import femLogoWhite from "@/assets/fem-logo-white.png";
@@ -118,6 +119,13 @@ export function TimeBlockRunner({
             Block {blockIndex + 1} of {totalBlocks}
           </p>
           <MuteButton audio={audio} />
+          <ExitWorkoutButton
+            onExit={handleExit}
+            requireConfirm={t.phase === "running" || t.phase === "paused"}
+            onBeforeConfirm={() => {
+              if (t.phase === "running") t.pause();
+            }}
+          />
         </div>
       </header>
 
