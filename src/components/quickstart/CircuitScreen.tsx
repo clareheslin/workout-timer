@@ -192,13 +192,16 @@ export function CircuitScreen({ onBack }: Props) {
   const upNext = schedule[stepIdx + 1];
   const isPrep = phase === "prep";
   const isActive = phase === "prep" || phase === "running" || phase === "paused";
+  const isRestStep =
+    (phase === "running" || phase === "paused") && current?.kind === "rest";
+  const tone = isPrep || isRestStep ? "rest" : isActive ? "exercise" : "default";
 
   return (
     <QuickStartShell
       title="Circuit"
       guarded={isActive}
       onBack={onBack}
-      tone={isPrep ? "rest" : isActive ? "exercise" : "default"}
+      tone={tone}
     >
       {phase === "idle" ? (
         <div className="flex flex-1 flex-col">
