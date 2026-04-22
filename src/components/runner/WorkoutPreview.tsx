@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import type { Workout } from "@/types";
 import { blockTotalSeconds, blockType, formatDuration } from "@/lib/duration";
 import { CoachNotes } from "@/components/CoachNotes";
-import { ExitWorkoutButton } from "./ExitWorkoutButton";
-import femLogo from "@/assets/fem-logo.png";
+import { usePageHeader } from "@/components/PageHeaderContext";
+import { useExitConfirm } from "./useExitConfirm";
 
 interface Props {
   workout: Workout;
@@ -21,16 +22,22 @@ const TYPE_LABEL: Record<string, string> = {
  *  Lists every block with its type, total time and exercise count, and shows
  *  workout-level coach notes. */
 export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
-  return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="flex items-center justify-between gap-3 p-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <img src={femLogo} alt="FEM" className="h-7 w-auto shrink-0" />
-          <p className="truncate text-sm font-semibold opacity-80">{workout.name}</p>
-        </div>
-        <ExitWorkoutButton onExit={onExit} requireConfirm={false} />
-      </header>
+  const { handleBack, sheet } = useExitConfirm(false, {
+    title: "Stop workout?",
+    description:
+      "Progress for completed blocks will be saved to your log. The current block will be discarded.",
+    confirmLabel: "Stop workout",
+    onConfirm: onExit,
+  });
 
+  const headerOpts = useMemo(
+    () => ({ onBack: handleBack }),
+    [handleBack],
+  );
+  usePageHeader(workout.name, headerOpts);
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col">
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
           <h2 className="text-2xl font-semibold">{workout.name}</h2>
@@ -93,6 +100,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
           </button>
         </div>
       </main>
+      {sheet}
     </div>
   );
 }

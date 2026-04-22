@@ -26,7 +26,8 @@ export function AppShell() {
       if (
         prev.title === s.title &&
         prev.onBack === s.onBack &&
-        (prev.tone ?? "default") === (s.tone ?? "default")
+        (prev.tone ?? "default") === (s.tone ?? "default") &&
+        prev.headerRight === s.headerRight
       ) {
         return prev;
       }
@@ -35,24 +36,18 @@ export function AppShell() {
   }, []);
   const ctxValue = useMemo(() => ({ state: headerState, setState }), [headerState, setState]);
 
-  if (running) {
-    return (
-      <div className="flex min-h-screen justify-center bg-background">
-        <div className="w-full max-w-[430px]">
-          <WorkoutRunner
-            workout={running}
-            onExit={(reason) => {
-              setRunning(null);
-              if (reason === "done") setTab("diary");
-            }}
-          />
-          <ToastViewport />
-        </div>
-      </div>
-    );
-  }
-
   const renderTab = () => {
+    if (running) {
+      return (
+        <WorkoutRunner
+          workout={running}
+          onExit={(reason) => {
+            setRunning(null);
+            if (reason === "done") setTab("diary");
+          }}
+        />
+      );
+    }
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
     return <DiaryTab />;
@@ -62,6 +57,7 @@ export function AppShell() {
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
   const isImmersive = isExercise || isRest;
+  const hideNav = isImmersive || running !== null;
   const toneClass = isExercise
     ? "bg-exercise text-exercise-foreground"
     : isRest
@@ -79,9 +75,11 @@ export function AppShell() {
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
           <AppHeader tone={tone} />
-          <main className={`flex flex-1 flex-col px-6 pt-4 ${isImmersive ? "pb-6" : "pb-24"}`}>{renderTab()}</main>
+          <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
+            {renderTab()}
+          </main>
 
-          {!isImmersive && (
+          {!hideNav && (
             <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
               <TabButton
                 label="Quick Start"
@@ -111,10 +109,9 @@ export function AppShell() {
 }
 
 function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
-  const { title, onBack } = usePageHeaderState();
+  const { title, onBack, headerRight } = usePageHeaderState();
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
-  const isImmersive = isExercise || isRest;
   const logo = isExercise ? femLogoWhite : femLogo;
   return (
     <header
@@ -146,6 +143,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
       {title && (
         <h1 className="truncate text-base font-semibold tracking-tight">{title}</h1>
       )}
+      {headerRight && <div className="ml-auto flex items-center gap-2">{headerRight}</div>}
     </header>
   );
 }
