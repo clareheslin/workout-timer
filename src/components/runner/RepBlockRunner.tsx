@@ -3,6 +3,7 @@ import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
+import { CoachNotes } from "@/components/CoachNotes";
 import femLogo from "@/assets/fem-logo.png";
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   blockIndex: number;
   totalBlocks: number;
   workoutName: string;
+  /** Workout-level coach notes. Shown on the Ready screen of the first block. */
+  workoutNotes?: string;
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
