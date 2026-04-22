@@ -28,6 +28,7 @@ export function RepBlockRunner({
   blockIndex,
   totalBlocks,
   workoutName,
+  workoutNotes,
   audio,
   onComplete,
   onExitWorkout,
