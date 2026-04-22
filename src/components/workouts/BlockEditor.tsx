@@ -82,11 +82,12 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         mode: initial.mode ?? "circuit",
         type: initial.type ?? "circuit",
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
+        notes: initial.notes ?? "",
       }),
     [initial],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap }) !== initialSnapshot;
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, notes }) !== initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
