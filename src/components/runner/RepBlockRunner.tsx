@@ -220,7 +220,7 @@ export function RepBlockRunner({
                 onClick={handleContinue}
                 className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
               >
-                Continue
+                Preview next block
               </button>
             </>
           ) : (
