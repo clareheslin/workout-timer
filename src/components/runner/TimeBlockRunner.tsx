@@ -28,6 +28,7 @@ export function TimeBlockRunner({
   blockIndex,
   totalBlocks,
   workoutName,
+  workoutNotes,
   audio,
   onComplete,
   onExitWorkout,
