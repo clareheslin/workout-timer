@@ -328,6 +328,18 @@ export function CircuitScreen({ onBack }: Props) {
                 updateCircuit({ exerciseCount, workSeconds, restSeconds: v })
               }
             />
+            {(() => {
+              const total =
+                exerciseCount > 0 && workSeconds > 0
+                  ? exerciseCount * workSeconds +
+                    Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds)
+                  : 0;
+              return (
+                <p className="pt-1 text-sm opacity-80">
+                  {total > 0 ? `Total Time: ${formatMMSS(total)}` : "Total Time: --:--"}
+                </p>
+              );
+            })()}
           </div>
           <div className="mt-auto pb-2">
             <button
