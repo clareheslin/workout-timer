@@ -6,6 +6,7 @@ import { DiaryTab } from "./DiaryTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 import { QuickStartScreen } from "./quickstart/QuickStartScreen";
+import { InstallPromptBanner } from "./InstallPromptBanner";
 import {
   PageHeaderProvider,
   usePageHeaderState,
