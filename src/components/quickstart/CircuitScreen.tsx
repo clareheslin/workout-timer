@@ -26,12 +26,19 @@ function buildSchedule(
   exerciseCount: number,
   workSeconds: number,
   restSeconds: number,
+  rounds: number,
+  roundRestSeconds: number,
 ): Step[] {
   const steps: Step[] = [];
-  for (let e = 1; e <= exerciseCount; e++) {
-    steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
-    if (restSeconds > 0 && e < exerciseCount) {
-      steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
+  for (let r = 1; r <= rounds; r++) {
+    for (let e = 1; e <= exerciseCount; e++) {
+      steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
+      if (e < exerciseCount && restSeconds > 0) {
+        steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
+      }
+    }
+    if (r < rounds && roundRestSeconds > 0) {
+      steps.push({ kind: "rest", exerciseIndex: 0, durationSeconds: roundRestSeconds });
     }
   }
   return steps;
