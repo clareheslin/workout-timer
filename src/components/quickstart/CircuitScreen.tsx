@@ -341,24 +341,36 @@ export function CircuitScreen({ onBack }: Props) {
               label="Rounds"
               value={rounds}
               min={1}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds: v, roundRestSeconds })
-              }
+              onChange={(v) => {
+                const nextRoundRest =
+                  v > 1 && rounds <= 1 ? restSeconds : roundRestSeconds;
+                updateCircuit({
+                  exerciseCount,
+                  workSeconds,
+                  restSeconds,
+                  rounds: v,
+                  roundRestSeconds: nextRoundRest,
+                });
+              }}
             />
             <SecondsInput
               label="Round Rest"
               valueSeconds={roundRestSeconds}
               minSeconds={0}
+              disabled={rounds <= 1}
               onChange={(v) =>
                 updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds: v })
               }
             />
             {(() => {
+              const roundRestActive = rounds > 1;
               const total =
                 exerciseCount > 0 && workSeconds > 0 && rounds > 0
                   ? rounds * exerciseCount * workSeconds +
                     rounds * Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds) +
-                    Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
+                    (roundRestActive
+                      ? Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
+                      : 0)
                   : 0;
               return (
                 <p className="pt-1 text-sm opacity-80">
