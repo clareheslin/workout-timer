@@ -53,10 +53,6 @@ export function CircuitScreen({ onBack }: Props) {
   const audio = useWorkoutAudio();
 
   const { exerciseCount, workSeconds, restSeconds } = settings.circuit;
-
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [stepIdx, setStepIdx] = useState(0);
-  const { exerciseCount, workSeconds, restSeconds } = settings.circuit;
   const rounds = settings.circuit.rounds ?? 1;
   const roundRestSeconds = settings.circuit.roundRestSeconds ?? 60;
 
