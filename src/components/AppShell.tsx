@@ -75,6 +75,7 @@ export function AppShell() {
         <div
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
+          <InstallPromptBanner />
           <AppHeader tone={tone} />
           <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
             {renderTab()}
