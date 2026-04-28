@@ -289,6 +289,11 @@ export function EmomScreen({ onBack }: Props) {
               min={1}
               onChange={(v) => updateEmom({ intervalSeconds: interval, rounds: v })}
             />
+            <p className="pt-1 text-sm opacity-80">
+              {interval > 0 && rounds > 0
+                ? `Total Time: ${formatMMSS(interval * rounds)}`
+                : "Total Time: --:--"}
+            </p>
           </div>
           <div className="mt-auto pb-2">
             <button
