@@ -56,12 +56,18 @@ export function CircuitScreen({ onBack }: Props) {
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [stepIdx, setStepIdx] = useState(0);
+  const { exerciseCount, workSeconds, restSeconds } = settings.circuit;
+  const rounds = settings.circuit.rounds ?? 1;
+  const roundRestSeconds = settings.circuit.roundRestSeconds ?? 60;
+
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [stepIdx, setStepIdx] = useState(0);
   const [remaining, setRemaining] = useState(0);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
 
   const schedule = useMemo(
-    () => buildSchedule(exerciseCount, workSeconds, restSeconds),
-    [exerciseCount, workSeconds, restSeconds],
+    () => buildSchedule(exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds),
+    [exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds],
   );
 
   const lastBeepRef = useRef<string | null>(null);
