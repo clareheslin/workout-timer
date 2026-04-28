@@ -98,9 +98,10 @@ interface NumberInputProps {
   min: number;
   max?: number;
   onChange: (v: number) => void;
+  disabled?: boolean;
 }
 
-export function NumberInput({ label, value, min, max, onChange }: NumberInputProps) {
+export function NumberInput({ label, value, min, max, onChange, disabled }: NumberInputProps) {
   const [text, setText] = useState(String(value));
 
   useEffect(() => {
@@ -118,12 +119,17 @@ export function NumberInput({ label, value, min, max, onChange }: NumberInputPro
   };
 
   return (
-    <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+    <label
+      className={`flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 ${
+        disabled ? "opacity-50" : ""
+      }`}
+    >
       <span className="text-sm font-medium">{label}</span>
       <input
         type="text"
         inputMode="numeric"
-        value={text}
+        value={disabled ? "--" : text}
+        disabled={disabled}
         onChange={(e) => setText(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -132,7 +138,7 @@ export function NumberInput({ label, value, min, max, onChange }: NumberInputPro
             (e.target as HTMLInputElement).blur();
           }
         }}
-        className="w-20 rounded-md bg-background px-3 py-1.5 text-right font-mono text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-20 rounded-md bg-background px-3 py-1.5 text-right font-mono text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed"
       />
     </label>
   );
@@ -143,16 +149,18 @@ interface SecondsInputProps {
   valueSeconds: number;
   minSeconds: number;
   onChange: (v: number) => void;
+  disabled?: boolean;
 }
 
 /** Plain seconds input — no MM:SS parsing. */
-export function SecondsInput({ label, valueSeconds, minSeconds, onChange }: SecondsInputProps) {
+export function SecondsInput({ label, valueSeconds, minSeconds, onChange, disabled }: SecondsInputProps) {
   return (
     <NumberInput
       label={`${label} (s)`}
       value={valueSeconds}
       min={minSeconds}
       onChange={onChange}
+      disabled={disabled}
     />
   );
 }
