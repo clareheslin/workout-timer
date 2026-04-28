@@ -26,12 +26,19 @@ function buildSchedule(
   exerciseCount: number,
   workSeconds: number,
   restSeconds: number,
+  rounds: number,
+  roundRestSeconds: number,
 ): Step[] {
   const steps: Step[] = [];
-  for (let e = 1; e <= exerciseCount; e++) {
-    steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
-    if (restSeconds > 0 && e < exerciseCount) {
-      steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
+  for (let r = 1; r <= rounds; r++) {
+    for (let e = 1; e <= exerciseCount; e++) {
+      steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
+      if (e < exerciseCount && restSeconds > 0) {
+        steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
+      }
+    }
+    if (r < rounds && roundRestSeconds > 0) {
+      steps.push({ kind: "rest", exerciseIndex: 0, durationSeconds: roundRestSeconds });
     }
   }
   return steps;
@@ -46,6 +53,8 @@ export function CircuitScreen({ onBack }: Props) {
   const audio = useWorkoutAudio();
 
   const { exerciseCount, workSeconds, restSeconds } = settings.circuit;
+  const rounds = settings.circuit.rounds ?? 1;
+  const roundRestSeconds = settings.circuit.roundRestSeconds ?? 60;
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [stepIdx, setStepIdx] = useState(0);
@@ -53,8 +62,8 @@ export function CircuitScreen({ onBack }: Props) {
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
 
   const schedule = useMemo(
-    () => buildSchedule(exerciseCount, workSeconds, restSeconds),
-    [exerciseCount, workSeconds, restSeconds],
+    () => buildSchedule(exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds),
+    [exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds],
   );
 
   const lastBeepRef = useRef<string | null>(null);
@@ -309,7 +318,7 @@ export function CircuitScreen({ onBack }: Props) {
               min={1}
               max={10}
               onChange={(v) =>
-                updateCircuit({ exerciseCount: v, workSeconds, restSeconds })
+                updateCircuit({ exerciseCount: v, workSeconds, restSeconds, rounds, roundRestSeconds })
               }
             />
             <SecondsInput
@@ -317,7 +326,7 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={workSeconds}
               minSeconds={1}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds: v, restSeconds })
+                updateCircuit({ exerciseCount, workSeconds: v, restSeconds, rounds, roundRestSeconds })
               }
             />
             <SecondsInput
@@ -325,14 +334,31 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={restSeconds}
               minSeconds={0}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds: v })
+                updateCircuit({ exerciseCount, workSeconds, restSeconds: v, rounds, roundRestSeconds })
+              }
+            />
+            <NumberInput
+              label="Rounds"
+              value={rounds}
+              min={1}
+              onChange={(v) =>
+                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds: v, roundRestSeconds })
+              }
+            />
+            <SecondsInput
+              label="Round Rest"
+              valueSeconds={roundRestSeconds}
+              minSeconds={0}
+              onChange={(v) =>
+                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds: v })
               }
             />
             {(() => {
               const total =
-                exerciseCount > 0 && workSeconds > 0
-                  ? exerciseCount * workSeconds +
-                    Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds)
+                exerciseCount > 0 && workSeconds > 0 && rounds > 0
+                  ? rounds * exerciseCount * workSeconds +
+                    rounds * Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds) +
+                    Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
                   : 0;
               return (
                 <p className="pt-1 text-sm opacity-80">

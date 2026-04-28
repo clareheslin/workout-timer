@@ -7,13 +7,21 @@ export interface QuickStartSettings {
     exerciseCount: number;
     workSeconds: number;
     restSeconds: number;
+    rounds: number;
+    roundRestSeconds: number;
   };
 }
 
 export const QUICK_START_DEFAULTS: QuickStartSettings = {
   amrap: { durationSeconds: 300 },
   emom: { intervalSeconds: 60, rounds: 10 },
-  circuit: { exerciseCount: 4, workSeconds: 40, restSeconds: 20 },
+  circuit: {
+    exerciseCount: 4,
+    workSeconds: 40,
+    restSeconds: 20,
+    rounds: 1,
+    roundRestSeconds: 60,
+  },
 };
 
 const STORAGE_KEY = "quickStartSettings";
