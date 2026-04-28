@@ -318,7 +318,7 @@ export function CircuitScreen({ onBack }: Props) {
               min={1}
               max={10}
               onChange={(v) =>
-                updateCircuit({ exerciseCount: v, workSeconds, restSeconds })
+                updateCircuit({ exerciseCount: v, workSeconds, restSeconds, rounds, roundRestSeconds })
               }
             />
             <SecondsInput
@@ -326,7 +326,7 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={workSeconds}
               minSeconds={1}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds: v, restSeconds })
+                updateCircuit({ exerciseCount, workSeconds: v, restSeconds, rounds, roundRestSeconds })
               }
             />
             <SecondsInput
@@ -334,14 +334,31 @@ export function CircuitScreen({ onBack }: Props) {
               valueSeconds={restSeconds}
               minSeconds={0}
               onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds: v })
+                updateCircuit({ exerciseCount, workSeconds, restSeconds: v, rounds, roundRestSeconds })
+              }
+            />
+            <NumberInput
+              label="Rounds"
+              value={rounds}
+              min={1}
+              onChange={(v) =>
+                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds: v, roundRestSeconds })
+              }
+            />
+            <SecondsInput
+              label="Round Rest"
+              valueSeconds={roundRestSeconds}
+              minSeconds={0}
+              onChange={(v) =>
+                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds: v })
               }
             />
             {(() => {
               const total =
-                exerciseCount > 0 && workSeconds > 0
-                  ? exerciseCount * workSeconds +
-                    Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds)
+                exerciseCount > 0 && workSeconds > 0 && rounds > 0
+                  ? rounds * exerciseCount * workSeconds +
+                    rounds * Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds) +
+                    Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
                   : 0;
               return (
                 <p className="pt-1 text-sm opacity-80">
