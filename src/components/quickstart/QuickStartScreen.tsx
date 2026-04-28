@@ -59,7 +59,7 @@ function QuickStartList({ onPick }: { onPick: (id: QuickStartTimer) => void }) {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">Pick a timer. No setup, no logging.</p>
+      <p className="text-sm text-muted-foreground">Pick a timer. Minimal setup, no logging.</p>
 
       <ul className="space-y-3">
         {OPTIONS.map((option) => {
