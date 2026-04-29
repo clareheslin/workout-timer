@@ -290,12 +290,19 @@ export function RepBlockRunner({
                         onClick={handlePauseResume}
                         className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
                       >
-                        Pause
+                        {isAmrap ? "Pause" : "Stop"}
                       </button>
                       <p className="text-[11px] text-muted-foreground">Timer running</p>
                     </>
+                  ) : isAmrap ? (
+                    <HoldToExitButton onTap={handlePauseResume} onHoldComplete={onExitWorkout} />
                   ) : (
-                    <HoldToExitButton onResume={handlePauseResume} onExit={onExitWorkout} />
+                    <HoldToExitButton
+                      onTap={handleEnd}
+                      onHoldComplete={onExitWorkout}
+                      label="Complete"
+                      hint="Tap to complete · Hold to exit workout"
+                    />
                   )}
                 </>
               )}
