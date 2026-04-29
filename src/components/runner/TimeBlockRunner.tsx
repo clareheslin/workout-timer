@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { ChevronRight } from "lucide-react";
 import type { Block, Workout, WorkoutLogBlock } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
@@ -17,6 +18,7 @@ interface Props {
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
+  onSkipBlock: () => void;
 }
 
 
@@ -30,6 +32,7 @@ export function TimeBlockRunner({
   audio,
   onComplete,
   onExitWorkout,
+  onSkipBlock,
 }: Props) {
   const subWorkout = useMemo<Workout>(
     () => ({
@@ -119,11 +122,19 @@ export function TimeBlockRunner({
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
+          <button
+            type="button"
+            onClick={onSkipBlock}
+            aria-label="Skip block"
+            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, isActive, tone, blockIndex, totalBlocks, audio],
+    [handleBack, isActive, tone, blockIndex, totalBlocks, audio, onSkipBlock],
   );
   usePageHeader(workoutName, headerOpts);
 
