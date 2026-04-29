@@ -30,44 +30,72 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const startedAtRef = useRef<string>(new Date().toISOString());
   const logBlocksRef = useRef<WorkoutLogBlock[]>([]);
   const loggedRef = useRef(false);
+  const blocksWereSkippedRef = useRef(false);
 
   const currentBlock = workout.blocks[blockIndex];
   const isLastBlock = blockIndex >= workout.blocks.length - 1;
 
-  const writeDiary = useCallback(() => {
-    if (loggedRef.current) return;
-    if (logBlocksRef.current.length === 0) return;
-    loggedRef.current = true;
-    const completedAt = new Date();
-    const startedAtDate = new Date(startedAtRef.current);
-    const totalDurationSeconds = Math.max(
-      0,
-      Math.round((completedAt.getTime() - startedAtDate.getTime()) / 1000),
-    );
-    const log: WorkoutLog = {
-      id: createId("log"),
-      workoutId: workout.id,
-      workoutName: workout.name,
-      startedAt: startedAtRef.current,
-      completedAt: completedAt.toISOString(),
-      totalDurationSeconds,
-      blockBreakdown: logBlocksRef.current,
-    };
-    diary.addLog(log);
-  }, [diary, workout.id, workout.name]);
+  const writeDiary = useCallback(
+    (incomplete: boolean) => {
+      if (loggedRef.current) return;
+      if (logBlocksRef.current.length === 0) return;
+      loggedRef.current = true;
+      const completedAt = new Date();
+      const startedAtDate = new Date(startedAtRef.current);
+      const totalDurationSeconds = Math.max(
+        0,
+        Math.round((completedAt.getTime() - startedAtDate.getTime()) / 1000),
+      );
+      const log: WorkoutLog = {
+        id: createId("log"),
+        workoutId: workout.id,
+        workoutName: workout.name,
+        startedAt: startedAtRef.current,
+        completedAt: completedAt.toISOString(),
+        totalDurationSeconds,
+        blockBreakdown: logBlocksRef.current,
+        ...(incomplete ? { incomplete: true } : {}),
+      };
+      diary.addLog(log);
+    },
+    [diary, workout.id, workout.name],
+  );
+
+  const clearInProgress = () => {
+    try {
+      window.localStorage.removeItem("workout_in_progress");
+    } catch {
+      // ignore
+    }
+  };
 
   const handleBlockComplete = useCallback(
     (logBlock: WorkoutLogBlock) => {
       logBlocksRef.current = [...logBlocksRef.current, logBlock];
+      // Crash-protection snapshot: persist completed blocks immediately.
+      try {
+        const snapshot = {
+          workoutId: workout.id,
+          workoutName: workout.name,
+          startedAt: startedAtRef.current,
+          lastBlockAt: new Date().toISOString(),
+          blockBreakdown: logBlocksRef.current,
+          incomplete: true as const,
+        };
+        window.localStorage.setItem("workout_in_progress", JSON.stringify(snapshot));
+      } catch {
+        // ignore
+      }
       if (isLastBlock) {
         setPhase("done");
-        writeDiary();
+        writeDiary(blocksWereSkippedRef.current);
+        clearInProgress();
         window.setTimeout(() => onExit("done"), 2000);
       } else {
         setPhase("between-blocks");
       }
     },
-    [isLastBlock, onExit, writeDiary],
+    [isLastBlock, onExit, writeDiary, workout.id, workout.name],
   );
 
   const handleNextBlock = () => {
@@ -78,10 +106,12 @@ export function WorkoutRunner({ workout, onExit }: Props) {
 
   const handleExitWorkout = useCallback(() => {
     // Exit always discards in-flight progress; only natural completion logs.
+    clearInProgress();
     onExit("exit");
   }, [onExit]);
 
   const handleSkipBlock = useCallback(() => {
+    blocksWereSkippedRef.current = true;
     // Skip discards the current block — no onComplete, no log entry.
     if (isLastBlock) {
       setPhase("done");
