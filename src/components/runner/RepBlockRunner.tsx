@@ -210,11 +210,12 @@ export function RepBlockRunner({
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
-          {phase === "idle" && (
-            <p className="text-xs font-medium uppercase tracking-wider opacity-70">
-              Block Preview
-            </p>
-          )}
+          <p
+            className="text-xs font-medium uppercase tracking-wider opacity-70"
+            aria-hidden={phase !== "idle"}
+          >
+            {phase === "idle" ? "Block Preview" : "\u00A0"}
+          </p>
           <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
           <p className="text-xs text-muted-foreground">
             {isAmrap
