@@ -13,13 +13,25 @@ function isIOS() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+function matchesDisplayMode(mode: string): boolean {
+  try {
+    return window.matchMedia?.(`(display-mode: ${mode})`).matches === true;
+  } catch {
+    return false;
+  }
+}
+
 function isStandalone() {
   if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    // iOS Safari
-    (navigator as unknown as { standalone?: boolean }).standalone === true
-  );
+  if (matchesDisplayMode("standalone")) return true;
+  if (matchesDisplayMode("fullscreen")) return true;
+  if (matchesDisplayMode("minimal-ui")) return true;
+  if (matchesDisplayMode("window-controls-overlay")) return true;
+  // iOS Safari
+  if ((navigator as unknown as { standalone?: boolean }).standalone === true) return true;
+  // Android TWA / launched from installed app
+  if (typeof document !== "undefined" && document.referrer.startsWith("android-app://")) return true;
+  return false;
 }
 
 export function InstallPromptBanner() {
