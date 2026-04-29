@@ -30,6 +30,7 @@ export function EmomScreen({ onBack }: Props) {
   const [elapsed, setElapsed] = useState(0);
 
   const lastBeepRef = useRef<string | null>(null);
+  const midpointFiredRef = useRef(false);
 
   // Wall-clock anchor for the running EMOM. `sessionAnchorAt` is the wall-clock
   // ms at which `elapsedAtAnchor` seconds had been completed. While running we
