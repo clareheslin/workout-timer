@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
-import { Dumbbell, BookOpen, Zap, ChevronLeft } from "lucide-react";
-import type { Workout } from "@/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Dumbbell, BookOpen, Zap, ChevronLeft, X } from "lucide-react";
+import type { Workout, WorkoutLog, WorkoutLogBlock } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 import { QuickStartScreen } from "./quickstart/QuickStartScreen";
 import { InstallPromptBanner } from "./InstallPromptBanner";
+import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
+import { createId } from "@/lib/id";
 import {
   PageHeaderProvider,
   usePageHeaderState,
@@ -17,10 +19,65 @@ import femLogoWhite from "@/assets/fem-logo-white.png";
 
 type Tab = "workouts" | "quickstart" | "diary";
 
+interface InProgressSnapshot {
+  workoutId: string;
+  workoutName: string;
+  startedAt: string;
+  lastBlockAt: string;
+  blockBreakdown: WorkoutLogBlock[];
+  incomplete: true;
+}
+
+/** Read & clear an interrupted-workout snapshot from localStorage.
+ *  Runs synchronously during initial render via lazy useState so the
+ *  recovery banner is shown on first paint, not after navigation. */
+function consumeInterruptedSnapshot(): InProgressSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem("workout_in_progress");
+    if (!raw) return null;
+    window.localStorage.removeItem("workout_in_progress");
+    const parsed = JSON.parse(raw) as InProgressSnapshot;
+    if (!parsed || !Array.isArray(parsed.blockBreakdown) || parsed.blockBreakdown.length === 0) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
+  const diary = useWorkoutDiary();
+  // Lazy init so the snapshot is consumed before the first render commits.
+  const [interrupted, setInterrupted] = useState<InProgressSnapshot | null>(() =>
+    consumeInterruptedSnapshot(),
+  );
+
+  // Persist the recovered entry to the diary on mount.
+  useEffect(() => {
+    if (!interrupted) return;
+    const startedAtMs = new Date(interrupted.startedAt).getTime();
+    const lastBlockMs = new Date(interrupted.lastBlockAt).getTime();
+    const totalDurationSeconds = Math.max(0, Math.round((lastBlockMs - startedAtMs) / 1000));
+    const log: WorkoutLog = {
+      id: createId("log"),
+      workoutId: interrupted.workoutId,
+      workoutName: interrupted.workoutName,
+      startedAt: interrupted.startedAt,
+      // Use the last completed block's timestamp, NOT the recovery time.
+      completedAt: interrupted.lastBlockAt,
+      totalDurationSeconds,
+      blockBreakdown: interrupted.blockBreakdown,
+      incomplete: true,
+    };
+    diary.addLog(log);
+    // Only run once for this snapshot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setState = useCallback((s: PageHeaderState) => {
     setHeaderState((prev) => {
@@ -76,6 +133,25 @@ export function AppShell() {
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
           <InstallPromptBanner />
+          {interrupted && (
+            <div
+              role="status"
+              className="flex items-start gap-2 border-b border-border bg-accent/40 px-4 py-3 text-sm text-foreground"
+            >
+              <p className="flex-1">
+                It looks like your last workout was interrupted. Your completed blocks have been
+                saved to your diary.
+              </p>
+              <button
+                type="button"
+                onClick={() => setInterrupted(null)}
+                aria-label="Dismiss"
+                className="-mr-1 -mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           <AppHeader tone={tone} />
           <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
             {renderTab()}

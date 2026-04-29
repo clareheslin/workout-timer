@@ -93,4 +93,6 @@ export interface WorkoutLog {
   completedAt: string; // ISO timestamp
   totalDurationSeconds: number;
   blockBreakdown: WorkoutLogBlock[];
+  /** True if the workout was interrupted (crash) or had skipped blocks. */
+  incomplete?: boolean;
 }

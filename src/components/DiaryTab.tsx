@@ -104,6 +104,14 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
   );
 }
 
+function PartialBadge() {
+  return (
+    <span className="shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      Partial
+    </span>
+  );
+}
+
 interface LogCardProps {
   log: WorkoutLog;
   onRequestDelete: () => void;
@@ -145,7 +153,10 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
             {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
           </span>
           <div className="min-w-0 flex-1 text-card-foreground">
-            <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+              {log.incomplete && <PartialBadge />}
+            </div>
             <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
             <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
           </div>
@@ -158,7 +169,10 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
     <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+          <div className="flex items-center gap-2">
+            <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+            {log.incomplete && <PartialBadge />}
+          </div>
           <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
           <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
         </div>
