@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { ChevronRight } from "lucide-react";
 import type { Block, Workout, WorkoutLogBlock } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
@@ -17,6 +18,7 @@ interface Props {
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
+  onSkipBlock: () => void;
 }
 
 
@@ -30,6 +32,7 @@ export function TimeBlockRunner({
   audio,
   onComplete,
   onExitWorkout,
+  onSkipBlock,
 }: Props) {
   const subWorkout = useMemo<Workout>(
     () => ({
@@ -119,11 +122,19 @@ export function TimeBlockRunner({
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
+          <button
+            type="button"
+            onClick={onSkipBlock}
+            aria-label="Skip block"
+            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, isActive, tone, blockIndex, totalBlocks, audio],
+    [handleBack, isActive, tone, blockIndex, totalBlocks, audio, onSkipBlock],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -217,7 +228,7 @@ export function TimeBlockRunner({
                 ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
                 : "Block complete"}
             </div>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center justify-center">
               <button
                 type="button"
                 onClick={t.skipInterval}
@@ -225,14 +236,6 @@ export function TimeBlockRunner({
                 aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of block"}
               >
                 Skip Interval ›
-              </button>
-              <button
-                type="button"
-                onClick={t.endBlock}
-                className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                aria-label="End block"
-              >
-                Skip Block »
               </button>
             </div>
             {t.phase === "running" ? (

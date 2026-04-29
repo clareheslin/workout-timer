@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type { Block, WorkoutLogBlock } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
@@ -16,6 +17,7 @@ interface Props {
   audio: UseWorkoutAudioResult;
   onComplete: (logBlock: WorkoutLogBlock) => void;
   onExitWorkout: () => void;
+  onSkipBlock: () => void;
 }
 
 type Phase = "idle" | "running" | "paused" | "done";
@@ -31,6 +33,7 @@ export function RepBlockRunner({
   audio,
   onComplete,
   onExitWorkout,
+  onSkipBlock,
 }: Props) {
   const isAmrap = (block.type ?? "circuit") === "amrap";
   const timeCap = Math.max(1, block.timeCap ?? 0);
@@ -184,11 +187,19 @@ export function RepBlockRunner({
           <p className="text-xs opacity-70">
             Block {blockIndex + 1} of {totalBlocks}
           </p>
+          <button
+            type="button"
+            onClick={onSkipBlock}
+            aria-label="Skip block"
+            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, isActive, blockIndex, totalBlocks, audio],
+    [handleBack, isActive, blockIndex, totalBlocks, audio, onSkipBlock],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -265,24 +276,14 @@ export function RepBlockRunner({
 
               {(phase === "running" || phase === "paused") && (
                 <>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleEnd}
-                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                      aria-label="Skip to end of block"
-                    >
-                      Skip Interval ›
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleEnd}
-                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                      aria-label="End block"
-                    >
-                      Skip Block »
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleEnd}
+                    className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                    aria-label="Skip to end of block"
+                  >
+                    Skip Interval ›
+                  </button>
                   {phase === "running" ? (
                     <>
                       <button
