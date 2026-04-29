@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { RepExercise } from "@/types";
+import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: RepExercise;
@@ -53,12 +54,9 @@ export function RepItemRow({ item, onChange, onDelete }: Props) {
         </button>
 
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <input
-            type="text"
+          <NameTextarea
             value={item.name}
-            onChange={(e) => onChange({ name: e.target.value })}
-            placeholder="Exercise name"
-            className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+            onChange={(name) => onChange({ name })}
           />
           <div className="flex shrink-0 items-center gap-1">
             <input
