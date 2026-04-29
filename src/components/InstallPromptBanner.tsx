@@ -63,8 +63,20 @@ export function InstallPromptBanner() {
       e.preventDefault();
       setDeferred(e as BIPEvent);
     };
+    const onInstalled = () => {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, "permanent");
+      } catch {
+        // ignore
+      }
+      setVisible(false);
+    };
     window.addEventListener("beforeinstallprompt", onBIP);
-    return () => window.removeEventListener("beforeinstallprompt", onBIP);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   if (!visible) return null;
