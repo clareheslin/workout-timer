@@ -238,6 +238,7 @@ export function EmomScreen({ onBack }: Props) {
     } else {
       audio.playTransitionBeep();
       lastBeepRef.current = null;
+      midpointFiredRef.current = false;
       sessionAnchorAtRef.current = Date.now();
       elapsedAtAnchorRef.current = targetElapsed;
       setElapsed(targetElapsed);
