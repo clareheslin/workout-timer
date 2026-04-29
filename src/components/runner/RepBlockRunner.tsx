@@ -282,14 +282,16 @@ export function RepBlockRunner({
 
               {(phase === "running" || phase === "paused") && (
                 <>
-                  <button
-                    type="button"
-                    onClick={handleEnd}
-                    className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                    aria-label="Skip to end of block"
-                  >
-                    Skip Interval ›
-                  </button>
+                  {!isAmrap && (
+                    <button
+                      type="button"
+                      onClick={handleEnd}
+                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                      aria-label="Skip to end of block"
+                    >
+                      Skip Interval ›
+                    </button>
+                  )}
                   {phase === "running" ? (
                     <>
                       <button
