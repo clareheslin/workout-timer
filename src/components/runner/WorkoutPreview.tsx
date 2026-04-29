@@ -32,6 +32,9 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
         <div className="flex flex-col items-center gap-1 text-center">
+          <p className="text-xs font-medium uppercase tracking-wider opacity-70">
+            Workout Preview
+          </p>
           <h2 className="text-2xl font-semibold">{workout.name}</h2>
           <p className="text-xs opacity-70">
             {workout.blocks.length} {workout.blocks.length === 1 ? "block" : "blocks"}
@@ -55,7 +58,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
               const exerciseLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
               let timeLabel: string | null = null;
               if (t === "amrap") {
-                timeLabel = `Cap ${formatDuration(Math.max(0, b.timeCap ?? 0))}`;
+                timeLabel = formatDuration(Math.max(0, b.timeCap ?? 0));
               } else if (t === "forTime") {
                 timeLabel = null;
               } else {
@@ -88,7 +91,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
             onClick={onBegin}
             className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
           >
-            Begin
+            Start Workout
           </button>
         </div>
       </main>

@@ -1,54 +1,41 @@
 ## Goal
 
-Replace the in-runner "Skip Block" button with a right-pointing header chevron, owned by `WorkoutRunner`. Skipping advances `blockIndex` without firing `onComplete` or logging the skipped block.
+UI text-only changes on three files. No logic, no layout. Boundary: in `RepBlockRunner`, the always-visible block name during running/paused/done is **out of scope** — only the idle-state title changes.
 
 ---
 
-## 1. `WorkoutRunner.tsx` — owns skip logic
+## 1. `src/components/runner/WorkoutPreview.tsx`
 
-Add `handleSkipBlock`:
+- Add `"Workout Preview"` eyebrow label above the workout name (small uppercase, mirrors existing meta typography).
+- Line 58: drop the `Cap ` prefix from the AMRAP `timeLabel` — show duration only.
+- Line 91: rename primary button from `Begin` → `Start Workout`.
 
-- Does NOT call `onComplete`, does NOT push to `logBlocksRef`.
-- If `isLastBlock`: `setPhase("done")`, call `writeDiary()` (which logs only previously-completed blocks; if none, the empty-list early-return means nothing is written), then `setTimeout(onExit("done"), 2000)` — same tail as `handleBlockComplete`.
-- Otherwise: `setBlockIndex(i => i + 1)` and `setPhase("running-block")`. The next runner mounts via `key={currentBlock.id}` with internal phase `"idle"`, rendering the Ready screen — no auto-start.
+## 2. `src/components/runner/TimeBlockRunner.tsx` — idle screen only
 
-Pass `onSkipBlock={handleSkipBlock}` to both `TimeBlockRunner` and `RepBlockRunner`.
-
-Not added to `BetweenBlocksScreen`, `DoneScreen`, or `WorkoutPreview` (per confirmation).
-
-## 2. `TimeBlockRunner.tsx` and `RepBlockRunner.tsx` — render the chevron
-
-Accept new prop `onSkipBlock: () => void`.
-
-In `headerRight`, render the right chevron after the "Block i of n" text and before `MuteButton`:
-
+The idle block already renders:
 ```tsx
-headerRight: (
-  <>
-    <p className="text-xs opacity-70">Block {blockIndex + 1} of {totalBlocks}</p>
-    <button
-      type="button"
-      onClick={onSkipBlock}
-      aria-label="Skip block"
-      className="..."
-    >
-      <ChevronRight className="h-5 w-5" />
-    </button>
-    <MuteButton audio={audio} />
-  </>
-),
+<h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+```
+Replace its text with `"{name} Preview"` (e.g. `"Warm-up Preview"`). This whole block is already inside `t.phase === "idle"`, so no other state is touched.
+
+Rename Start button label → `Start Block`.
+
+## 3. `src/components/runner/RepBlockRunner.tsx` — idle screen only
+
+Currently the `<h2>{block.name || ...}</h2>` sits **outside** the phase conditional, so it renders during idle, running, paused, and done. Per confirmation, the always-visible name during running/paused/done must remain unchanged.
+
+Approach: change the existing always-visible `<h2>` so its text varies by phase:
+```tsx
+<h2 className="text-xl font-semibold">
+  {phase === "idle"
+    ? `${block.name || `Block ${blockIndex + 1}`} Preview`
+    : (block.name || `Block ${blockIndex + 1}`)}
+</h2>
 ```
 
-The chevron is always visible — not gated on `isActive` — so it shows on the Ready screen, while running, and while paused. Mirrors the back chevron's styling.
+This keeps the element identity, layout, and styling identical, and only swaps text content when phase === "idle". Running/paused/done text is byte-identical to today.
 
-## 3. Remove "Skip Block" button
-
-- `TimeBlockRunner.tsx`: remove the `t.endBlock` "Skip Block »" button. Keep "Skip Interval ›" and centre it directly above the primary timer control button (Pause / HoldToExitButton).
-- `RepBlockRunner.tsx`: remove any "Skip Block" / end-block button. (No "Skip Interval" exists here.)
-
-## 4. Header plumbing
-
-`AppHeader`/`PageHeaderContext` already accept arbitrary nodes via `headerRight` — verify on first read; no schema change expected.
+Rename idle Start button label → `Start Block`.
 
 ---
 
@@ -56,13 +43,8 @@ The chevron is always visible — not gated on `isActive` — so it shows on the
 
 | File | Change |
 |---|---|
-| `src/components/runner/WorkoutRunner.tsx` | Add `handleSkipBlock`; pass `onSkipBlock` to both runners. |
-| `src/components/runner/TimeBlockRunner.tsx` | Accept `onSkipBlock`; add right chevron to `headerRight`; remove Skip Block button; centre Skip Interval above primary control. |
-| `src/components/runner/RepBlockRunner.tsx` | Accept `onSkipBlock`; add right chevron to `headerRight`; remove Skip Block button if present. |
-| `src/components/PageHeaderContext.tsx` | Read-only verify `headerRight` accepts arbitrary nodes; no edit expected. |
+| `src/components/runner/WorkoutPreview.tsx` | Eyebrow "Workout Preview" added; "Cap " prefix dropped from AMRAP duration; button "Begin" → "Start Workout". |
+| `src/components/runner/TimeBlockRunner.tsx` | Idle title text → "{name} Preview"; Start button → "Start Block". |
+| `src/components/runner/RepBlockRunner.tsx` | Idle-only conditional on existing `<h2>` text → "{name} Preview"; running/paused/done text unchanged; Start button → "Start Block". |
 
-## Behaviour
-
-- Chevron visible on every block runner screen (idle/Ready, running, paused, block-done).
-- Chevron NOT visible on workout preview, between-blocks, or workout-complete screens.
-- Tapping skips the current block without logging it; routes to next block's Ready screen, or to the workout-complete screen + diary write if it was the last block.
+No other files, no logic changes, no layout changes.
