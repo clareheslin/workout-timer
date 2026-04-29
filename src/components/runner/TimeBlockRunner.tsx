@@ -155,7 +155,10 @@ export function TimeBlockRunner({
         {t.phase === "idle" && (
           <>
             <div className="flex flex-col items-center gap-1 text-center">
-              <h2 className="text-xl font-semibold">{`${block.name || `Block ${blockIndex + 1}`} Preview`}</h2>
+              <p className="text-xs font-medium uppercase tracking-wider opacity-70">
+                Block Preview
+              </p>
+              <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
               <p className="text-xs opacity-70">
                 {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
                 {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
