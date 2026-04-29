@@ -298,7 +298,7 @@ export function RepBlockRunner({
                       >
                         {isAmrap ? "Pause" : "Stop"}
                       </button>
-                      <p className="text-[11px] text-muted-foreground">Timer running</p>
+                      
                     </>
                   ) : isAmrap ? (
                     <HoldToExitButton onTap={handlePauseResume} onHoldComplete={onExitWorkout} />

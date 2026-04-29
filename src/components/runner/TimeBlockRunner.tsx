@@ -145,26 +145,24 @@ export function TimeBlockRunner({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <main
-        className={
-          t.phase === "idle"
-            ? "flex flex-1 flex-col gap-6 px-6 pb-8 pt-4"
-            : "flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center"
-        }
-      >
+      <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
+        <div className="flex flex-col items-center gap-1 text-center">
+          {t.phase === "idle" && (
+            <p className="text-xs font-medium uppercase tracking-wider opacity-70">
+              Block Preview
+            </p>
+          )}
+          <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+          {t.phase === "idle" && (
+            <p className="text-xs opacity-70">
+              {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+              {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
+            </p>
+          )}
+        </div>
+
         {t.phase === "idle" && (
           <>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-xs font-medium uppercase tracking-wider opacity-70">
-                Block Preview
-              </p>
-              <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
-              <p className="text-xs opacity-70">
-                {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
-                {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
-              </p>
-            </div>
-
             {block.notes && <CoachNotes notes={block.notes} label="Block notes" />}
 
             <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
@@ -208,7 +206,7 @@ export function TimeBlockRunner({
         )}
 
         {(t.phase === "running" || t.phase === "paused") && t.currentInterval && (
-          <>
+          <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
             <p className="text-sm font-medium uppercase tracking-wider opacity-80">
               {t.currentInterval.kind === "rest" && !t.currentInterval.isPrep
                 ? "Rest"
@@ -257,7 +255,7 @@ export function TimeBlockRunner({
                 <HoldToExitButton onTap={t.resume} onHoldComplete={handleExit} />
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
       {sheet}
