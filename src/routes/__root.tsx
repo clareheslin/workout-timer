@@ -34,7 +34,7 @@ export const Route = createRootRoute({
       { title: "FEM Workout Timer" },
       { name: "description", content: "Workout Timer helps users create, manage, and log structured exercise routines." },
       { name: "author", content: "Lovable" },
-      { name: "theme-color", content: "#0b0b0b" },
+      { name: "theme-color", content: "#ffffff" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
