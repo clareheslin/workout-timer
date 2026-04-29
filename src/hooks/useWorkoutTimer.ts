@@ -221,6 +221,10 @@ export function useWorkoutTimer(
   useEffect(() => {
     blockSchedulesRef.current = blockSchedules;
   }, [blockSchedules]);
+  // Reset the once-per-interval midpoint guard whenever we move to a new interval.
+  useEffect(() => {
+    midpointFiredRef.current = false;
+  }, [blockIndex, scheduleIndex]);
   useEffect(() => {
     blockIndexRef.current = blockIndex;
   }, [blockIndex]);
