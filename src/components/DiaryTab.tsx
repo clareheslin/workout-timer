@@ -1,12 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Trash2 } from "lucide-react";
 import type { WorkoutLog, WorkoutLogBlock } from "@/types";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { usePageHeader } from "./PageHeaderContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function formatLogDate(iso: string): string {
   try {
     const d = new Date(iso);
-    // Locale long format: "Saturday 18 Apr · 09:32"
     const datePart = d.toLocaleDateString(undefined, {
       weekday: "long",
       day: "numeric",
@@ -94,24 +104,55 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
   );
 }
 
-function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
+interface LogCardProps {
+  log: WorkoutLog;
+  onRequestDelete: () => void;
+  selectionMode: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+}
+
+function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect }: LogCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [confirming, setConfirming] = useState(false);
 
+  // Collapse details when entering selection mode so the card layout stays predictable.
   useEffect(() => {
-    if (!confirming) return;
-    const t = window.setTimeout(() => setConfirming(false), 4000);
-    return () => window.clearTimeout(t);
-  }, [confirming]);
+    if (selectionMode) setExpanded(false);
+  }, [selectionMode]);
 
-  const handleDelete = () => {
-    if (confirming) {
-      setConfirming(false);
-      onDelete();
-    } else {
-      setConfirming(true);
-    }
-  };
+  if (selectionMode) {
+    return (
+      <li>
+        <button
+          type="button"
+          onClick={onToggleSelect}
+          aria-pressed={selected}
+          aria-label={`${selected ? "Deselect" : "Select"} ${log.workoutName || "Untitled"}`}
+          className={`flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+            selected
+              ? "border-primary bg-primary/5"
+              : "border-border bg-card hover:bg-accent/40"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+              selected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background"
+            }`}
+          >
+            {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+          </span>
+          <div className="min-w-0 flex-1 text-card-foreground">
+            <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
+            <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
+            <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
+          </div>
+        </button>
+      </li>
+    );
+  }
 
   return (
     <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
@@ -134,14 +175,12 @@ function LogCard({ log, onDelete }: { log: WorkoutLog; onDelete: () => void }) {
         </button>
         <button
           type="button"
-          onClick={handleDelete}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-            confirming
-              ? "bg-destructive text-destructive-foreground"
-              : "border border-border hover:bg-accent"
-          }`}
+          onClick={onRequestDelete}
+          aria-label={`Delete ${log.workoutName || "Untitled"}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
         >
-          {confirming ? `Delete "${log.workoutName || "Untitled"}"? Tap to confirm` : "Delete"}
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Delete
         </button>
       </div>
 
@@ -186,23 +225,155 @@ function EmptyState() {
 }
 
 export function DiaryTab() {
-  const { logs, deleteLog } = useWorkoutDiary();
+  const { logs, deleteLog, setLogs } = useWorkoutDiary();
   usePageHeader("Workout Log");
 
-  // Most recent first. addLog already prepends, but sort defensively.
-  const sorted = [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pendingSingleId, setPendingSingleId] = useState<string | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+
+  const sorted = useMemo(
+    () => [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
+    [logs],
+  );
+
+  // Exit selection mode automatically if the list becomes empty.
+  useEffect(() => {
+    if (sorted.length === 0 && selectionMode) {
+      setSelectionMode(false);
+      setSelectedIds(new Set());
+    }
+  }, [sorted.length, selectionMode]);
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const confirmBulkDelete = () => {
+    const ids = selectedIds;
+    setLogs((prev) => prev.filter((l) => !ids.has(l.id)));
+    setBulkConfirmOpen(false);
+    exitSelectionMode();
+  };
+
+  const confirmSingleDelete = () => {
+    if (pendingSingleId) deleteLog(pendingSingleId);
+    setPendingSingleId(null);
+  };
+
+  const selectedCount = selectedIds.size;
 
   return (
     <div className="flex flex-col gap-4">
+      {sorted.length > 0 && (
+        <div className="flex items-center justify-between gap-2">
+          {selectionMode ? (
+            <>
+              <p className="text-sm font-medium">{selectedCount} selected</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exitSelectionMode}
+                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkConfirmOpen(true)}
+                  disabled={selectedCount === 0}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Delete selected
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <span />
+              <button
+                type="button"
+                onClick={() => setSelectionMode(true)}
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+              >
+                Select
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {sorted.length === 0 ? (
         <EmptyState />
       ) : (
         <ul className="flex flex-col gap-3">
           {sorted.map((log) => (
-            <LogCard key={log.id} log={log} onDelete={() => deleteLog(log.id)} />
+            <LogCard
+              key={log.id}
+              log={log}
+              onRequestDelete={() => setPendingSingleId(log.id)}
+              selectionMode={selectionMode}
+              selected={selectedIds.has(log.id)}
+              onToggleSelect={() => toggleSelect(log.id)}
+            />
           ))}
         </ul>
       )}
+
+      <AlertDialog
+        open={pendingSingleId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingSingleId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmSingleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {selectedCount} {selectedCount === 1 ? "entry" : "entries"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
