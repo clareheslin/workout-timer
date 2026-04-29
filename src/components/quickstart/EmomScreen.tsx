@@ -100,6 +100,7 @@ export function EmomScreen({ onBack }: Props) {
       if (newRound > prevRound) {
         audio.playTransitionBeep();
         lastBeepRef.current = null;
+        midpointFiredRef.current = false;
       }
       return newRound;
     });
@@ -160,12 +161,23 @@ export function EmomScreen({ onBack }: Props) {
     }
   }, [remaining, phase, round, audio]);
 
+  // Midpoint click for the running interval (work only — EMOM has no rest).
+  useEffect(() => {
+    if (phase !== "running") return;
+    const midpoint = Math.floor(interval / 2);
+    if (midpoint > 0 && remaining === midpoint && !midpointFiredRef.current) {
+      midpointFiredRef.current = true;
+      audio.playMidpointClick();
+    }
+  }, [phase, remaining, interval, audio]);
+
   const startRunningFromZero = useCallback(() => {
     sessionAnchorAtRef.current = Date.now();
     elapsedAtAnchorRef.current = 0;
     setRound(1);
     setRemaining(interval);
     setElapsed(0);
+    midpointFiredRef.current = false;
     setPhase("running");
   }, [interval]);
 
