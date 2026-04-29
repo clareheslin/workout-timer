@@ -81,6 +81,18 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     onExit("exit");
   }, [onExit]);
 
+  const handleSkipBlock = useCallback(() => {
+    // Skip discards the current block — no onComplete, no log entry.
+    if (isLastBlock) {
+      setPhase("done");
+      writeDiary();
+      window.setTimeout(() => onExit("done"), 2000);
+    } else {
+      setBlockIndex((i) => i + 1);
+      setPhase("running-block");
+    }
+  }, [isLastBlock, onExit, writeDiary]);
+
   if (!currentBlock) {
     return null;
   }
@@ -134,6 +146,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         audio={audio}
         onComplete={handleBlockComplete}
         onExitWorkout={handleExitWorkout}
+        onSkipBlock={handleSkipBlock}
       />
     );
   }
@@ -148,6 +161,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       audio={audio}
       onComplete={handleBlockComplete}
       onExitWorkout={handleExitWorkout}
+      onSkipBlock={handleSkipBlock}
     />
   );
 }
