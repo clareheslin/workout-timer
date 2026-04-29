@@ -3,7 +3,6 @@ import type { Workout } from "@/types";
 import { blockTotalSeconds, blockType, formatDuration } from "@/lib/duration";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader } from "@/components/PageHeaderContext";
-import { useExitConfirm } from "./useExitConfirm";
 
 interface Props {
   workout: Workout;
@@ -20,19 +19,12 @@ const TYPE_LABEL: Record<string, string> = {
 
 /** Workout-level preview screen shown before the first block's Ready screen.
  *  Lists every block with its type, total time and exercise count, and shows
- *  workout-level coach notes. */
+ *  workout-level coach notes. Back tap exits immediately — nothing has been
+ *  started or logged at this point, so no confirmation is needed. */
 export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
-  const { handleBack, sheet } = useExitConfirm(false, {
-    title: "Stop workout?",
-    description:
-      "Progress for completed blocks will be saved to your log. The current block will be discarded.",
-    confirmLabel: "Stop workout",
-    onConfirm: onExit,
-  });
-
   const headerOpts = useMemo(
-    () => ({ onBack: handleBack }),
-    [handleBack],
+    () => ({ onBack: onExit }),
+    [onExit],
   );
   usePageHeader(workout.name, headerOpts);
 
@@ -100,7 +92,6 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
           </button>
         </div>
       </main>
-      {sheet}
     </div>
   );
 }

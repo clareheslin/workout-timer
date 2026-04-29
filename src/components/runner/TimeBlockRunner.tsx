@@ -100,10 +100,10 @@ export function TimeBlockRunner({
   };
 
   const { handleBack, sheet } = useExitConfirm(isActive, {
-    title: "Stop workout?",
-    description:
-      "Progress for completed blocks will be saved to your log. The current block will be discarded.",
-    confirmLabel: "Stop workout",
+    title: "Exit workout?",
+    description: "Your progress will not be saved.",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
     onConfirm: handleExit,
     onOpen: () => {
       if (t.phase === "running") t.pause();
@@ -112,7 +112,7 @@ export function TimeBlockRunner({
 
   const headerOpts = useMemo(
     () => ({
-      onBack: handleBack,
+      onBack: isActive ? undefined : handleBack,
       tone,
       headerRight: (
         <>
@@ -123,7 +123,7 @@ export function TimeBlockRunner({
         </>
       ),
     }),
-    [handleBack, tone, blockIndex, totalBlocks, audio],
+    [handleBack, isActive, tone, blockIndex, totalBlocks, audio],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -248,7 +248,7 @@ export function TimeBlockRunner({
               </>
             ) : (
               <div className="mt-2">
-                <HoldToExitButton onResume={t.resume} onExit={handleExit} />
+                <HoldToExitButton onTap={t.resume} onHoldComplete={handleExit} />
               </div>
             )}
           </>
