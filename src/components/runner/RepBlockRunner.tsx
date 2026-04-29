@@ -166,10 +166,10 @@ export function RepBlockRunner({
   const isActive = phase === "running" || phase === "paused";
 
   const { handleBack, sheet } = useExitConfirm(isActive, {
-    title: "Stop workout?",
-    description:
-      "Progress for completed blocks will be saved to your log. The current block will be discarded.",
-    confirmLabel: "Stop workout",
+    title: "Exit workout?",
+    description: "Your progress will not be saved.",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
     onConfirm: onExitWorkout,
     onOpen: () => {
       if (phase === "running") setPhase("paused");
@@ -178,7 +178,7 @@ export function RepBlockRunner({
 
   const headerOpts = useMemo(
     () => ({
-      onBack: handleBack,
+      onBack: isActive ? undefined : handleBack,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
@@ -188,7 +188,7 @@ export function RepBlockRunner({
         </>
       ),
     }),
-    [handleBack, blockIndex, totalBlocks, audio],
+    [handleBack, isActive, blockIndex, totalBlocks, audio],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -290,12 +290,19 @@ export function RepBlockRunner({
                         onClick={handlePauseResume}
                         className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
                       >
-                        Pause
+                        {isAmrap ? "Pause" : "Stop"}
                       </button>
                       <p className="text-[11px] text-muted-foreground">Timer running</p>
                     </>
+                  ) : isAmrap ? (
+                    <HoldToExitButton onTap={handlePauseResume} onHoldComplete={onExitWorkout} />
                   ) : (
-                    <HoldToExitButton onResume={handlePauseResume} onExit={onExitWorkout} />
+                    <HoldToExitButton
+                      onTap={handleEnd}
+                      onHoldComplete={onExitWorkout}
+                      label="Complete"
+                      hint="Tap to complete · Hold to exit workout"
+                    />
                   )}
                 </>
               )}

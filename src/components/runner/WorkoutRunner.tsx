@@ -77,10 +77,9 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   };
 
   const handleExitWorkout = useCallback(() => {
-    // Write whatever has been completed so far.
-    if (logBlocksRef.current.length > 0) writeDiary();
+    // Exit always discards in-flight progress; only natural completion logs.
     onExit("exit");
-  }, [onExit, writeDiary]);
+  }, [onExit]);
 
   if (!currentBlock) {
     return null;
@@ -168,11 +167,11 @@ function BetweenBlocksScreen({
   onNext,
   onExit,
 }: BetweenBlocksScreenProps) {
-  const { handleBack, sheet } = useExitConfirm(false, {
-    title: "Stop workout?",
-    description:
-      "Progress for completed blocks will be saved to your log.",
-    confirmLabel: "Stop workout",
+  const { handleBack, sheet } = useExitConfirm(true, {
+    title: "Exit workout?",
+    description: "Your progress will not be saved.",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
     onConfirm: onExit,
   });
   const headerOpts = useMemo(() => ({ onBack: handleBack }), [handleBack]);
