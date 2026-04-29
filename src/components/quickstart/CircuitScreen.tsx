@@ -67,6 +67,7 @@ export function CircuitScreen({ onBack }: Props) {
   );
 
   const lastBeepRef = useRef<string | null>(null);
+  const midpointFiredRef = useRef(false);
   // Wall-clock anchors for the current step.
   const anchorAtRef = useRef<number>(0);
   const anchorRemainingRef = useRef<number>(0);
@@ -133,6 +134,7 @@ export function CircuitScreen({ onBack }: Props) {
         anchorRemaining = sched[sIdx].durationSeconds;
         audio.playTransitionBeep();
         lastBeepRef.current = null;
+        midpointFiredRef.current = false;
         continue;
       }
 
@@ -201,12 +203,25 @@ export function CircuitScreen({ onBack }: Props) {
     }
   }, [remaining, phase, stepIdx, audio]);
 
+  // Midpoint click for work intervals only.
+  useEffect(() => {
+    if (phase !== "running") return;
+    const cur = schedule[stepIdx];
+    if (!cur || cur.kind !== "work") return;
+    const midpoint = Math.floor(cur.durationSeconds / 2);
+    if (midpoint > 0 && remaining === midpoint && !midpointFiredRef.current) {
+      midpointFiredRef.current = true;
+      audio.playMidpointClick();
+    }
+  }, [phase, remaining, stepIdx, schedule, audio]);
+
   const startStep = useCallback((idx: number) => {
     const sched = scheduleRef.current;
     if (idx >= sched.length) return;
     stepIdxRef.current = idx;
     anchorAtRef.current = Date.now();
     anchorRemainingRef.current = sched[idx].durationSeconds;
+    midpointFiredRef.current = false;
     setStepIdx(idx);
     setRemaining(sched[idx].durationSeconds);
   }, []);
