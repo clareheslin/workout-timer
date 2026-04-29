@@ -37,7 +37,7 @@ const OPTIONS: TimerOption[] = [
   {
     id: "circuit",
     name: "Circuit",
-    description: "Work and rest intervals. Set number of exercises and schedule.",
+    description: "Work / rest intervals. Set schedule and number of exercises.",
     icon: Repeat,
   },
 ];
