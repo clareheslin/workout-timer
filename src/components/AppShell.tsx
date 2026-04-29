@@ -133,6 +133,25 @@ export function AppShell() {
           className={`w-full max-w-[430px] min-h-screen flex flex-col border-x border-border transition-colors ${toneClass}`}
         >
           <InstallPromptBanner />
+          {interrupted && (
+            <div
+              role="status"
+              className="flex items-start gap-2 border-b border-border bg-accent/40 px-4 py-3 text-sm text-foreground"
+            >
+              <p className="flex-1">
+                It looks like your last workout was interrupted. Your completed blocks have been
+                saved to your diary.
+              </p>
+              <button
+                type="button"
+                onClick={() => setInterrupted(null)}
+                aria-label="Dismiss"
+                className="-mr-1 -mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           <AppHeader tone={tone} />
           <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
             {renderTab()}
