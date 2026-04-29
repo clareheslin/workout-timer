@@ -5,6 +5,7 @@ export interface WorkoutTimerCallbacks {
   onTransition?: () => void;
   onCountdownTick?: () => void;
   onBlockEnd?: () => void;
+  onMidpoint?: () => void;
 }
 
 export interface RunSummaryItem {
@@ -207,6 +208,7 @@ export function useWorkoutTimer(
   // Track which (phase, second) we've already chimed for, to guard against
   // double-fires from React re-renders or strict-mode double-invocation.
   const lastCountdownKey = useRef<string | null>(null);
+  const midpointFiredRef = useRef(false);
 
   // Keep the latest schedule/index in refs so the recompute loop can read
   // the freshest values without stale closures.
@@ -219,6 +221,10 @@ export function useWorkoutTimer(
   useEffect(() => {
     blockSchedulesRef.current = blockSchedules;
   }, [blockSchedules]);
+  // Reset the once-per-interval midpoint guard whenever we move to a new interval.
+  useEffect(() => {
+    midpointFiredRef.current = false;
+  }, [blockIndex, scheduleIndex]);
   useEffect(() => {
     blockIndexRef.current = blockIndex;
   }, [blockIndex]);
@@ -394,6 +400,19 @@ export function useWorkoutTimer(
         lastCountdownKey.current = key;
         callbacksRef.current?.onCountdownTick?.();
       }
+    }
+  }, [phase, timeRemaining, blockIndex, scheduleIndex]);
+
+  // Midpoint click for exercise intervals only (not rest, not prep).
+  useEffect(() => {
+    if (phase !== "running") return;
+    const schedule = blockSchedulesRef.current[blockIndex] ?? [];
+    const planned = schedule[scheduleIndex];
+    if (!planned || planned.kind !== "exercise" || planned.isPrep) return;
+    const midpoint = Math.floor(planned.durationSeconds / 2);
+    if (midpoint > 0 && timeRemaining === midpoint && !midpointFiredRef.current) {
+      midpointFiredRef.current = true;
+      callbacksRef.current?.onMidpoint?.();
     }
   }, [phase, timeRemaining, blockIndex, scheduleIndex]);
 

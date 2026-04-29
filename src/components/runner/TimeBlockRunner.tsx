@@ -47,8 +47,9 @@ export function TimeBlockRunner({
       onTransition: audio.playTransitionBeep,
       onCountdownTick: audio.playCountdownBeep,
       onBlockEnd: audio.playBlockEndBeep,
+      onMidpoint: audio.playMidpointClick,
     }),
-    [audio.playTransitionBeep, audio.playCountdownBeep, audio.playBlockEndBeep],
+    [audio.playTransitionBeep, audio.playCountdownBeep, audio.playBlockEndBeep, audio.playMidpointClick],
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks);
