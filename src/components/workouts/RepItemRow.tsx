@@ -69,6 +69,7 @@ export function RepItemRow({ item, onChange, onDelete }: Props) {
                 onChange({ reps: Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1 });
               }}
               aria-label="Reps"
+              onFocus={(e) => e.target.select()}
               className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-xs text-muted-foreground">reps</span>

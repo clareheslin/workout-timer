@@ -72,6 +72,7 @@ export function DurationInput({ label, valueSeconds, minSeconds, onChange }: Pro
           value={minText}
           onChange={(e) => setMinText(e.target.value.replace(/\D/g, ""))}
           onBlur={commit}
+          onFocus={(e) => e.target.select()}
           onKeyDown={handleKeyDown}
           className={fieldClass}
         />
@@ -83,6 +84,7 @@ export function DurationInput({ label, valueSeconds, minSeconds, onChange }: Pro
           value={secText}
           onChange={(e) => setSecText(e.target.value.replace(/\D/g, ""))}
           onBlur={commit}
+          onFocus={(e) => e.target.select()}
           onKeyDown={handleKeyDown}
           className={fieldClass}
         />
@@ -132,6 +134,7 @@ export function NumberInput({ label, value, min, max, onChange, disabled }: Numb
         disabled={disabled}
         onChange={(e) => setText(e.target.value)}
         onBlur={commit}
+        onFocus={(e) => e.target.select()}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();

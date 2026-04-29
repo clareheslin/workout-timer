@@ -153,6 +153,7 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder="My Workout"
           className="rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
         />
@@ -206,6 +207,7 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
           id="workout-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder="Overall intent, warm-up, equipment, scaling, etc."
           rows={4}
           className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"

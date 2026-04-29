@@ -91,6 +91,7 @@ export function BlockItemRow({ item, onChange, onDelete }: Props) {
                   });
                 }}
                 onBlur={() => setEditing(null)}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") setEditing(null);
                 }}
@@ -121,6 +122,7 @@ export function BlockItemRow({ item, onChange, onDelete }: Props) {
                   });
                 }}
                 onBlur={() => setEditing(null)}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") setEditing(null);
                 }}
@@ -151,6 +153,7 @@ export function BlockItemRow({ item, onChange, onDelete }: Props) {
                   });
                 }}
                 onBlur={() => setEditing(null)}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") setEditing(null);
                 }}

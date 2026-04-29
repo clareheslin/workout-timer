@@ -37,6 +37,7 @@ export function NameTextarea({ value, onChange, placeholder = "Exercise name", a
       value={value}
       maxLength={MAX_LEN}
       onChange={(e) => onChange(e.target.value.slice(0, MAX_LEN))}
+      onFocus={(e) => e.target.select()}
       placeholder={placeholder}
       aria-label={ariaLabel}
       style={{ overflowWrap: "break-word", wordBreak: "normal" }}

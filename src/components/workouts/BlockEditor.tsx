@@ -224,6 +224,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder={defaultName}
           className="rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
         />
@@ -284,6 +285,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
                 setTimeCap(next);
               }}
               aria-label="Minutes"
+              onFocus={(e) => e.target.select()}
               className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-sm text-muted-foreground">min</span>
@@ -300,6 +302,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
                 setTimeCap(next);
               }}
               aria-label="Seconds"
+              onFocus={(e) => e.target.select()}
               className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-sm text-muted-foreground">sec</span>
@@ -386,6 +389,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
           id="block-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder="How to perform this block, scaling options, cues, etc."
           rows={4}
           className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
