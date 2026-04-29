@@ -115,7 +115,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     // Skip discards the current block — no onComplete, no log entry.
     if (isLastBlock) {
       setPhase("done");
-      writeDiary();
+      writeDiary(true);
+      clearInProgress();
       window.setTimeout(() => onExit("done"), 2000);
     } else {
       setBlockIndex((i) => i + 1);
