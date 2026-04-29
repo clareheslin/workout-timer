@@ -117,7 +117,8 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
   const logo = isExercise ? femLogoWhite : femLogo;
   return (
     <header
-      className={`sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 transition-colors ${
+      style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
+      className={`sticky top-0 z-10 flex items-center gap-3 border-b px-4 pb-3 transition-colors ${
         isExercise
           ? "border-exercise-foreground/20 bg-exercise text-exercise-foreground"
           : isRest
