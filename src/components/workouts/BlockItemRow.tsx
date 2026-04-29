@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { BlockItem } from "@/types";
@@ -69,12 +69,9 @@ export function BlockItemRow({ item, onChange, onDelete }: Props) {
         </button>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <input
-            type="text"
+          <NameTextarea
             value={item.exercise.name}
-            onChange={(e) => onChange({ name: e.target.value })}
-            placeholder="Exercise name"
-            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+            onChange={(name) => onChange({ name })}
           />
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
