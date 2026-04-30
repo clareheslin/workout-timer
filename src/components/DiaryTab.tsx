@@ -83,11 +83,11 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
             ))}
           </ul>
         )
-      ) : section.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="text-xs text-muted-foreground">No exercises played.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {section.items.map((it, i) => (
+          {items.map((it, i) => (
             <li
               key={`${it.exerciseName}-${i}`}
               className="flex items-center justify-between gap-2 text-xs"
