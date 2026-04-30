@@ -171,7 +171,7 @@ function WorkoutCard({
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{workout.name || "Untitled"}</p>
           <p className="text-xs text-muted-foreground">
-            {workout.sections.length} {workout.sections.length === 1 ? "section" : "sections"}
+            {(workout.sections?.length ?? 0)} {workout.sections?.length === 1 ? "section" : "sections"}
             {totalSecs > 0 && <> · {formatDuration(totalSecs)}</>}
           </p>
         </div>
