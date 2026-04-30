@@ -51,7 +51,10 @@ async function shareWorkout(workout: Workout): Promise<void> {
 }
 
 function workoutHasExercise(w: Workout): boolean {
-  return w.sections.some((s) => s.items.length > 0 || (s.repExercises?.length ?? 0) > 0);
+  const sections = Array.isArray(w.sections) ? w.sections : [];
+  return sections.some(
+    (s) => (s.items?.length ?? 0) > 0 || (s.repExercises?.length ?? 0) > 0,
+  );
 }
 
 function EmptyState({ onNew }: { onNew: () => void }) {
