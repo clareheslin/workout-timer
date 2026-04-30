@@ -1,11 +1,11 @@
-import type { Block, Workout } from "@/types";
-import { blockTotalSeconds, formatDuration } from "./duration";
+import type { Section, Workout } from "@/types";
+import { sectionTotalSeconds, formatDuration } from "./duration";
 
-export { blockTotalSeconds, formatDuration };
+export { sectionTotalSeconds, formatDuration };
 
-/** Sum of all block durations (each block already accounts for its rounds). */
+/** Sum of all section durations (each section already accounts for its rounds). */
 export function workoutTotalSeconds(workout: Workout): number {
-  return workout.blocks.reduce((sum, b: Block) => sum + blockTotalSeconds(b), 0);
+  return workout.sections.reduce((sum, s: Section) => sum + sectionTotalSeconds(s), 0);
 }
 
 /** Convenience: round to nearest minute, min 1 if there's any time at all. */
