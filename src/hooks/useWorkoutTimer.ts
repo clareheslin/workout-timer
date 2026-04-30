@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Block, BlockItem, Workout } from "@/types";
+import type { Section, SectionItem, Workout } from "@/types";
 
 export interface WorkoutTimerCallbacks {
   onTransition?: () => void;
   onCountdownTick?: () => void;
-  onBlockEnd?: () => void;
+  onSectionEnd?: () => void;
   onMidpoint?: () => void;
 }
 
@@ -14,21 +14,21 @@ export interface RunSummaryItem {
   restDuration: number;
 }
 
-export interface RunSummaryBlock {
-  blockName: string;
+export interface RunSummarySection {
+  sectionName: string;
   rounds: number; // rounds fully completed
   items: RunSummaryItem[];
 }
 
 export interface RunSummary {
   startedAt: string; // ISO
-  blocks: RunSummaryBlock[];
+  sections: RunSummarySection[];
 }
 
-/** Seconds of "Get Ready" prep prepended to every block. */
+/** Seconds of "Get Ready" prep prepended to every section. */
 export const BLOCK_PREP_SECONDS = 10;
 
-export type TimerPhase = "idle" | "running" | "paused" | "block-complete" | "done";
+export type TimerPhase = "idle" | "running" | "paused" | "section-complete" | "done";
 
 export type IntervalKind = "exercise" | "rest";
 
@@ -38,9 +38,9 @@ export interface CurrentInterval {
   name: string;
   /** Original (planned) duration in seconds. */
   durationSeconds: number;
-  /** Index of the BlockItem within the current block. -1 for the prep interval. */
+  /** Index of the SectionItem within the current section. -1 for the prep interval. */
   itemIndex: number;
-  /** True only for the 10s "Get Ready" period at the start of a block. */
+  /** True only for the 10s "Get Ready" period at the start of a section. */
   isPrep: boolean;
 }
 
@@ -53,9 +53,9 @@ export interface UpNextInterval {
 
 export interface UseWorkoutTimerResult {
   phase: TimerPhase;
-  currentBlockIndex: number;
-  currentBlock: Block | null;
-  currentItem: BlockItem | null;
+  currentSectionIndex: number;
+  currentSection: Section | null;
+  currentItem: SectionItem | null;
   currentInterval: CurrentInterval | null;
   currentRound: number;
   totalRounds: number;
@@ -64,15 +64,15 @@ export interface UseWorkoutTimerResult {
   start: () => void;
   pause: () => void;
   resume: () => void;
-  nextBlock: () => void;
+  nextSection: () => void;
   finish: () => void;
-  /** Skip the current interval and advance to the next one within the block.
-   *  If this was the last interval, transitions the block to "block-complete"
-   *  (or "done" if it was the final block). Skipped intervals are NOT logged. */
+  /** Skip the current interval and advance to the next one within the section.
+   *  If this was the last interval, transitions the section to "section-complete"
+   *  (or "done" if it was the final section). Skipped intervals are NOT logged. */
   skipInterval: () => void;
-  /** Skip all remaining intervals in the current block and go straight to
-   *  block-complete (or done if it was the final block). */
-  endBlock: () => void;
+  /** Skip all remaining intervals in the current section and go straight to
+   *  section-complete (or done if it was the final section). */
+  endSection: () => void;
   /** ISO timestamp captured the first time `start` was tapped, or null if never. */
   startedAt: string | null;
   /** Build a summary of what actually played, for diary logging. */
@@ -83,62 +83,62 @@ interface PlannedInterval {
   kind: IntervalKind;
   name: string;
   durationSeconds: number;
-  blockIndex: number;
+  sectionIndex: number;
   itemIndex: number;
   round: number; // 1-based
   isPrep: boolean;
 }
 
 /**
- * Build the linear schedule of intervals for a single block.
+ * Build the linear schedule of intervals for a single section.
  *
  * Rules:
- *  - Every block starts with a 10s "Get Ready" prep period.
+ *  - Every section starts with a 10s "Get Ready" prep period.
  *  - For each round, play each exercise then its rest.
  *  - Skip any rest with duration 0 ("No rest" / superset).
  *  - The very last rest of the very last round is skipped (no trailing rest).
  */
-function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
+function planSection(section: Section, sectionIndex: number): PlannedInterval[] {
   const out: PlannedInterval[] = [];
 
-  // 10s "Get Ready" prep at the start of every block. Modeled as a rest so it
+  // 10s "Get Ready" prep at the start of every section. Modeled as a rest so it
   // gets the rest visual treatment and doesn't echo as an exercise.
   out.push({
     kind: "rest",
     name: "Get Ready",
     durationSeconds: BLOCK_PREP_SECONDS,
-    blockIndex,
+    sectionIndex,
     itemIndex: -1,
     round: 1,
     isPrep: true,
   });
 
-  const mode = block.mode ?? "circuit";
-  const itemCount = block.items.length;
-  const itemRounds = block.items.map((it) => Math.max(1, Math.floor(it.exercise.rounds ?? 1)));
-  // Total exercise emissions across the whole block — used to know which one is "last".
+  const mode = section.mode ?? "circuit";
+  const itemCount = section.items.length;
+  const itemRounds = section.items.map((it) => Math.max(1, Math.floor(it.exercise.rounds ?? 1)));
+  // Total exercise emissions across the whole section — used to know which one is "last".
   const totalEmissions = itemRounds.reduce((a, b) => a + b, 0);
   let emitted = 0;
 
-  const pushExerciseAndRest = (item: BlockItem, itemIndex: number, round: number) => {
+  const pushExerciseAndRest = (item: SectionItem, itemIndex: number, round: number) => {
     emitted += 1;
-    const isLastOfBlock = emitted === totalEmissions;
+    const isLastOfSection = emitted === totalEmissions;
     out.push({
       kind: "exercise",
       name: item.exercise.name || `Exercise ${itemIndex + 1}`,
       durationSeconds: Math.max(0, item.exercise.durationSeconds),
-      blockIndex,
+      sectionIndex,
       itemIndex,
       round,
       isPrep: false,
     });
     const restSecs = Math.max(0, item.rest.durationSeconds);
-    if (restSecs > 0 && !isLastOfBlock) {
+    if (restSecs > 0 && !isLastOfSection) {
       out.push({
         kind: "rest",
         name: `${item.exercise.name || `Exercise ${itemIndex + 1}`} — Rest`,
         durationSeconds: restSecs,
-        blockIndex,
+        sectionIndex,
         itemIndex,
         round,
         isPrep: false,
@@ -148,7 +148,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
 
   if (mode === "sets") {
     // All rounds of exercise 1, then all rounds of exercise 2, etc.
-    block.items.forEach((item, itemIndex) => {
+    section.items.forEach((item, itemIndex) => {
       for (let r = 1; r <= itemRounds[itemIndex]; r++) {
         pushExerciseAndRest(item, itemIndex, r);
       }
@@ -164,7 +164,7 @@ function planBlock(block: Block, blockIndex: number): PlannedInterval[] {
         if (remaining[i] <= 0) continue;
         round[i] += 1;
         remaining[i] -= 1;
-        pushExerciseAndRest(block.items[i], i, round[i]);
+        pushExerciseAndRest(section.items[i], i, round[i]);
       }
       anyLeft = remaining.some((r) => r > 0);
     }
@@ -176,10 +176,10 @@ export function useWorkoutTimer(
   workout: Workout,
   callbacks?: WorkoutTimerCallbacks,
 ): UseWorkoutTimerResult {
-  const blockSchedules = useMemo(() => workout.blocks.map((b, i) => planBlock(b, i)), [workout]);
+  const sectionSchedules = useMemo(() => workout.sections.map((s, i) => planSection(s, i)), [workout]);
 
   const [phase, setPhase] = useState<TimerPhase>("idle");
-  const [blockIndex, setBlockIndex] = useState(0);
+  const [sectionIndex, setSectionIndex] = useState(0);
   const [scheduleIndex, setScheduleIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
@@ -193,7 +193,7 @@ export function useWorkoutTimer(
 
   const intervalRef = useRef<number | null>(null);
 
-  // First-Start timestamp + per-block tally of intervals that fully played.
+  // First-Start timestamp + per-section tally of intervals that fully played.
   const startedAtRef = useRef<string | null>(null);
   const playedRef = useRef<PlannedInterval[][]>([]);
   // Force re-render when startedAt is set so consumers (and the runner) can react.
@@ -212,22 +212,22 @@ export function useWorkoutTimer(
 
   // Keep the latest schedule/index in refs so the recompute loop can read
   // the freshest values without stale closures.
-  const blockSchedulesRef = useRef(blockSchedules);
-  const blockIndexRef = useRef(blockIndex);
+  const sectionSchedulesRef = useRef(sectionSchedules);
+  const sectionIndexRef = useRef(sectionIndex);
   const scheduleIndexRef = useRef(scheduleIndex);
   const phaseRef = useRef(phase);
-  const blocksLength = workout.blocks.length;
-  const blocksLengthRef = useRef(blocksLength);
+  const sectionsLength = workout.sections.length;
+  const sectionsLengthRef = useRef(sectionsLength);
   useEffect(() => {
-    blockSchedulesRef.current = blockSchedules;
-  }, [blockSchedules]);
+    sectionSchedulesRef.current = sectionSchedules;
+  }, [sectionSchedules]);
   // Reset the once-per-interval midpoint guard whenever we move to a new interval.
   useEffect(() => {
     midpointFiredRef.current = false;
-  }, [blockIndex, scheduleIndex]);
+  }, [sectionIndex, scheduleIndex]);
   useEffect(() => {
-    blockIndexRef.current = blockIndex;
-  }, [blockIndex]);
+    sectionIndexRef.current = sectionIndex;
+  }, [sectionIndex]);
   useEffect(() => {
     scheduleIndexRef.current = scheduleIndex;
   }, [scheduleIndex]);
@@ -235,15 +235,15 @@ export function useWorkoutTimer(
     phaseRef.current = phase;
   }, [phase]);
   useEffect(() => {
-    blocksLengthRef.current = blocksLength;
-  }, [blocksLength]);
+    sectionsLengthRef.current = sectionsLength;
+  }, [sectionsLength]);
 
-  const currentBlock = workout.blocks[blockIndex] ?? null;
-  const currentSchedule = blockSchedules[blockIndex] ?? [];
+  const currentSection = workout.sections[sectionIndex] ?? null;
+  const currentSchedule = sectionSchedules[sectionIndex] ?? [];
   const currentPlanned = currentSchedule[scheduleIndex] ?? null;
 
-  const currentItem: BlockItem | null =
-    currentBlock && currentPlanned ? (currentBlock.items[currentPlanned.itemIndex] ?? null) : null;
+  const currentItem: SectionItem | null =
+    currentSection && currentPlanned ? (currentSection.items[currentPlanned.itemIndex] ?? null) : null;
 
   const currentInterval: CurrentInterval | null = currentPlanned
     ? {
@@ -255,7 +255,7 @@ export function useWorkoutTimer(
       }
     : null;
 
-  // Up-next: next planned interval in the same block, else "Block complete".
+  // Up-next: next planned interval in the same section, else "Section complete".
   // If the next interval is the rest belonging to the current exercise, label it just "Rest"
   // so we don't echo the current exercise's name back to the user.
   const nextPlanned = currentSchedule[scheduleIndex + 1] ?? null;
@@ -282,16 +282,16 @@ export function useWorkoutTimer(
   }, []);
 
   /**
-   * Flush block/schedule index updates to refs + React state when a cascade
+   * Flush section/schedule index updates to refs + React state when a cascade
    * crossed at least one interval boundary.
    */
   const flushIndices = useCallback(
     (bIdx: number, sIdx: number, anchorAt: number, anchorRemaining: number) => {
-    blockIndexRef.current = bIdx;
+    sectionIndexRef.current = bIdx;
     scheduleIndexRef.current = sIdx;
     anchorAtRef.current = anchorAt;
     anchorRemainingRef.current = anchorRemaining;
-    setBlockIndex(bIdx);
+    setSectionIndex(bIdx);
     setScheduleIndex(sIdx);
   }, []);
 
@@ -301,9 +301,9 @@ export function useWorkoutTimer(
   const recomputeFull = useCallback(() => {
     if (phaseRef.current !== "running") return;
 
-    let bIdx = blockIndexRef.current;
+    let bIdx = sectionIndexRef.current;
     let sIdx = scheduleIndexRef.current;
-    const schedule = blockSchedulesRef.current[bIdx] ?? [];
+    const schedule = sectionSchedulesRef.current[bIdx] ?? [];
     let anchorAt = anchorAtRef.current;
     let anchorRemaining = anchorRemainingRef.current;
     if (!schedule.length || anchorAt === 0) return;
@@ -327,9 +327,9 @@ export function useWorkoutTimer(
       // Interval fully elapsed.
       const justFinished = schedule[sIdx];
       if (justFinished && !justFinished.isPrep) {
-        const bucket = playedRef.current[justFinished.blockIndex] ?? [];
+        const bucket = playedRef.current[justFinished.sectionIndex] ?? [];
         bucket.push(justFinished);
-        playedRef.current[justFinished.blockIndex] = bucket;
+        playedRef.current[justFinished.sectionIndex] = bucket;
       }
       const intervalEndedAt = anchorAt + anchorRemaining * 1000;
       const nextIdx = sIdx + 1;
@@ -344,18 +344,18 @@ export function useWorkoutTimer(
         continue;
       }
 
-      // End of block.
+      // End of section.
       callbacksRef.current?.onTransition?.();
-      callbacksRef.current?.onBlockEnd?.();
-      const isLastBlock = bIdx >= blocksLengthRef.current - 1;
+      callbacksRef.current?.onSectionEnd?.();
+      const isLastSection = bIdx >= sectionsLengthRef.current - 1;
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
-      blockIndexRef.current = bIdx;
+      sectionIndexRef.current = bIdx;
       scheduleIndexRef.current = sIdx;
-      setBlockIndex(bIdx);
+      setSectionIndex(bIdx);
       setScheduleIndex(sIdx);
       setTimeRemaining(0);
-      setPhase(isLastBlock ? "done" : "block-complete");
+      setPhase(isLastSection ? "done" : "section-complete");
       return;
     }
   }, [flushIndices]);
@@ -395,18 +395,18 @@ export function useWorkoutTimer(
       return;
     }
     if (timeRemaining > 0 && timeRemaining <= 3) {
-      const key = `${blockIndex}:${scheduleIndex}:${timeRemaining}`;
+      const key = `${sectionIndex}:${scheduleIndex}:${timeRemaining}`;
       if (lastCountdownKey.current !== key) {
         lastCountdownKey.current = key;
         callbacksRef.current?.onCountdownTick?.();
       }
     }
-  }, [phase, timeRemaining, blockIndex, scheduleIndex]);
+  }, [phase, timeRemaining, sectionIndex, scheduleIndex]);
 
   // Midpoint click for exercise intervals only (not rest, not prep).
   useEffect(() => {
     if (phase !== "running") return;
-    const schedule = blockSchedulesRef.current[blockIndex] ?? [];
+    const schedule = sectionSchedulesRef.current[sectionIndex] ?? [];
     const planned = schedule[scheduleIndex];
     if (!planned || planned.kind !== "exercise" || planned.isPrep) return;
     const midpoint = Math.floor(planned.durationSeconds / 2);
@@ -414,11 +414,11 @@ export function useWorkoutTimer(
       midpointFiredRef.current = true;
       callbacksRef.current?.onMidpoint?.();
     }
-  }, [phase, timeRemaining, blockIndex, scheduleIndex]);
+  }, [phase, timeRemaining, sectionIndex, scheduleIndex]);
 
   const start = useCallback(() => {
-    if (phase !== "idle" && phase !== "block-complete") return;
-    const schedule = blockSchedules[blockIndex];
+    if (phase !== "idle" && phase !== "section-complete") return;
+    const schedule = sectionSchedules[sectionIndex];
     if (!schedule || schedule.length === 0) {
       setPhase("done");
       return;
@@ -426,7 +426,7 @@ export function useWorkoutTimer(
     // Capture the very first start time for diary logging.
     if (startedAtRef.current === null) {
       startedAtRef.current = new Date().toISOString();
-      playedRef.current = workout.blocks.map(() => []);
+      playedRef.current = workout.sections.map(() => []);
       setStartedAtTick((n) => n + 1);
     }
     const first = schedule[0];
@@ -436,7 +436,7 @@ export function useWorkoutTimer(
     anchorAtRef.current = Date.now();
     anchorRemainingRef.current = first.durationSeconds;
     setPhase("running");
-  }, [phase, blockSchedules, blockIndex, workout.blocks]);
+  }, [phase, sectionSchedules, sectionIndex, workout.sections]);
 
   const pause = useCallback(() => {
     setPhase((p) => {
@@ -461,24 +461,24 @@ export function useWorkoutTimer(
     });
   }, []);
 
-  const nextBlock = useCallback(() => {
-    if (phase !== "block-complete") return;
-    const next = blockIndex + 1;
-    if (next >= workout.blocks.length) {
+  const nextSection = useCallback(() => {
+    if (phase !== "section-complete") return;
+    const next = sectionIndex + 1;
+    if (next >= workout.sections.length) {
       setPhase("done");
       return;
     }
-    setBlockIndex(next);
-    const schedule = blockSchedules[next];
+    setSectionIndex(next);
+    const schedule = sectionSchedules[next];
     const first = schedule[0];
     setScheduleIndex(0);
     setTimeRemaining(first?.durationSeconds ?? 0);
-    blockIndexRef.current = next;
+    sectionIndexRef.current = next;
     scheduleIndexRef.current = 0;
     anchorAtRef.current = Date.now();
     anchorRemainingRef.current = first?.durationSeconds ?? 0;
     setPhase("running");
-  }, [phase, blockIndex, blockSchedules, workout.blocks.length]);
+  }, [phase, sectionIndex, sectionSchedules, workout.sections.length]);
 
   const finish = useCallback(() => {
     clearTick();
@@ -489,7 +489,7 @@ export function useWorkoutTimer(
 
   const skipInterval = useCallback(() => {
     if (phase !== "running" && phase !== "paused") return;
-    const schedule = blockSchedules[blockIndex];
+    const schedule = sectionSchedules[sectionIndex];
     if (!schedule || schedule.length === 0) return;
     const nextIdx = scheduleIndex + 1;
     if (nextIdx < schedule.length) {
@@ -502,33 +502,33 @@ export function useWorkoutTimer(
       callbacksRef.current?.onTransition?.();
       return;
     }
-    // No more intervals in this block — end of block.
+    // No more intervals in this section — end of section.
     callbacksRef.current?.onTransition?.();
-    callbacksRef.current?.onBlockEnd?.();
-    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    callbacksRef.current?.onSectionEnd?.();
+    const isLastSection = sectionIndex >= workout.sections.length - 1;
     anchorAtRef.current = 0;
     anchorRemainingRef.current = 0;
-    setPhase(isLastBlock ? "done" : "block-complete");
-  }, [phase, blockSchedules, blockIndex, scheduleIndex, workout.blocks.length]);
+    setPhase(isLastSection ? "done" : "section-complete");
+  }, [phase, sectionSchedules, sectionIndex, scheduleIndex, workout.sections.length]);
 
-  const endBlock = useCallback(() => {
+  const endSection = useCallback(() => {
     if (phase !== "running" && phase !== "paused") return;
-    callbacksRef.current?.onBlockEnd?.();
-    const isLastBlock = blockIndex >= workout.blocks.length - 1;
+    callbacksRef.current?.onSectionEnd?.();
+    const isLastSection = sectionIndex >= workout.sections.length - 1;
     anchorAtRef.current = 0;
     anchorRemainingRef.current = 0;
-    setPhase(isLastBlock ? "done" : "block-complete");
-  }, [phase, blockIndex, workout.blocks.length]);
+    setPhase(isLastSection ? "done" : "section-complete");
+  }, [phase, sectionIndex, workout.sections.length]);
 
   // Stop tick on unmount.
   useEffect(() => clearTick, [clearTick]);
 
   const getRunSummary = useCallback((): RunSummary | null => {
     if (startedAtRef.current === null) return null;
-    const blocks: RunSummaryBlock[] = workout.blocks.map((block, i) => {
+    const sections: RunSummarySection[] = workout.sections.map((section, i) => {
       const played = playedRef.current[i] ?? [];
 
-      // Total sets played in this block (one per completed exercise interval).
+      // Total sets played in this section (one per completed exercise interval).
       const setsPlayed = played.filter((p) => p.kind === "exercise").length;
 
       // Build the items list from the workout definition, but only for items
@@ -536,7 +536,7 @@ export function useWorkoutTimer(
       const playedItemIdxs = new Set(
         played.filter((p) => p.kind === "exercise").map((p) => p.itemIndex),
       );
-      const items: RunSummaryItem[] = block.items
+      const items: RunSummaryItem[] = section.items
         .map((it, idx) => ({ it, idx }))
         .filter(({ idx }) => playedItemIdxs.has(idx))
         .map(({ it, idx }) => ({
@@ -546,22 +546,22 @@ export function useWorkoutTimer(
         }));
 
       return {
-        blockName: block.name || `Block ${i + 1}`,
+        sectionName: section.name || `Section ${i + 1}`,
         rounds: setsPlayed,
         items,
       };
     });
-    // Trim trailing blocks with zero sets played (never reached).
-    while (blocks.length > 0 && blocks[blocks.length - 1].rounds === 0) {
-      blocks.pop();
+    // Trim trailing sections with zero sets played (never reached).
+    while (sections.length > 0 && sections[sections.length - 1].rounds === 0) {
+      sections.pop();
     }
-    return { startedAt: startedAtRef.current, blocks };
-  }, [workout.blocks]);
+    return { startedAt: startedAtRef.current, sections };
+  }, [workout.sections]);
 
   return {
     phase,
-    currentBlockIndex: blockIndex,
-    currentBlock,
+    currentSectionIndex: sectionIndex,
+    currentSection,
     currentItem,
     currentInterval,
     currentRound: currentPlanned?.round ?? 1,
@@ -571,10 +571,10 @@ export function useWorkoutTimer(
     start,
     pause,
     resume,
-    nextBlock,
+    nextSection,
     finish,
     skipInterval,
-    endBlock,
+    endSection,
     startedAt: startedAtRef.current,
     getRunSummary,
   };

@@ -18,7 +18,7 @@ export interface UseWorkoutAudioResult {
   endSession: () => void;
   playTransitionBeep: () => void;
   playCountdownBeep: () => void;
-  playBlockEndBeep: () => void;
+  playSectionEndBeep: () => void;
   playMidpointClick: () => void;
 }
 
@@ -41,7 +41,7 @@ interface BeepSpec {
 
 const TRANSITION_BEEP: BeepSpec = { frequency: 880, durationSec: 0.16, gain: 0.55 };
 const COUNTDOWN_BEEP: BeepSpec = { frequency: 660, durationSec: 0.09, gain: 0.45 };
-const BLOCK_END_BEEP: BeepSpec = { frequency: 880, durationSec: 0.18, gain: 0.6 };
+const SECTION_END_BEEP: BeepSpec = { frequency: 880, durationSec: 0.18, gain: 0.6 };
 const MIDPOINT_CLICK: BeepSpec = { frequency: 1200, durationSec: 0.04, gain: 0.5 };
 
 /**
@@ -126,7 +126,7 @@ export function useWorkoutAudio(): UseWorkoutAudioResult {
 
   const playTransitionBeep = useCallback(() => playBeep(TRANSITION_BEEP), [playBeep]);
   const playCountdownBeep = useCallback(() => playBeep(COUNTDOWN_BEEP), [playBeep]);
-  const playBlockEndBeep = useCallback(() => playBeep(BLOCK_END_BEEP), [playBeep]);
+  const playSectionEndBeep = useCallback(() => playBeep(SECTION_END_BEEP), [playBeep]);
   const playMidpointClick = useCallback(() => playBeep(MIDPOINT_CLICK), [playBeep]);
 
   const startSession = useCallback(() => {
@@ -165,7 +165,7 @@ export function useWorkoutAudio(): UseWorkoutAudioResult {
     endSession,
     playTransitionBeep,
     playCountdownBeep,
-    playBlockEndBeep,
+    playSectionEndBeep,
     playMidpointClick,
   };
 }
