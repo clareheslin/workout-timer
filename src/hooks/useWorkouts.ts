@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 import type { Workout } from "@/types";
 import { createId } from "@/lib/id";
@@ -57,6 +57,8 @@ export function useWorkouts() {
     setWorkouts((prev) => prev.map(migrateLegacyWorkout));
   }, [workouts, setWorkouts]);
 
+  const safeWorkouts = useMemo(() => workouts.map(migrateLegacyWorkout), [workouts]);
+
   const addWorkout = useCallback(
     (workout: Workout) => setWorkouts((prev) => [...prev, workout]),
     [setWorkouts],
@@ -91,5 +93,5 @@ export function useWorkouts() {
     [setWorkouts],
   );
 
-  return { workouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout };
+  return { workouts: safeWorkouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout };
 }
