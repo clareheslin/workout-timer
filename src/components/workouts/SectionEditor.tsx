@@ -15,22 +15,22 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Block, BlockItem, BlockMode, BlockType, RepExercise } from "@/types";
+import type { Section, SectionItem, SectionMode, SectionType, RepExercise } from "@/types";
 import { createId } from "@/lib/id";
-import { BlockItemRow } from "./BlockItemRow";
+import { SectionItemRow } from "./SectionItemRow";
 import { RepItemRow } from "./RepItemRow";
 
 interface Props {
-  initial: Block;
-  /** 1-based index used to suggest the default block name. */
+  initial: Section;
+  /** 1-based index used to suggest the default section name. */
   positionIndex: number;
   onCancel: () => void;
-  onDone: (block: Block) => void;
+  onDone: (section: Section) => void;
 }
 
 const DEFAULT_AMRAP_CAP = 600; // 10:00
 
-function makeNewItem(itemIndex: number): BlockItem {
+function makeNewItem(itemIndex: number): SectionItem {
   return {
     exercise: {
       id: createId("ex"),
@@ -53,21 +53,21 @@ function makeNewRepItem(itemIndex: number): RepExercise {
   };
 }
 
-const BLOCK_TYPES: ReadonlyArray<{ value: BlockType; label: string }> = [
+const SECTION_TYPES: ReadonlyArray<{ value: SectionType; label: string }> = [
   { value: "circuit", label: "Circuit" },
   { value: "sets", label: "Sets" },
   { value: "forTime", label: "For Time" },
   { value: "amrap", label: "AMRAP" },
 ];
 
-export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props) {
-  const defaultName = `Block ${positionIndex + 1}`;
+export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Props) {
+  const defaultName = `Section ${positionIndex + 1}`;
   const [name, setName] = useState(initial.name);
-  const [items, setItems] = useState<BlockItem[]>(initial.items);
+  const [items, setItems] = useState<SectionItem[]>(initial.items);
   const [repItems, setRepItems] = useState<RepExercise[]>(initial.repExercises ?? []);
-  const [type, setType] = useState<BlockType>(initial.type ?? "circuit");
+  const [type, setType] = useState<SectionType>(initial.type ?? "circuit");
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
-  const mode: BlockMode = type === "sets" ? "sets" : "circuit";
+  const mode: SectionMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
@@ -139,7 +139,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
 
   const handleUpdate = (
     id: string,
-    patch: Partial<BlockItem["exercise"]> & { restSeconds?: number },
+    patch: Partial<SectionItem["exercise"]> & { restSeconds?: number },
   ) => {
     setItems((prev) =>
       prev.map((it) => {
@@ -158,7 +158,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
   };
 
   const handleCancel = () => {
-    if (isDirty && !window.confirm("Discard unsaved changes to this block?")) return;
+    if (isDirty && !window.confirm("Discard unsaved changes to this section?")) return;
     onCancel();
   };
 
@@ -173,7 +173,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
         type,
         repExercises: repItems,
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
-        // mode is irrelevant for rep blocks but kept for back-compat
+        // mode is irrelevant for rep sections but kept for back-compat
         mode,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
@@ -216,11 +216,11 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="block-name" className="text-xs font-medium text-muted-foreground">
-          Block name
+        <label htmlFor="section-name" className="text-xs font-medium text-muted-foreground">
+          Section name
         </label>
         <input
-          id="block-name"
+          id="section-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -231,13 +231,13 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Block type</span>
+        <span className="text-xs font-medium text-muted-foreground">Section type</span>
         <div
           role="radiogroup"
-          aria-label="Block type"
+          aria-label="Section type"
           className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
         >
-          {BLOCK_TYPES.map((bt) => {
+          {SECTION_TYPES.map((bt) => {
             const active = type === bt.value;
             return (
               <button
@@ -368,7 +368,7 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
             >
               <ul className="flex flex-col gap-2">
                 {items.map((it) => (
-                  <BlockItemRow
+                  <SectionItemRow
                     key={it.exercise.id}
                     item={it}
                     onChange={(patch) => handleUpdate(it.exercise.id, patch)}
@@ -382,15 +382,15 @@ export function BlockEditor({ initial, positionIndex, onCancel, onDone }: Props)
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="block-notes" className="text-xs font-medium text-muted-foreground">
+        <label htmlFor="section-notes" className="text-xs font-medium text-muted-foreground">
           Coach notes <span className="opacity-70">(optional · markdown supported)</span>
         </label>
         <textarea
-          id="block-notes"
+          id="section-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           onFocus={(e) => e.target.select()}
-          placeholder="How to perform this block, scaling options, cues, etc."
+          placeholder="How to perform this section, scaling options, cues, etc."
           rows={4}
           className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
         />

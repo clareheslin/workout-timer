@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block } from "@/types";
-import { blockTotalSeconds, blockTotalSets, blockType, formatDuration } from "@/lib/duration";
+import type { Section } from "@/types";
+import { sectionTotalSeconds, sectionTotalSets, sectionType, formatDuration } from "@/lib/duration";
 
 const TYPE_LABELS: Record<string, string> = {
   circuit: "Circuit",
@@ -12,12 +12,12 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 interface Props {
-  block: Block;
+  section: Section;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export function BlockRow({ block, onEdit, onDelete }: Props) {
+export function SectionRow({ section, onEdit, onDelete }: Props) {
   const [confirming, setConfirming] = useState(false);
 
   // Reset the confirm state if the user walks away for a moment.
@@ -37,7 +37,7 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
   };
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: block.id,
+    id: section.id,
   });
 
   const style: React.CSSProperties = {
@@ -61,7 +61,7 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
             type="button"
             {...attributes}
             {...listeners}
-            aria-label="Drag to reorder block"
+            aria-label="Drag to reorder section"
             className="flex h-11 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded border border-border text-muted-foreground hover:bg-accent active:cursor-grabbing"
           >
             <svg
@@ -80,12 +80,12 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
             </svg>
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{block.name}</p>
+            <p className="truncate text-sm font-medium">{section.name}</p>
             {(() => {
-              const t = blockType(block);
+              const t = sectionType(section);
               const typeLabel = TYPE_LABELS[t] ?? "Circuit";
               if (t === "forTime" || t === "amrap") {
-                const reps = block.repExercises ?? [];
+                const reps = section.repExercises ?? [];
                 return (
                   <p className="text-xs text-muted-foreground">
                     {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
@@ -94,7 +94,7 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
                     {t === "amrap" && (
                       <>
                         {" · "}
-                        cap {formatDuration(block.timeCap ?? 0)}
+                        cap {formatDuration(section.timeCap ?? 0)}
                       </>
                     )}
                   </p>
@@ -102,13 +102,13 @@ export function BlockRow({ block, onEdit, onDelete }: Props) {
               }
               return (
                 <p className="text-xs text-muted-foreground">
-                  {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
+                  {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
                   {" · "}
-                  {blockTotalSets(block)} total {blockTotalSets(block) === 1 ? "set" : "sets"}
+                  {sectionTotalSets(section)} total {sectionTotalSets(section) === 1 ? "set" : "sets"}
                   {" · "}
-                  {(block.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+                  {(section.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
                   {" · "}
-                  {formatDuration(blockTotalSeconds(block))}
+                  {formatDuration(sectionTotalSeconds(section))}
                 </p>
               );
             })()}

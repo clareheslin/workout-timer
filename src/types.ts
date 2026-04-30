@@ -13,51 +13,51 @@ export interface RestInterval {
   durationSeconds: number;
 }
 
-export interface BlockItem {
+export interface SectionItem {
   exercise: ExerciseInterval;
   rest: RestInterval;
 }
 
-/** A rep-based exercise used by forTime / amrap blocks. */
+/** A rep-based exercise used by forTime / amrap sections. */
 export interface RepExercise {
   id: string;
   name: string;
   reps: number;
 }
 
-/** How rounds are ordered within a block.
+/** How rounds are ordered within a section.
  *  - "circuit": exercise 1 → 2 → 3 ... cycling; exercises with remaining rounds stay in the rotation.
  *  - "sets":    all rounds of exercise 1, then all rounds of exercise 2, etc.
  */
-export type BlockMode = "circuit" | "sets";
+export type SectionMode = "circuit" | "sets";
 
-/** Block kind. Time-based ("circuit", "sets") use `items`; rep-based
+/** Section kind. Time-based ("circuit", "sets") use `items`; rep-based
  *  ("forTime", "amrap") use `repExercises`. */
-export type BlockType = "circuit" | "sets" | "forTime" | "amrap";
+export type SectionType = "circuit" | "sets" | "forTime" | "amrap";
 
-export interface Block {
+export interface Section {
   id: string;
   name: string;
-  items: BlockItem[];
+  items: SectionItem[];
   /** Defaults to "circuit" when missing (back-compat with older saved workouts). */
-  mode?: BlockMode;
+  mode?: SectionMode;
   /** Defaults to "circuit" when missing. */
-  type?: BlockType;
-  /** Used by forTime and amrap blocks. */
+  type?: SectionType;
+  /** Used by forTime and amrap sections. */
   repExercises?: RepExercise[];
   /** Time cap in seconds. AMRAP only. */
   timeCap?: number;
-  /** Optional coach notes (markdown) shown on the block's Ready screen. */
+  /** Optional coach notes (markdown) shown on the section's Ready screen. */
   notes?: string;
 }
 
 export interface Workout {
   id: string;
   name: string;
-  blocks: Block[];
+  sections: Section[];
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp — bumped on every save
-  /** Optional coach notes (markdown) shown before the first block. */
+  /** Optional coach notes (markdown) shown before the first section. */
   notes?: string;
 }
 
@@ -67,18 +67,18 @@ export interface WorkoutLogItem {
   restDuration: number;
 }
 
-/** Rep-based log item used for forTime / amrap blocks. */
+/** Rep-based log item used for forTime / amrap sections. */
 export interface WorkoutLogRepItem {
   exerciseName: string;
   reps: number;
 }
 
-export interface WorkoutLogBlock {
-  blockName: string;
+export interface WorkoutLogSection {
+  sectionName: string;
   rounds: number;
   items: WorkoutLogItem[];
-  /** Block type. Missing on legacy logs (treated as time-based). */
-  blockType?: BlockType;
+  /** Section type. Missing on legacy logs (treated as time-based). */
+  sectionType?: SectionType;
   /** Rep-based exercises (forTime / amrap). */
   repItems?: WorkoutLogRepItem[];
   /** forTime: elapsed seconds when Stop was tapped. amrap: time cap in seconds. */
@@ -92,7 +92,7 @@ export interface WorkoutLog {
   startedAt: string; // ISO timestamp
   completedAt: string; // ISO timestamp
   totalDurationSeconds: number;
-  blockBreakdown: WorkoutLogBlock[];
-  /** True if the workout was interrupted (crash) or had skipped blocks. */
+  sectionBreakdown: WorkoutLogSection[];
+  /** True if the workout was interrupted (crash) or had skipped sections. */
   incomplete?: boolean;
 }

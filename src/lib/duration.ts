@@ -1,39 +1,39 @@
-import type { Block, BlockItem, BlockType } from "@/types";
+import type { Section, SectionItem, SectionType } from "@/types";
 
-/** Effective block type, defaulting to "circuit" for legacy data. */
-export function blockType(block: Block): BlockType {
-  return block.type ?? "circuit";
+/** Effective section type, defaulting to "circuit" for legacy data. */
+export function sectionType(section: Section): SectionType {
+  return section.type ?? "circuit";
 }
 
 /** Rounds for a single exercise. Defaults to 1 when missing/invalid. */
-export function exerciseRounds(item: BlockItem): number {
+export function exerciseRounds(item: SectionItem): number {
   return Math.max(1, Math.floor(item.exercise.rounds ?? 1));
 }
 
-/** Total sets across all exercises in a block (time-based blocks only). */
-export function blockTotalSets(block: Block): number {
-  if (blockType(block) === "forTime" || blockType(block) === "amrap") return 0;
-  return block.items.reduce((sum, it) => sum + exerciseRounds(it), 0);
+/** Total sets across all exercises in a section (time-based sections only). */
+export function sectionTotalSets(section: Section): number {
+  if (sectionType(section) === "forTime" || sectionType(section) === "amrap") return 0;
+  return section.items.reduce((sum, it) => sum + exerciseRounds(it), 0);
 }
 
-/** Total seconds for a single block, accounting for per-exercise rounds.
- *  The trailing rest after the very last interval of the block is omitted
+/** Total seconds for a single section, accounting for per-exercise rounds.
+ *  The trailing rest after the very last interval of the section is omitted
  *  (matches the planner's behavior). For amrap, returns the time cap.
  *  For forTime, returns 0 (unknown ahead of time). */
-export function blockTotalSeconds(block: Block): number {
-  const t = blockType(block);
-  if (t === "amrap") return Math.max(0, block.timeCap ?? 0);
+export function sectionTotalSeconds(section: Section): number {
+  const t = sectionType(section);
+  if (t === "amrap") return Math.max(0, section.timeCap ?? 0);
   if (t === "forTime") return 0;
-  if (block.items.length === 0) return 0;
+  if (section.items.length === 0) return 0;
   let total = 0;
-  for (const it of block.items) {
+  for (const it of section.items) {
     const rounds = exerciseRounds(it);
     const exSecs = Math.max(0, it.exercise.durationSeconds);
     const restSecs = Math.max(0, it.rest.durationSeconds);
     total += rounds * (exSecs + restSecs);
   }
-  // Strip the trailing rest of the very last interval in the block.
-  const lastRest = Math.max(0, block.items[block.items.length - 1].rest.durationSeconds);
+  // Strip the trailing rest of the very last interval in the section.
+  const lastRest = Math.max(0, section.items[section.items.length - 1].rest.durationSeconds);
   total -= lastRest;
   return Math.max(0, total);
 }

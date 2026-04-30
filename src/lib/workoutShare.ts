@@ -1,4 +1,4 @@
-import type { Block, BlockItem, RepExercise, Workout } from "@/types";
+import type { Section, SectionItem, RepExercise, Workout } from "@/types";
 import { createId } from "./id";
 
 export const WORKOUT_FILE_FORMAT = "fem.workout";
@@ -10,7 +10,7 @@ export interface WorkoutFileEnvelope {
   exportedAt: string;
   workout: {
     name: string;
-    blocks: Block[];
+    sections: Section[];
   };
 }
 
@@ -22,7 +22,7 @@ export function serializeWorkout(workout: Workout): string {
     exportedAt: new Date().toISOString(),
     workout: {
       name: workout.name,
-      blocks: workout.blocks,
+      sections: workout.sections,
     },
   };
   return JSON.stringify(envelope, null, 2);
@@ -39,7 +39,7 @@ function isValidRepExercise(v: unknown): v is RepExercise {
   );
 }
 
-function isValidBlockItem(v: unknown): v is BlockItem {
+function isValidSectionItem(v: unknown): v is SectionItem {
   if (!isObj(v)) return false;
   const ex = v.exercise;
   const rest = v.rest;
@@ -51,11 +51,11 @@ function isValidBlockItem(v: unknown): v is BlockItem {
   return true;
 }
 
-function isValidBlock(v: unknown): v is Block {
+function isValidSection(v: unknown): v is Section {
   if (!isObj(v)) return false;
   if (typeof v.id !== "string" || typeof v.name !== "string") return false;
   if (!Array.isArray(v.items)) return false;
-  if (!v.items.every(isValidBlockItem)) return false;
+  if (!v.items.every(isValidSectionItem)) return false;
   if (v.repExercises !== undefined) {
     if (!Array.isArray(v.repExercises)) return false;
     if (!v.repExercises.every(isValidRepExercise)) return false;
@@ -71,8 +71,8 @@ export function isValidWorkoutShape(obj: unknown): obj is WorkoutFileEnvelope {
   const w = obj.workout;
   if (!isObj(w)) return false;
   if (typeof w.name !== "string") return false;
-  if (!Array.isArray(w.blocks)) return false;
-  if (!w.blocks.every(isValidBlock)) return false;
+  if (!Array.isArray(w.sections)) return false;
+  if (!w.sections.every(isValidSection)) return false;
   return true;
 }
 
@@ -108,19 +108,19 @@ export function regenerateIds(
   const now = new Date().toISOString();
   const trimmedPrefix = prefix?.trim() ? prefix : "";
   const name = `${trimmedPrefix}${envelope.workout.name}`;
-  const blocks: Block[] = envelope.workout.blocks.map((b) => ({
-    ...b,
-    id: createId("block"),
-    items: b.items.map((it) => ({
+  const sections: Section[] = envelope.workout.sections.map((s) => ({
+    ...s,
+    id: createId("section"),
+    items: s.items.map((it) => ({
       exercise: { ...it.exercise, id: createId("ex") },
       rest: { ...it.rest, id: createId("rest") },
     })),
-    repExercises: b.repExercises?.map((r) => ({ ...r, id: createId("rep") })),
+    repExercises: s.repExercises?.map((r) => ({ ...r, id: createId("rep") })),
   }));
   return {
     id: createId("workout"),
     name,
-    blocks,
+    sections,
     createdAt: now,
     updatedAt: now,
   };

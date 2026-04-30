@@ -15,10 +15,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Block, Workout } from "@/types";
+import type { Section, Workout } from "@/types";
 import { createId } from "@/lib/id";
-import { BlockRow } from "./BlockRow";
-import { BlockEditor } from "./BlockEditor";
+import { SectionRow } from "./SectionRow";
+import { SectionEditor } from "./SectionEditor";
 
 interface Props {
   initial: Workout | null;
@@ -26,10 +26,10 @@ interface Props {
   onSave: (workout: Workout) => void;
 }
 
-function makeEmptyBlock(index: number): Block {
+function makeEmptySection(index: number): Section {
   return {
-    id: createId("block"),
-    name: `Block ${index + 1}`,
+    id: createId("section"),
+    name: `Section ${index + 1}`,
     items: [],
     mode: "circuit",
   };
@@ -37,40 +37,40 @@ function makeEmptyBlock(index: number): Block {
 
 export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [blocks, setBlocks] = useState<Block[]>(initial?.blocks ?? []);
+  const [sections, setSections] = useState<Section[]>(initial?.sections ?? []);
   const [notes, setNotes] = useState<string>(initial?.notes ?? "");
-  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 
   const initialSnapshot = useMemo(
     () =>
       JSON.stringify({
         name: initial?.name ?? "",
-        blocks: initial?.blocks ?? [],
+        sections: initial?.sections ?? [],
         notes: initial?.notes ?? "",
       }),
     [initial],
   );
-  const isDirty = JSON.stringify({ name, blocks, notes }) !== initialSnapshot;
+  const isDirty = JSON.stringify({ name, sections, notes }) !== initialSnapshot;
 
   const canSave =
-    blocks.length > 0 &&
-    blocks.some((b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0);
+    sections.length > 0 &&
+    sections.some((s) => s.items.length > 0 || (s.repExercises?.length ?? 0) > 0);
 
-  const handleAddBlock = () => {
-    setBlocks((prev) => [...prev, makeEmptyBlock(prev.length)]);
+  const handleAddSection = () => {
+    setSections((prev) => [...prev, makeEmptySection(prev.length)]);
   };
 
-  const handleDeleteBlock = (id: string) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
+  const handleDeleteSection = (id: string) => {
+    setSections((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleEditBlock = (id: string) => {
-    setEditingBlockId(id);
+  const handleEditSection = (id: string) => {
+    setEditingSectionId(id);
   };
 
-  const handleBlockDone = (updated: Block) => {
-    setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
-    setEditingBlockId(null);
+  const handleSectionDone = (updated: Section) => {
+    setSections((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setEditingSectionId(null);
   };
 
   const sensors = useSensors(
@@ -82,24 +82,24 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    setBlocks((prev) => {
-      const oldIdx = prev.findIndex((b) => b.id === active.id);
-      const newIdx = prev.findIndex((b) => b.id === over.id);
+    setSections((prev) => {
+      const oldIdx = prev.findIndex((s) => s.id === active.id);
+      const newIdx = prev.findIndex((s) => s.id === over.id);
       if (oldIdx === -1 || newIdx === -1) return prev;
       return arrayMove(prev, oldIdx, newIdx);
     });
   };
 
-  const editingBlock = blocks.find((b) => b.id === editingBlockId) ?? null;
-  const editingBlockIndex = editingBlock ? blocks.findIndex((b) => b.id === editingBlock.id) : -1;
+  const editingSection = sections.find((s) => s.id === editingSectionId) ?? null;
+  const editingSectionIndex = editingSection ? sections.findIndex((s) => s.id === editingSection.id) : -1;
 
-  if (editingBlock && editingBlockIndex >= 0) {
+  if (editingSection && editingSectionIndex >= 0) {
     return (
-      <BlockEditor
-        initial={editingBlock}
-        positionIndex={editingBlockIndex}
-        onCancel={() => setEditingBlockId(null)}
-        onDone={handleBlockDone}
+      <SectionEditor
+        initial={editingSection}
+        positionIndex={editingSectionIndex}
+        onCancel={() => setEditingSectionId(null)}
+        onDone={handleSectionDone}
       />
     );
   }
@@ -116,7 +116,7 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
     const workout: Workout = {
       id: initial?.id ?? createId("workout"),
       name: name.trim() || "My Workout",
-      blocks,
+      sections,
       createdAt: initial?.createdAt ?? now,
       updatedAt: now,
       notes: trimmedNotes ? trimmedNotes : undefined,
@@ -162,20 +162,20 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Blocks
+            Sections
           </h2>
           <button
             type="button"
-            onClick={handleAddBlock}
+            onClick={handleAddSection}
             className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            + Add Block
+            + Add Section
           </button>
         </div>
 
-        {blocks.length === 0 ? (
+        {sections.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No blocks yet. Add your first block.
+            No sections yet. Add your first section.
           </p>
         ) : (
           <DndContext
@@ -183,14 +183,14 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               <ul className="flex flex-col gap-2">
-                {blocks.map((b) => (
-                  <BlockRow
-                    key={b.id}
-                    block={b}
-                    onEdit={() => handleEditBlock(b.id)}
-                    onDelete={() => handleDeleteBlock(b.id)}
+                {sections.map((s) => (
+                  <SectionRow
+                    key={s.id}
+                    section={s}
+                    onEdit={() => handleEditSection(s.id)}
+                    onDelete={() => handleDeleteSection(s.id)}
                   />
                 ))}
               </ul>
@@ -214,9 +214,9 @@ export function WorkoutEditor({ initial, onCancel, onSave }: Props) {
         />
       </div>
 
-      {!canSave && blocks.length > 0 && (
+      {!canSave && sections.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Add at least one exercise to a block to enable saving.
+          Add at least one exercise to a section to enable saving.
         </p>
       )}
     </div>

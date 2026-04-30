@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import type { Block, WorkoutLogBlock } from "@/types";
+import type { Section, WorkoutLogSection } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
@@ -10,34 +10,34 @@ import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader } from "@/components/PageHeaderContext";
 
 interface Props {
-  block: Block;
-  blockIndex: number;
-  totalBlocks: number;
+  section: Section;
+  sectionIndex: number;
+  totalSections: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
-  onComplete: (logBlock: WorkoutLogBlock) => void;
+  onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
-  onSkipBlock: () => void;
+  onSkipSection: () => void;
 }
 
 type Phase = "idle" | "running" | "paused" | "done";
 
 
-/** Runs a single forTime or amrap block. The exercise list is static.
- *  Supports pause/resume, skip (jump to end), and end-block (same as skip). */
-export function RepBlockRunner({
-  block,
-  blockIndex,
-  totalBlocks,
+/** Runs a single forTime or amrap section. The exercise list is static.
+ *  Supports pause/resume, skip (jump to end), and end-section (same as skip). */
+export function RepSectionRunner({
+  section,
+  sectionIndex,
+  totalSections,
   workoutName,
   audio,
   onComplete,
   onExitWorkout,
-  onSkipBlock,
+  onSkipSection,
 }: Props) {
-  const isAmrap = (block.type ?? "circuit") === "amrap";
-  const timeCap = Math.max(1, block.timeCap ?? 0);
-  const repExercises = block.repExercises ?? [];
+  const isAmrap = (section.type ?? "circuit") === "amrap";
+  const timeCap = Math.max(1, section.timeCap ?? 0);
+  const repExercises = section.repExercises ?? [];
 
   const [phase, setPhase] = useState<Phase>("idle");
   // For forTime: elapsed seconds (counts up). For amrap: remaining seconds (counts down).
@@ -51,7 +51,7 @@ export function RepBlockRunner({
   const elapsedRef = useRef(0);
   const remainingRef = useRef(timeCap);
 
-  // Hold a real media session while the block is active so iOS mixes our
+  // Hold a real media session while the section is active so iOS mixes our
   // beeps over background music instead of silencing them via the ambient
   // route.
   useEffect(() => {
@@ -74,18 +74,18 @@ export function RepBlockRunner({
   }, [remaining]);
 
   const buildLog = useCallback(
-    (durationSeconds: number): WorkoutLogBlock => ({
-      blockName: block.name || `Block ${blockIndex + 1}`,
+    (durationSeconds: number): WorkoutLogSection => ({
+      sectionName: section.name || `Section ${sectionIndex + 1}`,
       rounds: 0,
       items: [],
-      blockType: isAmrap ? "amrap" : "forTime",
+      sectionType: isAmrap ? "amrap" : "forTime",
       repItems: repExercises.map((ex) => ({
         exerciseName: ex.name || "Exercise",
         reps: Math.max(1, Math.floor(ex.reps)),
       })),
       durationSeconds: Math.max(0, Math.floor(durationSeconds)),
     }),
-    [block.name, blockIndex, isAmrap, repExercises],
+    [section.name, sectionIndex, isAmrap, repExercises],
   );
 
   const finalize = useCallback(
@@ -94,7 +94,7 @@ export function RepBlockRunner({
       completedRef.current = true;
       setFinalDuration(Math.max(0, Math.floor(durationSeconds)));
       setPhase("done");
-      audio.playBlockEndBeep();
+      audio.playSectionEndBeep();
     },
     [audio],
   );
@@ -155,7 +155,7 @@ export function RepBlockRunner({
     else if (phase === "paused") setPhase("running");
   };
 
-  // Skip / End block — both jump to the done screen with current duration.
+  // Skip / End section — both jump to the done screen with current duration.
   const handleEnd = () => {
     const duration = isAmrap ? timeCap - remainingRef.current : elapsedRef.current;
     finalize(duration);
@@ -185,12 +185,12 @@ export function RepBlockRunner({
       headerRight: (
         <>
           <p className="text-xs opacity-70">
-            Block {blockIndex + 1} of {totalBlocks}
+            Section {sectionIndex + 1} of {totalSections}
           </p>
           <button
             type="button"
-            onClick={onSkipBlock}
-            aria-label="Skip block"
+            onClick={onSkipSection}
+            aria-label="Skip section"
             className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
           >
             <ChevronRight className="h-5 w-5" />
@@ -199,7 +199,7 @@ export function RepBlockRunner({
         </>
       ),
     }),
-    [handleBack, isActive, blockIndex, totalBlocks, audio, onSkipBlock],
+    [handleBack, isActive, sectionIndex, totalSections, audio, onSkipSection],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -214,9 +214,9 @@ export function RepBlockRunner({
             className="text-xs font-medium uppercase tracking-wider opacity-70"
             aria-hidden={phase !== "idle"}
           >
-            {phase === "idle" ? "Block Preview" : "\u00A0"}
+            {phase === "idle" ? "Section Preview" : "\u00A0"}
           </p>
-          <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+          <h2 className="text-xl font-semibold">{section.name || `Section ${sectionIndex + 1}`}</h2>
           <p className="text-xs text-muted-foreground">
             {isAmrap
               ? `Cap ${formatDuration(timeCap)}`
@@ -224,8 +224,8 @@ export function RepBlockRunner({
           </p>
         </div>
 
-        {phase === "idle" && block.notes && (
-          <CoachNotes notes={block.notes} label="Block notes" />
+        {phase === "idle" && section.notes && (
+          <CoachNotes notes={section.notes} label="Section notes" />
         )}
 
         <ul className="flex flex-col divide-y divide-border border-y border-border">
@@ -276,7 +276,7 @@ export function RepBlockRunner({
                   onClick={handleStart}
                   className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
                 >
-                  Start Block
+                  Start Section
                 </button>
               )}
 
@@ -287,7 +287,7 @@ export function RepBlockRunner({
                       type="button"
                       onClick={handleEnd}
                       className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                      aria-label="Skip to end of block"
+                      aria-label="Skip to end of section"
                     >
                       Skip Interval ›
                     </button>

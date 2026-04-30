@@ -85,7 +85,7 @@ export function AmrapScreen({ onBack }: Props) {
       wc.start(seconds, {
         onTick: (r) => setRemaining(r),
         onComplete: () => {
-          audio.playBlockEndBeep();
+          audio.playSectionEndBeep();
           setRemaining(0);
           setPhase("done");
         },

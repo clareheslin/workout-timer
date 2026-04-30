@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { Workout, WorkoutLog, WorkoutLogBlock } from "@/types";
+import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { createId } from "@/lib/id";
-import { TimeBlockRunner } from "./TimeBlockRunner";
-import { RepBlockRunner } from "./RepBlockRunner";
+import { TimeSectionRunner } from "./TimeSectionRunner";
+import { RepSectionRunner } from "./RepSectionRunner";
 import { WorkoutPreview } from "./WorkoutPreview";
 import { useExitConfirm } from "./useExitConfirm";
 import { usePageHeader } from "@/components/PageHeaderContext";
@@ -15,30 +15,30 @@ interface Props {
   onExit: (reason: "done" | "exit") => void;
 }
 
-type Phase = "workout-preview" | "running-block" | "between-blocks" | "done";
+type Phase = "workout-preview" | "running-section" | "between-sections" | "done";
 
 export function WorkoutRunner({ workout, onExit }: Props) {
   const audio = useWorkoutAudio();
   const diary = useWorkoutDiary();
 
-  const [blockIndex, setBlockIndex] = useState(0);
-  // Skip the workout preview when there's only a single block — the block's
+  const [sectionIndex, setSectionIndex] = useState(0);
+  // Skip the workout preview when there's only a single section — the section's
   // own Ready screen already previews everything.
   const [phase, setPhase] = useState<Phase>(
-    workout.blocks.length > 1 ? "workout-preview" : "running-block",
+    workout.sections.length > 1 ? "workout-preview" : "running-section",
   );
   const startedAtRef = useRef<string>(new Date().toISOString());
-  const logBlocksRef = useRef<WorkoutLogBlock[]>([]);
+  const logSectionsRef = useRef<WorkoutLogSection[]>([]);
   const loggedRef = useRef(false);
-  const blocksWereSkippedRef = useRef(false);
+  const sectionsWereSkippedRef = useRef(false);
 
-  const currentBlock = workout.blocks[blockIndex];
-  const isLastBlock = blockIndex >= workout.blocks.length - 1;
+  const currentSection = workout.sections[sectionIndex];
+  const isLastSection = sectionIndex >= workout.sections.length - 1;
 
   const writeDiary = useCallback(
     (incomplete: boolean) => {
       if (loggedRef.current) return;
-      if (logBlocksRef.current.length === 0) return;
+      if (logSectionsRef.current.length === 0) return;
       loggedRef.current = true;
       const completedAt = new Date();
       const startedAtDate = new Date(startedAtRef.current);
@@ -53,7 +53,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         startedAt: startedAtRef.current,
         completedAt: completedAt.toISOString(),
         totalDurationSeconds,
-        blockBreakdown: logBlocksRef.current,
+        sectionBreakdown: logSectionsRef.current,
         ...(incomplete ? { incomplete: true } : {}),
       };
       diary.addLog(log);
@@ -69,39 +69,39 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     }
   };
 
-  const handleBlockComplete = useCallback(
-    (logBlock: WorkoutLogBlock) => {
-      logBlocksRef.current = [...logBlocksRef.current, logBlock];
-      // Crash-protection snapshot: persist completed blocks immediately.
+  const handleSectionComplete = useCallback(
+    (logSection: WorkoutLogSection) => {
+      logSectionsRef.current = [...logSectionsRef.current, logSection];
+      // Crash-protection snapshot: persist completed sections immediately.
       try {
         const snapshot = {
           workoutId: workout.id,
           workoutName: workout.name,
           startedAt: startedAtRef.current,
-          lastBlockAt: new Date().toISOString(),
-          blockBreakdown: logBlocksRef.current,
+          lastSectionAt: new Date().toISOString(),
+          sectionBreakdown: logSectionsRef.current,
           incomplete: true as const,
         };
         window.localStorage.setItem("workout_in_progress", JSON.stringify(snapshot));
       } catch {
         // ignore
       }
-      if (isLastBlock) {
+      if (isLastSection) {
         setPhase("done");
-        writeDiary(blocksWereSkippedRef.current);
+        writeDiary(sectionsWereSkippedRef.current);
         clearInProgress();
         window.setTimeout(() => onExit("done"), 2000);
       } else {
-        setPhase("between-blocks");
+        setPhase("between-sections");
       }
     },
-    [isLastBlock, onExit, writeDiary, workout.id, workout.name],
+    [isLastSection, onExit, writeDiary, workout.id, workout.name],
   );
 
-  const handleNextBlock = () => {
+  const handleNextSection = () => {
     audio.unlock();
-    setBlockIndex((i) => i + 1);
-    setPhase("running-block");
+    setSectionIndex((i) => i + 1);
+    setPhase("running-section");
   };
 
   const handleExitWorkout = useCallback(() => {
@@ -110,21 +110,21 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     onExit("exit");
   }, [onExit]);
 
-  const handleSkipBlock = useCallback(() => {
-    blocksWereSkippedRef.current = true;
-    // Skip discards the current block — no onComplete, no log entry.
-    if (isLastBlock) {
+  const handleSkipSection = useCallback(() => {
+    sectionsWereSkippedRef.current = true;
+    // Skip discards the current section — no onComplete, no log entry.
+    if (isLastSection) {
       setPhase("done");
       writeDiary(true);
       clearInProgress();
       window.setTimeout(() => onExit("done"), 2000);
     } else {
-      setBlockIndex((i) => i + 1);
-      setPhase("running-block");
+      setSectionIndex((i) => i + 1);
+      setPhase("running-section");
     }
-  }, [isLastBlock, onExit, writeDiary]);
+  }, [isLastSection, onExit, writeDiary]);
 
-  if (!currentBlock) {
+  if (!currentSection) {
     return null;
   }
 
@@ -134,7 +134,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         workout={workout}
         onBegin={() => {
           audio.unlock();
-          setPhase("running-block");
+          setPhase("running-section");
         }}
         onExit={handleExitWorkout}
       />
@@ -150,68 +150,68 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     );
   }
 
-  if (phase === "between-blocks") {
-    const next = workout.blocks[blockIndex + 1];
+  if (phase === "between-sections") {
+    const next = workout.sections[sectionIndex + 1];
     return (
-      <BetweenBlocksScreen
+      <BetweenSectionsScreen
         workoutName={workout.name}
-        currentBlockName={currentBlock.name || `Block ${blockIndex + 1}`}
-        nextBlockName={next?.name ?? `Block ${blockIndex + 2}`}
-        onNext={handleNextBlock}
+        currentSectionName={currentSection.name || `Section ${sectionIndex + 1}`}
+        nextSectionName={next?.name ?? `Section ${sectionIndex + 2}`}
+        onNext={handleNextSection}
         onExit={handleExitWorkout}
       />
     );
   }
 
-  const blockTypeKey = currentBlock.type ?? "circuit";
-  const isRepBlock = blockTypeKey === "forTime" || blockTypeKey === "amrap";
+  const sectionTypeKey = currentSection.type ?? "circuit";
+  const isRepSection = sectionTypeKey === "forTime" || sectionTypeKey === "amrap";
 
-  if (isRepBlock) {
+  if (isRepSection) {
     return (
-      <RepBlockRunner
-        key={currentBlock.id}
-        block={currentBlock}
-        blockIndex={blockIndex}
-        totalBlocks={workout.blocks.length}
+      <RepSectionRunner
+        key={currentSection.id}
+        section={currentSection}
+        sectionIndex={sectionIndex}
+        totalSections={workout.sections.length}
         workoutName={workout.name}
         audio={audio}
-        onComplete={handleBlockComplete}
+        onComplete={handleSectionComplete}
         onExitWorkout={handleExitWorkout}
-        onSkipBlock={handleSkipBlock}
+        onSkipSection={handleSkipSection}
       />
     );
   }
 
   return (
-    <TimeBlockRunner
-      key={currentBlock.id}
-      block={currentBlock}
-      blockIndex={blockIndex}
-      totalBlocks={workout.blocks.length}
+    <TimeSectionRunner
+      key={currentSection.id}
+      section={currentSection}
+      sectionIndex={sectionIndex}
+      totalSections={workout.sections.length}
       workoutName={workout.name}
       audio={audio}
-      onComplete={handleBlockComplete}
+      onComplete={handleSectionComplete}
       onExitWorkout={handleExitWorkout}
-      onSkipBlock={handleSkipBlock}
+      onSkipSection={handleSkipSection}
     />
   );
 }
 
-interface BetweenBlocksScreenProps {
+interface BetweenSectionsScreenProps {
   workoutName: string;
-  currentBlockName: string;
-  nextBlockName: string;
+  currentSectionName: string;
+  nextSectionName: string;
   onNext: () => void;
   onExit: () => void;
 }
 
-function BetweenBlocksScreen({
+function BetweenSectionsScreen({
   workoutName,
-  currentBlockName,
-  nextBlockName,
+  currentSectionName,
+  nextSectionName,
   onNext,
   onExit,
-}: BetweenBlocksScreenProps) {
+}: BetweenSectionsScreenProps) {
   const { handleBack, sheet } = useExitConfirm(true, {
     title: "Exit workout?",
     description: "Your progress will not be saved.",
@@ -225,8 +225,8 @@ function BetweenBlocksScreen({
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-        <h2 className="text-2xl font-semibold">{currentBlockName} complete.</h2>
-        <p className="text-sm opacity-80">Ready for {nextBlockName}?</p>
+        <h2 className="text-2xl font-semibold">{currentSectionName} complete.</h2>
+        <p className="text-sm opacity-80">Ready for {nextSectionName}?</p>
         <button
           type="button"
           onClick={onNext}

@@ -139,7 +139,7 @@ export function CircuitScreen({ onBack }: Props) {
       }
 
       // End of circuit.
-      audio.playBlockEndBeep();
+      audio.playSectionEndBeep();
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
       stepIdxRef.current = sIdx;
@@ -269,7 +269,7 @@ export function CircuitScreen({ onBack }: Props) {
       lastBeepRef.current = null;
       startStep(next);
     } else {
-      audio.playBlockEndBeep();
+      audio.playSectionEndBeep();
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
       setRemaining(0);

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
 import { ChevronRight } from "lucide-react";
-import type { Block, Workout, WorkoutLogBlock } from "@/types";
+import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
-import { blockTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
+import { sectionTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { HoldToExitButton } from "./HoldToExitButton";
 import { MuteButton } from "./MuteButton";
 import { useExitConfirm } from "./useExitConfirm";
@@ -11,54 +11,54 @@ import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
-  block: Block;
-  blockIndex: number;
-  totalBlocks: number;
+  section: Section;
+  sectionIndex: number;
+  totalSections: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
-  onComplete: (logBlock: WorkoutLogBlock) => void;
+  onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
-  onSkipBlock: () => void;
+  onSkipSection: () => void;
 }
 
 
-/** Runs a single time-based block (circuit / sets) using useWorkoutTimer.
- *  We synthesize a one-block "workout" so the existing timer hook can drive it. */
-export function TimeBlockRunner({
-  block,
-  blockIndex,
-  totalBlocks,
+/** Runs a single time-based section (circuit / sets) using useWorkoutTimer.
+ *  We synthesize a one-section "workout" so the existing timer hook can drive it. */
+export function TimeSectionRunner({
+  section,
+  sectionIndex,
+  totalSections,
   workoutName,
   audio,
   onComplete,
   onExitWorkout,
-  onSkipBlock,
+  onSkipSection,
 }: Props) {
   const subWorkout = useMemo<Workout>(
     () => ({
-      id: `sub_${block.id}`,
+      id: `sub_${section.id}`,
       name: workoutName,
-      blocks: [block],
+      sections: [section],
       createdAt: new Date(0).toISOString(),
       updatedAt: new Date(0).toISOString(),
     }),
-    [block, workoutName],
+    [section, workoutName],
   );
 
   const callbacks = useMemo<WorkoutTimerCallbacks>(
     () => ({
       onTransition: audio.playTransitionBeep,
       onCountdownTick: audio.playCountdownBeep,
-      onBlockEnd: audio.playBlockEndBeep,
+      onSectionEnd: audio.playSectionEndBeep,
       onMidpoint: audio.playMidpointClick,
     }),
-    [audio.playTransitionBeep, audio.playCountdownBeep, audio.playBlockEndBeep, audio.playMidpointClick],
+    [audio.playTransitionBeep, audio.playCountdownBeep, audio.playSectionEndBeep, audio.playMidpointClick],
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks);
   const completedRef = useRef(false);
 
-  // Hold a real media session while the block is active so iOS mixes our
+  // Hold a real media session while the section is active so iOS mixes our
   // beeps over background music instead of silencing them via the ambient
   // route.
   useEffect(() => {
@@ -73,21 +73,21 @@ export function TimeBlockRunner({
   }, [t.phase, audio]);
 
 
-  // When the (single) block reaches done, hand the summary up.
+  // When the (single) section reaches done, hand the summary up.
   useEffect(() => {
-    if (t.phase !== "done" && t.phase !== "block-complete") return;
+    if (t.phase !== "done" && t.phase !== "section-complete") return;
     if (completedRef.current) return;
     completedRef.current = true;
     const summary = t.getRunSummary();
-    const sb = summary?.blocks[0];
-    const log: WorkoutLogBlock = {
-      blockName: sb?.blockName ?? block.name ?? `Block ${blockIndex + 1}`,
+    const sb = summary?.sections[0];
+    const log: WorkoutLogSection = {
+      sectionName: sb?.sectionName ?? section.name ?? `Section ${sectionIndex + 1}`,
       rounds: sb?.rounds ?? 0,
       items: sb?.items ?? [],
-      blockType: block.type ?? "circuit",
+      sectionType: section.type ?? "circuit",
     };
     onComplete(log);
-  }, [t.phase, t.getRunSummary, onComplete, block.type, block.name, blockIndex]);
+  }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
 
   const isExerciseInterval = t.currentInterval?.kind === "exercise";
   const isActive = t.phase === "running" || t.phase === "paused";
@@ -120,12 +120,12 @@ export function TimeBlockRunner({
       headerRight: (
         <>
           <p className="text-xs opacity-70">
-            Block {blockIndex + 1} of {totalBlocks}
+            Section {sectionIndex + 1} of {totalSections}
           </p>
           <button
             type="button"
-            onClick={onSkipBlock}
-            aria-label="Skip block"
+            onClick={onSkipSection}
+            aria-label="Skip section"
             className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
           >
             <ChevronRight className="h-5 w-5" />
@@ -134,7 +134,7 @@ export function TimeBlockRunner({
         </>
       ),
     }),
-    [handleBack, isActive, tone, blockIndex, totalBlocks, audio, onSkipBlock],
+    [handleBack, isActive, tone, sectionIndex, totalSections, audio, onSkipSection],
   );
   usePageHeader(workoutName, headerOpts);
 
@@ -151,26 +151,26 @@ export function TimeBlockRunner({
             className="text-xs font-medium uppercase tracking-wider opacity-70"
             aria-hidden={t.phase !== "idle"}
           >
-            {t.phase === "idle" ? "Block Preview" : "\u00A0"}
+            {t.phase === "idle" ? "Section Preview" : "\u00A0"}
           </p>
-          <h2 className="text-xl font-semibold">{block.name || `Block ${blockIndex + 1}`}</h2>
+          <h2 className="text-xl font-semibold">{section.name || `Section ${sectionIndex + 1}`}</h2>
           {t.phase === "idle" && (
             <p className="text-xs opacity-70">
-              {block.items.length} {block.items.length === 1 ? "exercise" : "exercises"}
-              {blockTotalSeconds(block) > 0 ? ` · ${formatDuration(blockTotalSeconds(block))}` : ""}
+              {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
+              {sectionTotalSeconds(section) > 0 ? ` · ${formatDuration(sectionTotalSeconds(section))}` : ""}
             </p>
           )}
         </div>
 
         {t.phase === "idle" && (
           <>
-            {block.notes && <CoachNotes notes={block.notes} label="Block notes" />}
+            {section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
             <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
-              {block.items.length === 0 ? (
+              {section.items.length === 0 ? (
                 <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
               ) : (
-                block.items.map((it) => {
+                section.items.map((it) => {
                   const work = Math.max(0, it.exercise.durationSeconds);
                   const rest = Math.max(0, it.rest.durationSeconds);
                   const rounds = exerciseRounds(it);
@@ -200,7 +200,7 @@ export function TimeBlockRunner({
                 onClick={handleStart}
                 className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
               >
-                Start Block
+                Start Section
               </button>
             </div>
           </>
@@ -228,14 +228,14 @@ export function TimeBlockRunner({
               <span className="opacity-60">Up next: </span>
               {t.nextItem
                 ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
-                : "Block complete"}
+                : "Section complete"}
             </div>
             <div className="mt-2 flex items-center justify-center">
               <button
                 type="button"
                 onClick={t.skipInterval}
                 className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of block"}
+                aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
               >
                 Skip Interval ›
               </button>

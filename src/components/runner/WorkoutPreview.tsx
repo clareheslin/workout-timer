@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Workout } from "@/types";
-import { blockTotalSeconds, blockType, formatDuration } from "@/lib/duration";
+import { sectionTotalSeconds, sectionType, formatDuration } from "@/lib/duration";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader } from "@/components/PageHeaderContext";
 
@@ -17,8 +17,8 @@ const TYPE_LABEL: Record<string, string> = {
   amrap: "AMRAP",
 };
 
-/** Workout-level preview screen shown before the first block's Ready screen.
- *  Lists every block with its type, total time and exercise count, and shows
+/** Workout-level preview screen shown before the first section's Ready screen.
+ *  Lists every section with its type, total time and exercise count, and shows
  *  workout-level coach notes. Back tap exits immediately — nothing has been
  *  started or logged at this point, so no confirmation is needed. */
 export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
@@ -37,7 +37,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
           </p>
           <h2 className="text-2xl font-semibold">{workout.name}</h2>
           <p className="text-xs opacity-70">
-            {workout.blocks.length} {workout.blocks.length === 1 ? "block" : "blocks"}
+            {workout.sections.length} {workout.sections.length === 1 ? "section" : "sections"}
           </p>
         </div>
 
@@ -46,23 +46,23 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
         )}
 
         <ul className="flex flex-col divide-y divide-border border-y border-border">
-          {workout.blocks.length === 0 ? (
-            <li className="px-1 py-3 text-sm opacity-70">No blocks.</li>
+          {workout.sections.length === 0 ? (
+            <li className="px-1 py-3 text-sm opacity-70">No sections.</li>
           ) : (
-            workout.blocks.map((b, i) => {
-              const t = blockType(b);
+            workout.sections.map((s, i) => {
+              const t = sectionType(s);
               const isRep = t === "forTime" || t === "amrap";
               const exerciseCount = isRep
-                ? (b.repExercises?.length ?? 0)
-                : b.items.length;
+                ? (s.repExercises?.length ?? 0)
+                : s.items.length;
               const exerciseLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
               let timeLabel: string | null = null;
               if (t === "amrap") {
-                timeLabel = formatDuration(Math.max(0, b.timeCap ?? 0));
+                timeLabel = formatDuration(Math.max(0, s.timeCap ?? 0));
               } else if (t === "forTime") {
                 timeLabel = null;
               } else {
-                const secs = blockTotalSeconds(b);
+                const secs = sectionTotalSeconds(s);
                 timeLabel = secs > 0 ? formatDuration(secs) : null;
               }
               const meta = [TYPE_LABEL[t] ?? t, timeLabel, exerciseLabel]
@@ -70,11 +70,11 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
                 .join(" · ");
               return (
                 <li
-                  key={b.id}
+                  key={s.id}
                   className="flex items-start justify-between gap-3 px-1 py-3"
                 >
                   <span className="min-w-0 flex-1 break-words text-base">
-                    {b.name || `Block ${i + 1}`}
+                    {s.name || `Section ${i + 1}`}
                   </span>
                   <span className="shrink-0 text-right text-xs tabular-nums opacity-80">
                     {meta}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Trash2 } from "lucide-react";
-import type { WorkoutLog, WorkoutLogBlock } from "@/types";
+import type { WorkoutLog, WorkoutLogSection } from "@/types";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { usePageHeader } from "./PageHeaderContext";
 import {
@@ -48,22 +48,22 @@ function formatItemDuration(seconds: number): string {
   return r === 0 ? `${m}m` : `${m}m ${r}s`;
 }
 
-function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
-  const isRep = block.blockType === "forTime" || block.blockType === "amrap";
-  const repItems = block.repItems ?? [];
+function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
+  const isRep = section.sectionType === "forTime" || section.sectionType === "amrap";
+  const repItems = section.repItems ?? [];
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{block.blockName}</p>
+        <p className="text-sm font-medium">{section.sectionName}</p>
         <p className="text-xs text-muted-foreground">
-          {block.blockType === "amrap"
-            ? `AMRAP · cap ${formatItemDuration(block.durationSeconds ?? 0)}`
-            : block.blockType === "forTime"
-              ? `For Time · ${formatItemDuration(block.durationSeconds ?? 0)}`
-              : block.blockType === "sets"
-                ? `Sets · ${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`
-                : `Circuit · ${block.rounds} ${block.rounds === 1 ? "set" : "sets"}`}
+          {section.sectionType === "amrap"
+            ? `AMRAP · cap ${formatItemDuration(section.durationSeconds ?? 0)}`
+            : section.sectionType === "forTime"
+              ? `For Time · ${formatItemDuration(section.durationSeconds ?? 0)}`
+              : section.sectionType === "sets"
+                ? `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`
+                : `Circuit · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`}
         </p>
       </div>
       {isRep ? (
@@ -82,11 +82,11 @@ function BlockBreakdown({ block }: { block: WorkoutLogBlock }) {
             ))}
           </ul>
         )
-      ) : block.items.length === 0 ? (
+      ) : section.items.length === 0 ? (
         <p className="text-xs text-muted-foreground">No exercises played.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {block.items.map((it, i) => (
+          {section.items.map((it, i) => (
             <li
               key={`${it.exerciseName}-${i}`}
               className="flex items-center justify-between gap-2 text-xs"
@@ -200,11 +200,11 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
 
       {expanded && (
         <div className="mt-3 flex flex-col gap-2">
-          {log.blockBreakdown.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No blocks recorded.</p>
+          {(log.sectionBreakdown ?? []).length === 0 ? (
+            <p className="text-xs text-muted-foreground">No sections recorded.</p>
           ) : (
-            log.blockBreakdown.map((b, i) => (
-              <BlockBreakdown key={`${b.blockName}-${i}`} block={b} />
+            (log.sectionBreakdown ?? []).map((s, i) => (
+              <SectionBreakdown key={`${s.sectionName}-${i}`} section={s} />
             ))
           )}
         </div>

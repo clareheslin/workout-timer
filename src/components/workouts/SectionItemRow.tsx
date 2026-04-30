@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { BlockItem } from "@/types";
+import type { SectionItem } from "@/types";
 import { NameTextarea } from "./NameTextarea";
 
 interface Props {
-  item: BlockItem;
+  item: SectionItem;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
@@ -17,7 +17,7 @@ interface Props {
 
 type EditingField = "exercise" | "rest" | "rounds" | null;
 
-export function BlockItemRow({ item, onChange, onDelete }: Props) {
+export function SectionItemRow({ item, onChange, onDelete }: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
