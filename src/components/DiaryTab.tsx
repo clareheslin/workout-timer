@@ -51,6 +51,7 @@ function formatItemDuration(seconds: number): string {
 function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
   const isRep = section.sectionType === "forTime" || section.sectionType === "amrap";
   const repItems = section.repItems ?? [];
+  const items = section.items ?? [];
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
