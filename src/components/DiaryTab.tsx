@@ -51,6 +51,7 @@ function formatItemDuration(seconds: number): string {
 function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
   const isRep = section.sectionType === "forTime" || section.sectionType === "amrap";
   const repItems = section.repItems ?? [];
+  const items = section.items ?? [];
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
@@ -82,11 +83,11 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
             ))}
           </ul>
         )
-      ) : section.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="text-xs text-muted-foreground">No exercises played.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {section.items.map((it, i) => (
+          {items.map((it, i) => (
             <li
               key={`${it.exerciseName}-${i}`}
               className="flex items-center justify-between gap-2 text-xs"
