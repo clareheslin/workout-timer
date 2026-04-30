@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dumbbell, BookOpen, Zap, ChevronLeft, X } from "lucide-react";
-import type { Workout, WorkoutLog, WorkoutLogBlock } from "@/types";
+import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
 import { ToastViewport } from "./ToastViewport";
@@ -23,25 +23,38 @@ interface InProgressSnapshot {
   workoutId: string;
   workoutName: string;
   startedAt: string;
-  lastBlockAt: string;
-  blockBreakdown: WorkoutLogBlock[];
+  lastSectionAt: string;
+  sectionBreakdown: WorkoutLogSection[];
   incomplete: true;
 }
 
 /** Read & clear an interrupted-workout snapshot from localStorage.
  *  Runs synchronously during initial render via lazy useState so the
- *  recovery banner is shown on first paint, not after navigation. */
+ *  recovery banner is shown on first paint, not after navigation.
+ *  Legacy snapshots (with `blockBreakdown` / `lastBlockAt` fields from before
+ *  the Block→Section rename) are wiped without recovery to avoid corrupted reads. */
 function consumeInterruptedSnapshot(): InProgressSnapshot | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem("workout_in_progress");
     if (!raw) return null;
     window.localStorage.removeItem("workout_in_progress");
-    const parsed = JSON.parse(raw) as InProgressSnapshot;
-    if (!parsed || !Array.isArray(parsed.blockBreakdown) || parsed.blockBreakdown.length === 0) {
+    const parsed = JSON.parse(raw) as Partial<InProgressSnapshot> & {
+      blockBreakdown?: unknown;
+      lastBlockAt?: unknown;
+    };
+    // Legacy shape — discard.
+    if (parsed && parsed.blockBreakdown !== undefined && parsed.sectionBreakdown === undefined) {
       return null;
     }
-    return parsed;
+    if (
+      !parsed ||
+      !Array.isArray(parsed.sectionBreakdown) ||
+      parsed.sectionBreakdown.length === 0
+    ) {
+      return null;
+    }
+    return parsed as InProgressSnapshot;
   } catch {
     return null;
   }
@@ -61,17 +74,17 @@ export function AppShell() {
   useEffect(() => {
     if (!interrupted) return;
     const startedAtMs = new Date(interrupted.startedAt).getTime();
-    const lastBlockMs = new Date(interrupted.lastBlockAt).getTime();
-    const totalDurationSeconds = Math.max(0, Math.round((lastBlockMs - startedAtMs) / 1000));
+    const lastSectionMs = new Date(interrupted.lastSectionAt).getTime();
+    const totalDurationSeconds = Math.max(0, Math.round((lastSectionMs - startedAtMs) / 1000));
     const log: WorkoutLog = {
       id: createId("log"),
       workoutId: interrupted.workoutId,
       workoutName: interrupted.workoutName,
       startedAt: interrupted.startedAt,
-      // Use the last completed block's timestamp, NOT the recovery time.
-      completedAt: interrupted.lastBlockAt,
+      // Use the last completed section's timestamp, NOT the recovery time.
+      completedAt: interrupted.lastSectionAt,
       totalDurationSeconds,
-      blockBreakdown: interrupted.blockBreakdown,
+      sectionBreakdown: interrupted.sectionBreakdown,
       incomplete: true,
     };
     diary.addLog(log);
@@ -139,7 +152,7 @@ export function AppShell() {
               className="flex items-start gap-2 border-b border-border bg-accent/40 px-4 py-3 text-sm text-foreground"
             >
               <p className="flex-1">
-                It looks like your last workout was interrupted. Your completed blocks have been
+                It looks like your last workout was interrupted. Your completed sections have been
                 saved to your diary.
               </p>
               <button

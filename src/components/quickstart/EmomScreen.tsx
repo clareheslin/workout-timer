@@ -80,7 +80,7 @@ export function EmomScreen({ onBack }: Props) {
 
     if (liveElapsed >= totalDuration) {
       // EMOM complete (possibly after a long background interval).
-      audio.playBlockEndBeep();
+      audio.playSectionEndBeep();
       sessionAnchorAtRef.current = 0;
       elapsedAtAnchorRef.current = totalDuration;
       setElapsed(totalDuration);
@@ -228,7 +228,7 @@ export function EmomScreen({ onBack }: Props) {
     // Jump elapsed forward to the next round boundary (or finish).
     const targetElapsed = round * interval;
     if (targetElapsed >= totalDuration) {
-      audio.playBlockEndBeep();
+      audio.playSectionEndBeep();
       sessionAnchorAtRef.current = 0;
       elapsedAtAnchorRef.current = totalDuration;
       setElapsed(totalDuration);

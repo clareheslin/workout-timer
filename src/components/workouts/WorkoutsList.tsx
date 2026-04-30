@@ -51,7 +51,7 @@ async function shareWorkout(workout: Workout): Promise<void> {
 }
 
 function workoutHasExercise(w: Workout): boolean {
-  return w.blocks.some((b) => b.items.length > 0 || (b.repExercises?.length ?? 0) > 0);
+  return w.sections.some((s) => s.items.length > 0 || (s.repExercises?.length ?? 0) > 0);
 }
 
 function EmptyState({ onNew }: { onNew: () => void }) {
@@ -168,7 +168,7 @@ function WorkoutCard({
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{workout.name || "Untitled"}</p>
           <p className="text-xs text-muted-foreground">
-            {workout.blocks.length} {workout.blocks.length === 1 ? "block" : "blocks"}
+            {workout.sections.length} {workout.sections.length === 1 ? "section" : "sections"}
             {totalSecs > 0 && <> · {formatDuration(totalSecs)}</>}
           </p>
         </div>
