@@ -5,7 +5,8 @@ export { sectionTotalSeconds, formatDuration };
 
 /** Sum of all section durations (each section already accounts for its rounds). */
 export function workoutTotalSeconds(workout: Workout): number {
-  return workout.sections.reduce((sum, s: Section) => sum + sectionTotalSeconds(s), 0);
+  const sections = Array.isArray(workout.sections) ? workout.sections : [];
+  return sections.reduce((sum, s: Section) => sum + sectionTotalSeconds(s), 0);
 }
 
 /** Convenience: round to nearest minute, min 1 if there's any time at all. */

@@ -13,7 +13,8 @@ export function exerciseRounds(item: SectionItem): number {
 /** Total sets across all exercises in a section (time-based sections only). */
 export function sectionTotalSets(section: Section): number {
   if (sectionType(section) === "forTime" || sectionType(section) === "amrap") return 0;
-  return section.items.reduce((sum, it) => sum + exerciseRounds(it), 0);
+  const items = Array.isArray(section.items) ? section.items : [];
+  return items.reduce((sum, it) => sum + exerciseRounds(it), 0);
 }
 
 /** Total seconds for a single section, accounting for per-exercise rounds.
@@ -24,16 +25,17 @@ export function sectionTotalSeconds(section: Section): number {
   const t = sectionType(section);
   if (t === "amrap") return Math.max(0, section.timeCap ?? 0);
   if (t === "forTime") return 0;
-  if (section.items.length === 0) return 0;
+  const items = Array.isArray(section.items) ? section.items : [];
+  if (items.length === 0) return 0;
   let total = 0;
-  for (const it of section.items) {
+  for (const it of items) {
     const rounds = exerciseRounds(it);
     const exSecs = Math.max(0, it.exercise.durationSeconds);
     const restSecs = Math.max(0, it.rest.durationSeconds);
     total += rounds * (exSecs + restSecs);
   }
   // Strip the trailing rest of the very last interval in the section.
-  const lastRest = Math.max(0, section.items[section.items.length - 1].rest.durationSeconds);
+  const lastRest = Math.max(0, items[items.length - 1].rest.durationSeconds);
   total -= lastRest;
   return Math.max(0, total);
 }
