@@ -13,8 +13,8 @@ interface Props {
 const TYPE_LABEL: Record<string, string> = {
   circuit: "CIRCUIT",
   sets: "SETS",
-  forTime: "FOR TIME",
-  amrap: "AMRAP",
+  forTime: "STOPWATCH",
+  amrap: "TIME CAP",
 };
 
 /** Workout-level preview screen shown before the first section's Ready screen.

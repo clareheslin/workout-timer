@@ -56,8 +56,8 @@ function makeNewRepItem(itemIndex: number): RepExercise {
 const SECTION_TYPES: ReadonlyArray<{ value: SectionType; label: string }> = [
   { value: "circuit", label: "Circuit" },
   { value: "sets", label: "Sets" },
-  { value: "forTime", label: "For Time" },
-  { value: "amrap", label: "AMRAP" },
+  { value: "forTime", label: "Stopwatch" },
+  { value: "amrap", label: "Time Cap" },
 ];
 
 export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Props) {

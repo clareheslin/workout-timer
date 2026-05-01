@@ -59,9 +59,9 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
         <p className="text-sm font-medium">{section.sectionName}</p>
         <p className="text-xs text-muted-foreground">
           {section.sectionType === "amrap"
-            ? `AMRAP · cap ${formatItemDuration(section.durationSeconds ?? 0)}`
+            ? `Time Cap · cap ${formatItemDuration(section.durationSeconds ?? 0)}`
             : section.sectionType === "forTime"
-              ? `For Time · ${formatItemDuration(section.durationSeconds ?? 0)}`
+              ? `Stopwatch · ${formatItemDuration(section.durationSeconds ?? 0)}`
               : section.sectionType === "sets"
                 ? `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`
                 : `Circuit · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`}
