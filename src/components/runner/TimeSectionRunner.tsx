@@ -250,21 +250,21 @@ export function TimeSectionRunner({
                 </button>
                 <p className="text-[11px] opacity-60">Tap to pause</p>
               </>
-            ) : t.nextItem ? (
-              <button
-                type="button"
-                onClick={t.resume}
-                className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-              >
-                Resume
-              </button>
-            ) : (
+            ) : !t.nextItem && t.timeRemaining === 0 ? (
               <button
                 type="button"
                 onClick={t.skipInterval}
                 className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
               >
                 Finish
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={t.resume}
+                className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+              >
+                Resume
               </button>
             )}
           </div>
