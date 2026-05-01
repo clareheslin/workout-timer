@@ -54,7 +54,7 @@ export function TimeSectionRunner({
     [audio.playTransitionBeep, audio.playCountdownBeep, audio.playSectionEndBeep, audio.playMidpointClick],
   );
 
-  const t = useWorkoutTimer(subWorkout, callbacks);
+  const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: true });
   const completedRef = useRef(false);
 
   // Hold a real media session while the section is active so iOS mixes our

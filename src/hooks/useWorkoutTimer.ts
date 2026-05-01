@@ -172,10 +172,24 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   return out;
 }
 
+export interface UseWorkoutTimerOptions {
+  /** When true, if the *final* interval of the *final* section reaches zero
+   *  naturally, the timer stays on that interval at timeRemaining=0 in the
+   *  "paused" phase, waiting for explicit user input (Finish) instead of
+   *  auto-transitioning to "done". */
+  holdOnFinalInterval?: boolean;
+}
+
 export function useWorkoutTimer(
   workout: Workout,
   callbacks?: WorkoutTimerCallbacks,
+  options?: UseWorkoutTimerOptions,
 ): UseWorkoutTimerResult {
+  const holdOnFinalInterval = options?.holdOnFinalInterval ?? false;
+  const holdOnFinalIntervalRef = useRef(holdOnFinalInterval);
+  useEffect(() => {
+    holdOnFinalIntervalRef.current = holdOnFinalInterval;
+  }, [holdOnFinalInterval]);
   const sectionSchedules = useMemo(() => workout.sections.map((s, i) => planSection(s, i)), [workout]);
 
   const [phase, setPhase] = useState<TimerPhase>("idle");
@@ -344,10 +358,30 @@ export function useWorkoutTimer(
         continue;
       }
 
-      // End of section.
+      // End of section. Log the just-finished interval first (handled above).
+      const isLastSection = bIdx >= sectionsLengthRef.current - 1;
+
+      // If the caller asked us to hold on the final interval (CIRCUIT/SETS),
+      // freeze on the last interval at timeRemaining=0 in "paused" phase and
+      // wait for explicit user input instead of auto-progressing to "done".
+      if (holdOnFinalIntervalRef.current && isLastSection) {
+        callbacksRef.current?.onTransition?.();
+        callbacksRef.current?.onSectionEnd?.();
+        anchorAtRef.current = 0;
+        anchorRemainingRef.current = 0;
+        // Keep sIdx pointing at the just-finished interval so currentInterval,
+        // currentRound, and totalRounds remain meaningful in the UI.
+        sectionIndexRef.current = bIdx;
+        scheduleIndexRef.current = sIdx;
+        setSectionIndex(bIdx);
+        setScheduleIndex(sIdx);
+        setTimeRemaining(0);
+        setPhase("paused");
+        return;
+      }
+
       callbacksRef.current?.onTransition?.();
       callbacksRef.current?.onSectionEnd?.();
-      const isLastSection = bIdx >= sectionsLengthRef.current - 1;
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
       sectionIndexRef.current = bIdx;
@@ -442,9 +476,22 @@ export function useWorkoutTimer(
     setPhase((p) => {
       if (p !== "running") return p;
       // Capture remaining time at the moment of pause so resume can re-anchor
-      // without drift.
-      const elapsed = Math.floor((Date.now() - anchorAtRef.current) / 1000);
-      const remaining = Math.max(0, anchorRemainingRef.current - elapsed);
+      // without drift. Use ceil so a sub-second crossing of the boundary
+      // (e.g. user taps Pause as the tick fires) doesn't snap the displayed
+      // value to 0 — pausing should freeze the visible time, not finish the
+      // interval. If the wall clock truly is at/past zero, hold at 1 to keep
+      // the interval alive; the natural-completion path is the only thing
+      // that may move us to 0.
+      const anchorAt = anchorAtRef.current;
+      const anchorRemaining = anchorRemainingRef.current;
+      let remaining: number;
+      if (anchorAt === 0) {
+        remaining = anchorRemaining;
+      } else {
+        const elapsedMs = Date.now() - anchorAt;
+        remaining = Math.ceil((anchorRemaining * 1000 - elapsedMs) / 1000);
+        if (remaining < 1) remaining = 1;
+      }
       anchorRemainingRef.current = remaining;
       anchorAtRef.current = 0;
       setTimeRemaining(remaining);
