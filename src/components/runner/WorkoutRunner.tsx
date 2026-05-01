@@ -7,6 +7,7 @@ import { TimeSectionRunner } from "./TimeSectionRunner";
 import { RepSectionRunner } from "./RepSectionRunner";
 import { WorkoutPreview } from "./WorkoutPreview";
 import { useExitConfirm } from "./useExitConfirm";
+import { RunnerScaffold } from "./RunnerScaffold";
 import { usePageHeader } from "@/components/PageHeaderContext";
 
 interface Props {
