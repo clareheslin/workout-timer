@@ -186,6 +186,10 @@ export function useWorkoutTimer(
   options?: UseWorkoutTimerOptions,
 ): UseWorkoutTimerResult {
   const holdOnFinalInterval = options?.holdOnFinalInterval ?? false;
+  const holdOnFinalIntervalRef = useRef(holdOnFinalInterval);
+  useEffect(() => {
+    holdOnFinalIntervalRef.current = holdOnFinalInterval;
+  }, [holdOnFinalInterval]);
   const sectionSchedules = useMemo(() => workout.sections.map((s, i) => planSection(s, i)), [workout]);
 
   const [phase, setPhase] = useState<TimerPhase>("idle");
