@@ -1,39 +1,39 @@
 import { useCallback, useState, type ReactNode } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 interface Options {
-  /** Title shown in the confirm sheet. */
+  /** Title shown in the confirm dialog. */
   title: string;
-  /** Body text shown in the confirm sheet. */
+  /** Body text shown in the confirm dialog. */
   description: string;
-  /** Label for the "stop" / destructive button. */
+  /** Label for the destructive confirm button. */
   confirmLabel?: string;
-  /** Label for the cancel / "keep going" button. */
+  /** Label for the cancel button. */
   cancelLabel?: string;
   /** Called when the user confirms the exit. */
   onConfirm: () => void;
-  /** Optional hook called right when the sheet opens (e.g. pause a timer). */
+  /** Optional hook called right when the dialog opens (e.g. pause a timer). */
   onOpen?: () => void;
 }
 
 interface ExitConfirm {
   /** Wire to the AppShell back chevron via usePageHeader({ onBack }). */
   handleBack: () => void;
-  /** Render this anywhere in the screen tree to mount the confirm sheet. */
+  /** Render this anywhere in the screen tree to mount the confirm dialog. */
   sheet: ReactNode;
 }
 
-/** Shared exit-confirm pattern for runner screens: tapping back during an
- *  active timer opens a bottom sheet ("Keep going" / "Stop"). When `guarded`
- *  is false, back triggers the confirm immediately by calling `onConfirm`. */
+/** Shared exit-confirm pattern for runner screens: tapping back opens a
+ *  centered confirmation dialog ("Cancel" / "Exit"). When `guarded` is
+ *  false, back triggers `onConfirm` immediately. */
 export function useExitConfirm(guarded: boolean, opts: Options): ExitConfirm {
   const [open, setOpen] = useState(false);
 
@@ -47,19 +47,21 @@ export function useExitConfirm(guarded: boolean, opts: Options): ExitConfirm {
   }, [guarded, opts]);
 
   const sheet = (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
-        <SheetHeader className="text-left">
-          <SheetTitle>{opts.title}</SheetTitle>
-          <SheetDescription>{opts.description}</SheetDescription>
-        </SheetHeader>
-        <SheetFooter className="mt-6 flex-row gap-3 sm:justify-stretch">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-sm text-center sm:rounded-lg">
+        <DialogHeader>
+          <DialogTitle className="text-center">{opts.title}</DialogTitle>
+          <DialogDescription className="text-center">
+            {opts.description}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-2 flex-row gap-3 sm:justify-stretch">
           <Button
             variant="outline"
             className="flex-1"
             onClick={() => setOpen(false)}
           >
-            {opts.cancelLabel ?? "Keep going"}
+            {opts.cancelLabel ?? "Cancel"}
           </Button>
           <Button
             variant="destructive"
@@ -69,11 +71,11 @@ export function useExitConfirm(guarded: boolean, opts: Options): ExitConfirm {
               opts.onConfirm();
             }}
           >
-            {opts.confirmLabel ?? "Stop"}
+            {opts.confirmLabel ?? "Exit"}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 
   return { handleBack, sheet };
