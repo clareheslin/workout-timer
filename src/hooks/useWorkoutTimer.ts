@@ -354,10 +354,30 @@ export function useWorkoutTimer(
         continue;
       }
 
-      // End of section.
+      // End of section. Log the just-finished interval first (handled above).
+      const isLastSection = bIdx >= sectionsLengthRef.current - 1;
+
+      // If the caller asked us to hold on the final interval (CIRCUIT/SETS),
+      // freeze on the last interval at timeRemaining=0 in "paused" phase and
+      // wait for explicit user input instead of auto-progressing to "done".
+      if (holdOnFinalIntervalRef.current && isLastSection) {
+        callbacksRef.current?.onTransition?.();
+        callbacksRef.current?.onSectionEnd?.();
+        anchorAtRef.current = 0;
+        anchorRemainingRef.current = 0;
+        // Keep sIdx pointing at the just-finished interval so currentInterval,
+        // currentRound, and totalRounds remain meaningful in the UI.
+        sectionIndexRef.current = bIdx;
+        scheduleIndexRef.current = sIdx;
+        setSectionIndex(bIdx);
+        setScheduleIndex(sIdx);
+        setTimeRemaining(0);
+        setPhase("paused");
+        return;
+      }
+
       callbacksRef.current?.onTransition?.();
       callbacksRef.current?.onSectionEnd?.();
-      const isLastSection = bIdx >= sectionsLengthRef.current - 1;
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
       sectionIndexRef.current = bIdx;
