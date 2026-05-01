@@ -242,19 +242,35 @@ export function TimeSectionRunner({
             </div>
             {t.phase === "running" ? (
               <>
-                <button
-                  type="button"
-                  onClick={t.pause}
-                  className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                >
-                  Pause
-                </button>
-                <p className="text-[11px] opacity-60">Tap to pause</p>
+                {t.nextItem ? (
+                  <button
+                    type="button"
+                    onClick={t.pause}
+                    className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                  >
+                    Pause
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={t.skipInterval}
+                    className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                  >
+                    Finish
+                  </button>
+                )}
+                <p className="text-[11px] opacity-60">
+                  {t.nextItem ? "Tap to pause" : "Tap to finish section"}
+                </p>
               </>
             ) : (
-              <div className="mt-2">
-                <HoldToExitButton onTap={t.resume} onHoldComplete={handleExit} />
-              </div>
+              <button
+                type="button"
+                onClick={t.resume}
+                className="mt-2 rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+              >
+                Resume
+              </button>
             )}
           </div>
         )}
