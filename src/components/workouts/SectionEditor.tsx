@@ -261,10 +261,10 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
           {type === "circuit"
             ? "Cycle through every exercise, then repeat for each round."
             : type === "sets"
-              ? "Finish all rounds of one exercise before moving to the next."
+              ? "Finish all sets of one exercise before moving to the next."
               : type === "forTime"
-                ? "Complete all reps as fast as possible. Stopwatch counts up until you tap Stop."
-                : "Repeat the exercise list as many times as you can before the time cap ends."}
+                ? "Complete the work and stop the timer when done."
+                : "Complete the execise list as many times as possible before the time cap ends."}
         </p>
       </div>
 
