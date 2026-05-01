@@ -266,9 +266,8 @@ export function RepSectionRunner({
               <p className="text-5xl font-bold tabular-nums" aria-live="polite">
                 {liveTimerLabel}
               </p>
-              {isAmrap && phase === "idle" && (
-                <p className="text-xs text-muted-foreground">Cap: {formatDuration(timeCap)}</p>
-              )}
+
+
 
               {phase === "idle" && (
                 <button
