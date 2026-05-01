@@ -172,10 +172,20 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   return out;
 }
 
+export interface UseWorkoutTimerOptions {
+  /** When true, if the *final* interval of the *final* section reaches zero
+   *  naturally, the timer stays on that interval at timeRemaining=0 in the
+   *  "paused" phase, waiting for explicit user input (Finish) instead of
+   *  auto-transitioning to "done". */
+  holdOnFinalInterval?: boolean;
+}
+
 export function useWorkoutTimer(
   workout: Workout,
   callbacks?: WorkoutTimerCallbacks,
+  options?: UseWorkoutTimerOptions,
 ): UseWorkoutTimerResult {
+  const holdOnFinalInterval = options?.holdOnFinalInterval ?? false;
   const sectionSchedules = useMemo(() => workout.sections.map((s, i) => planSection(s, i)), [workout]);
 
   const [phase, setPhase] = useState<TimerPhase>("idle");
