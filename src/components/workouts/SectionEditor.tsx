@@ -264,7 +264,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
               ? "Finish all sets of one exercise before moving to the next."
               : type === "forTime"
                 ? "Complete the work and stop the timer when done."
-                : "Complete the execise list as many times as possible before the time cap ends."}
+                : "Complete the exercise list as many times as possible in the time."}
         </p>
       </div>
 
