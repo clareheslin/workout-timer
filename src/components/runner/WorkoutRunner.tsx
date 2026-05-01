@@ -146,6 +146,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       <DoneScreen
         workoutName={workout.name}
         onExit={() => onExit("done")}
+        onExitWorkout={handleExitWorkout}
       />
     );
   }
