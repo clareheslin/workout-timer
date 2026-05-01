@@ -452,9 +452,22 @@ export function useWorkoutTimer(
     setPhase((p) => {
       if (p !== "running") return p;
       // Capture remaining time at the moment of pause so resume can re-anchor
-      // without drift.
-      const elapsed = Math.floor((Date.now() - anchorAtRef.current) / 1000);
-      const remaining = Math.max(0, anchorRemainingRef.current - elapsed);
+      // without drift. Use ceil so a sub-second crossing of the boundary
+      // (e.g. user taps Pause as the tick fires) doesn't snap the displayed
+      // value to 0 — pausing should freeze the visible time, not finish the
+      // interval. If the wall clock truly is at/past zero, hold at 1 to keep
+      // the interval alive; the natural-completion path is the only thing
+      // that may move us to 0.
+      const anchorAt = anchorAtRef.current;
+      const anchorRemaining = anchorRemainingRef.current;
+      let remaining: number;
+      if (anchorAt === 0) {
+        remaining = anchorRemaining;
+      } else {
+        const elapsedMs = Date.now() - anchorAt;
+        remaining = Math.ceil((anchorRemaining * 1000 - elapsedMs) / 1000);
+        if (remaining < 1) remaining = 1;
+      }
       anchorRemainingRef.current = remaining;
       anchorAtRef.current = 0;
       setTimeRemaining(remaining);
