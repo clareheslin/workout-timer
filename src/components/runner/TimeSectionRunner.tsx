@@ -4,7 +4,6 @@ import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { sectionTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
-import { HoldToExitButton } from "./HoldToExitButton";
 import { MuteButton } from "./MuteButton";
 import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
