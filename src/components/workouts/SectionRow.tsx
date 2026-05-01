@@ -7,8 +7,8 @@ import { sectionTotalSeconds, sectionTotalSets, sectionType, formatDuration } fr
 const TYPE_LABELS: Record<string, string> = {
   circuit: "Circuit",
   sets: "Sets",
-  forTime: "For Time",
-  amrap: "AMRAP",
+  forTime: "Stopwatch",
+  amrap: "Time Cap",
 };
 
 interface Props {

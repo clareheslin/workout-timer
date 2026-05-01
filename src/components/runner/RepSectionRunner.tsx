@@ -282,35 +282,36 @@ export function RepSectionRunner({
 
               {(phase === "running" || phase === "paused") && (
                 <>
-                  {!isAmrap && (
+                  <button
+                    type="button"
+                    onClick={handleEnd}
+                    className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                    aria-label="Skip to end of section"
+                  >
+                    Skip Interval ›
+                  </button>
+                  {phase === "running" ? (
                     <button
                       type="button"
-                      onClick={handleEnd}
-                      className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                      aria-label="Skip to end of section"
+                      onClick={handlePauseResume}
+                      className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
                     >
-                      Skip Interval ›
+                      {isAmrap ? "Pause" : "Stop"}
                     </button>
-                  )}
-                  {phase === "running" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={handlePauseResume}
-                        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                      >
-                        {isAmrap ? "Pause" : "Stop"}
-                      </button>
-                      
-                    </>
                   ) : isAmrap ? (
-                    <HoldToExitButton onTap={handlePauseResume} onHoldComplete={onExitWorkout} />
+                    <button
+                      type="button"
+                      onClick={handlePauseResume}
+                      className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+                    >
+                      Resume
+                    </button>
                   ) : (
                     <HoldToExitButton
-                      onTap={handleEnd}
-                      onHoldComplete={onExitWorkout}
-                      label="Complete"
-                      hint="Tap to complete · Hold to exit workout"
+                      onTap={handlePauseResume}
+                      onHoldComplete={handleEnd}
+                      label="Resume / Finish"
+                      hint="Tap to resume · Hold to finish section"
                     />
                   )}
                 </>

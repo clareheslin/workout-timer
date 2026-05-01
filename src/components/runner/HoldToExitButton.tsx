@@ -18,8 +18,8 @@ interface Props {
 export function HoldToExitButton({
   onTap,
   onHoldComplete,
-  label = "Resume / Exit",
-  hint = "Tap to resume · Hold to exit workout",
+  label = "Resume / Finish",
+  hint = "Tap to resume · Hold to finish section",
   holdDurationMs = 1200,
 }: Props) {
   const [progress, setProgress] = useState(0); // 0..1
@@ -102,7 +102,7 @@ export function HoldToExitButton({
         onPointerCancel={handlePointerCancel}
         style={{ touchAction: "none" }}
         className="relative overflow-hidden rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background select-none"
-        aria-label={`${label}. Hold to exit.`}
+        aria-label={`${label}. Hold to finish.`}
       >
         <span
           aria-hidden="true"
