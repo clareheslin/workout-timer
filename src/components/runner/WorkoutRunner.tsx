@@ -7,6 +7,7 @@ import { TimeSectionRunner } from "./TimeSectionRunner";
 import { RepSectionRunner } from "./RepSectionRunner";
 import { WorkoutPreview } from "./WorkoutPreview";
 import { useExitConfirm } from "./useExitConfirm";
+import { RunnerScaffold } from "./RunnerScaffold";
 import { usePageHeader } from "@/components/PageHeaderContext";
 
 interface Props {
@@ -146,6 +147,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       <DoneScreen
         workoutName={workout.name}
         onExit={() => onExit("done")}
+        onExitWorkout={handleExitWorkout}
       />
     );
   }
@@ -214,7 +216,7 @@ function BetweenSectionsScreen({
 }: BetweenSectionsScreenProps) {
   const { handleBack, sheet } = useExitConfirm(true, {
     title: "Exit workout?",
-    description: "Your progress will not be saved.",
+    description: "Progress will not be saved.",
     confirmLabel: "Exit",
     cancelLabel: "Cancel",
     onConfirm: onExit,
@@ -223,44 +225,64 @@ function BetweenSectionsScreen({
   usePageHeader(workoutName, headerOpts);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-        <h2 className="text-2xl font-semibold">{currentSectionName} complete.</h2>
-        <p className="text-sm opacity-80">Ready for {nextSectionName}?</p>
-        <button
-          type="button"
-          onClick={onNext}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-        >
-          Preview
-        </button>
-      </main>
+    <>
+      <RunnerScaffold
+        eyebrow="Section complete"
+        title={currentSectionName}
+        subtext={`Ready for ${nextSectionName}?`}
+        primary={
+          <button
+            type="button"
+            onClick={onNext}
+            className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          >
+            Preview
+          </button>
+        }
+      />
       {sheet}
-    </div>
+    </>
   );
 }
 
 function DoneScreen({
   workoutName,
   onExit,
+  onExitWorkout,
 }: {
   workoutName: string;
   onExit: () => void;
+  onExitWorkout: () => void;
 }) {
-  const headerOpts = useMemo(() => ({ onBack: onExit }), [onExit]);
+  // Even on the done screen, the back chevron must still confirm before
+  // leaving — same as every other runner screen.
+  const { handleBack, sheet } = useExitConfirm(true, {
+    title: "Exit workout?",
+    description: "Progress will not be saved.",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
+    onConfirm: onExitWorkout,
+  });
+  const headerOpts = useMemo(() => ({ onBack: handleBack }), [handleBack]);
   usePageHeader(workoutName, headerOpts);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-      <h2 className="text-3xl font-bold">Workout complete!</h2>
-      <p className="text-sm opacity-70">Returning to Diary…</p>
-      <button
-        type="button"
-        onClick={onExit}
-        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-      >
-        Finish
-      </button>
-    </div>
+    <>
+      <RunnerScaffold
+        eyebrow="Workout complete"
+        title="Nice work!"
+        subtext="Returning to Diary…"
+        primary={
+          <button
+            type="button"
+            onClick={onExit}
+            className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          >
+            Finish
+          </button>
+        }
+      />
+      {sheet}
+    </>
   );
 }

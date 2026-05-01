@@ -8,6 +8,7 @@ import { MuteButton } from "./MuteButton";
 import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader } from "@/components/PageHeaderContext";
+import { RunnerScaffold } from "./RunnerScaffold";
 
 interface Props {
   section: Section;
@@ -40,7 +41,6 @@ export function RepSectionRunner({
   const repExercises = section.repExercises ?? [];
 
   const [phase, setPhase] = useState<Phase>("idle");
-  // For forTime: elapsed seconds (counts up). For amrap: remaining seconds (counts down).
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
@@ -51,9 +51,6 @@ export function RepSectionRunner({
   const elapsedRef = useRef(0);
   const remainingRef = useRef(timeCap);
 
-  // Hold a real media session while the section is active so iOS mixes our
-  // beeps over background music instead of silencing them via the ambient
-  // route.
   useEffect(() => {
     if (phase === "running" || phase === "paused") {
       audio.startSession();
@@ -64,7 +61,6 @@ export function RepSectionRunner({
       audio.endSession();
     };
   }, [phase, audio]);
-
 
   useEffect(() => {
     elapsedRef.current = elapsed;
@@ -99,7 +95,6 @@ export function RepSectionRunner({
     [audio],
   );
 
-  // Tick loop — only when running.
   useEffect(() => {
     if (phase !== "running") {
       if (tickRef.current !== null) {
@@ -123,7 +118,6 @@ export function RepSectionRunner({
     };
   }, [phase, isAmrap]);
 
-  // AMRAP: countdown beeps in last 3 seconds + auto-finish at zero.
   useEffect(() => {
     if (!isAmrap || phase !== "running") {
       lastCountdownKey.current = null;
@@ -155,7 +149,6 @@ export function RepSectionRunner({
     else if (phase === "paused") setPhase("running");
   };
 
-  // Skip / End section — both jump to the done screen with current duration.
   const handleEnd = () => {
     const duration = isAmrap ? timeCap - remainingRef.current : elapsedRef.current;
     finalize(duration);
@@ -166,11 +159,10 @@ export function RepSectionRunner({
     onComplete(buildLog(finalDuration));
   };
 
-  const isActive = phase === "running" || phase === "paused";
-
-  const { handleBack, sheet } = useExitConfirm(isActive, {
+  // Back chevron is ALWAYS guarded inside the runner — confirms before exiting.
+  const { handleBack, sheet } = useExitConfirm(true, {
     title: "Exit workout?",
-    description: "Your progress will not be saved.",
+    description: "Progress will not be saved.",
     confirmLabel: "Exit",
     cancelLabel: "Cancel",
     onConfirm: onExitWorkout,
@@ -181,7 +173,7 @@ export function RepSectionRunner({
 
   const headerOpts = useMemo(
     () => ({
-      onBack: isActive ? undefined : handleBack,
+      onBack: handleBack,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
@@ -199,31 +191,93 @@ export function RepSectionRunner({
         </>
       ),
     }),
-    [handleBack, isActive, sectionIndex, totalSections, audio, onSkipSection],
+    [handleBack, sectionIndex, totalSections, audio, onSkipSection],
   );
   usePageHeader(workoutName, headerOpts);
 
   const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
   const doneTimerLabel = formatDuration(finalDuration ?? 0);
+  const sectionTitle = section.name || `Section ${sectionIndex + 1}`;
+
+  // Build screen content based on phase, but keep elements at consistent Y.
+  let eyebrow: string | undefined;
+  let subtext: string | undefined;
+  let primary: React.ReactNode = null;
+  let primaryHint: React.ReactNode = null;
+
+  if (phase === "idle") {
+    eyebrow = "Section Preview";
+    subtext = isAmrap
+      ? `Cap ${formatDuration(timeCap)}`
+      : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`;
+    primary = (
+      <button
+        type="button"
+        onClick={handleStart}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+      >
+        Start Section
+      </button>
+    );
+  } else if (phase === "done") {
+    eyebrow = isAmrap ? "Time" : "Your time";
+    subtext = doneTimerLabel;
+    primary = (
+      <button
+        type="button"
+        onClick={handleContinue}
+        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+      >
+        Continue
+      </button>
+    );
+  } else {
+    // running / paused
+    eyebrow = isAmrap ? "Time remaining" : "Elapsed";
+    subtext = isAmrap
+      ? `Cap ${formatDuration(timeCap)}`
+      : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`;
+    if (phase === "running") {
+      primary = (
+        <button
+          type="button"
+          onClick={handlePauseResume}
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+        >
+          {isAmrap ? "Pause" : "Stop"}
+        </button>
+      );
+    } else if (isAmrap) {
+      primary = (
+        <button
+          type="button"
+          onClick={handlePauseResume}
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+        >
+          Resume
+        </button>
+      );
+    } else {
+      primary = (
+        <HoldToExitButton
+          onTap={handlePauseResume}
+          onHoldComplete={handleEnd}
+          label="Resume / Finish"
+          hint="Tap to resume · Hold to finish section"
+        />
+      );
+    }
+  }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <main className="flex flex-1 flex-col gap-6 px-6 pb-8 pt-4">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p
-            className="text-xs font-medium uppercase tracking-wider opacity-70"
-            aria-hidden={phase !== "idle"}
-          >
-            {phase === "idle" ? "Section Preview" : "\u00A0"}
-          </p>
-          <h2 className="text-xl font-semibold">{section.name || `Section ${sectionIndex + 1}`}</h2>
-          <p className="text-xs text-muted-foreground">
-            {isAmrap
-              ? `Cap ${formatDuration(timeCap)}`
-              : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`}
-          </p>
-        </div>
-
+    <>
+      <RunnerScaffold
+        eyebrow={eyebrow}
+        title={sectionTitle}
+        subtext={subtext}
+        primary={primary}
+        primaryHint={primaryHint}
+      >
         {phase === "idle" && section.notes && (
           <CoachNotes notes={section.notes} label="Section notes" />
         )}
@@ -244,82 +298,23 @@ export function RepSectionRunner({
           )}
         </ul>
 
-        <div className="flex flex-col items-center gap-3">
-          {phase === "done" ? (
-            <>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {isAmrap ? "Time" : "Your time"}
-              </p>
-              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
-                {doneTimerLabel}
-              </p>
-              <button
-                type="button"
-                onClick={handleContinue}
-                className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-              >
-                Continue
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
-                {liveTimerLabel}
-              </p>
-
-
-
-              {phase === "idle" && (
-                <button
-                  type="button"
-                  onClick={handleStart}
-                  className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                >
-                  Start Section
-                </button>
-              )}
-
-              {(phase === "running" || phase === "paused") && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleEnd}
-                    className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                    aria-label="Skip to end of section"
-                  >
-                    Skip Interval ›
-                  </button>
-                  {phase === "running" ? (
-                    <button
-                      type="button"
-                      onClick={handlePauseResume}
-                      className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                    >
-                      {isAmrap ? "Pause" : "Stop"}
-                    </button>
-                  ) : isAmrap ? (
-                    <button
-                      type="button"
-                      onClick={handlePauseResume}
-                      className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-                    >
-                      Resume
-                    </button>
-                  ) : (
-                    <HoldToExitButton
-                      onTap={handlePauseResume}
-                      onHoldComplete={handleEnd}
-                      label="Resume / Finish"
-                      hint="Tap to resume · Hold to finish section"
-                    />
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </main>
+        {(phase === "running" || phase === "paused") && (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-5xl font-bold tabular-nums" aria-live="polite">
+              {liveTimerLabel}
+            </p>
+            <button
+              type="button"
+              onClick={handleEnd}
+              className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+              aria-label="Skip to end of section"
+            >
+              Skip Interval ›
+            </button>
+          </div>
+        )}
+      </RunnerScaffold>
       {sheet}
-    </div>
+    </>
   );
 }
