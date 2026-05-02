@@ -212,7 +212,7 @@ export function RepSectionRunner({
     const exerciseCount = repExercises.length;
     const exLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
     if (isAmrap) {
-      subtext = `${exLabel} · ${formatDuration(timeCap)}`;
+      subtext = `${exLabel} · cap ${formatDuration(timeCap)}`;
     } else {
       subtext = `${exLabel} · ${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`;
     }
@@ -312,14 +312,6 @@ export function RepSectionRunner({
               ))
             )}
           </ul>
-
-          {isIdle && (
-            isAmrap ? (
-              <p className="text-sm opacity-70">Time cap: {formatDuration(timeCap)}</p>
-            ) : (
-              <p className="text-sm opacity-70">Rounds: {targetRounds}</p>
-            )
-          )}
 
           {(phase === "running" || phase === "paused") && (
             <div className="flex flex-col items-center gap-3">
