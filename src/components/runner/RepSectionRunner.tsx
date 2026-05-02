@@ -155,10 +155,20 @@ export function RepSectionRunner({
     finalize(duration);
   };
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (finalDuration === null) return;
     onComplete(buildLog(finalDuration));
-  };
+  }, [finalDuration, onComplete, buildLog]);
+
+  // AMRAP auto-transitions 3s after the timer hits 0 / finalize is called.
+  useEffect(() => {
+    if (!isAmrap) return;
+    if (phase !== "done") return;
+    const handle = window.setTimeout(() => {
+      handleContinue();
+    }, 3000);
+    return () => window.clearTimeout(handle);
+  }, [isAmrap, phase, handleContinue]);
 
   // Back chevron is ALWAYS guarded inside the runner — confirms before exiting.
   const { handleBack, sheet } = useExitConfirm(true, {
