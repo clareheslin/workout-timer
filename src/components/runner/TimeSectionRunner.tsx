@@ -153,16 +153,15 @@ export function TimeSectionRunner({
 
   if (t.phase === "idle") {
     eyebrow = "Section Preview";
-    titleText = sectionTitle;
+    const exerciseCount = section.items.length;
+    const totalSecs = sectionTotalSeconds(section);
     subtext =
-      `${section.items.length} ${section.items.length === 1 ? "exercise" : "exercises"}` +
-      (sectionTotalSeconds(section) > 0
-        ? ` · ${formatDuration(sectionTotalSeconds(section))}`
-        : "");
+      `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}` +
+      (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
         {section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
-        <ul className="flex flex-col divide-y divide-current/15 border-y border-current/15">
+        <ul className="flex flex-col divide-y divide-black/15 border-y border-black/15">
           {section.items.length === 0 ? (
             <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
           ) : (
@@ -173,17 +172,17 @@ export function TimeSectionRunner({
               const meta = [
                 `${work}s`,
                 rest > 0 ? `rest ${rest}s` : null,
-                rounds > 1 ? `×${rounds}` : null,
+                `${rounds} ${rounds === 1 ? "round" : "rounds"}`,
               ]
                 .filter(Boolean)
                 .join(" · ");
               return (
                 <li
                   key={it.exercise.id}
-                  className="flex items-start justify-between gap-3 px-1 py-3"
+                  className="flex flex-col gap-1 px-1 py-3"
                 >
-                  <span className="min-w-0 flex-1 break-words text-base">{it.exercise.name || "Exercise"}</span>
-                  <span className="shrink-0 text-sm tabular-nums opacity-80">{meta}</span>
+                  <span className="break-words text-base font-bold">{it.exercise.name || "Exercise"}</span>
+                  <span className="text-xs opacity-70 tabular-nums">{meta}</span>
                 </li>
               );
             })
@@ -195,7 +194,7 @@ export function TimeSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
       >
         Start Section
       </button>
