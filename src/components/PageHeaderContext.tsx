@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 
 export type PageHeaderTone = "default" | "exercise" | "rest" | "paused";
 
@@ -64,11 +64,20 @@ export function usePageHeader(
   const resolvedTone = isOptions ? (onBackOrOptions.tone ?? "default") : tone;
   const headerRight = isOptions ? onBackOrOptions.headerRight : undefined;
 
+  const latestRef = useRef<PageHeaderState>({
+    title,
+    onBack,
+    tone: resolvedTone,
+    headerRight,
+  });
+  latestRef.current = { title, onBack, tone: resolvedTone, headerRight };
+
   useEffect(() => {
     if (!setState) return;
-    setState({ title, onBack, tone: resolvedTone, headerRight });
+    setState(latestRef.current);
     return () => {
       setState({ title: "", onBack: undefined, tone: "default", headerRight: undefined });
     };
-  }, [setState, title, onBack, resolvedTone, headerRight]);
+  }, [setState, title, onBack, resolvedTone]);
 }
+

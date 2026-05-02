@@ -82,9 +82,7 @@ export function TimeSectionRunner({
       items: sb?.items ?? [],
       sectionType: section.type ?? "circuit",
     };
-    // Pause briefly so the user sees the timer hit 00:00 before transitioning.
-    const handle = window.setTimeout(() => onComplete(log), 3000);
-    return () => window.clearTimeout(handle);
+    onComplete(log);
   }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
 
   const isActive = t.phase === "running" || t.phase === "paused";
@@ -270,16 +268,9 @@ export function TimeSectionRunner({
       );
     }
   } else {
-    // section-complete or done — brief bridge screen before we hand off to
-    // the parent runner (it transitions ~3s after onComplete fires).
     eyebrow = "Section complete";
     titleText = sectionTitle;
-    subtext = "Loading next…";
-    content = (
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="text-3xl font-bold">Nice work</p>
-      </div>
-    );
+    content = null;
   }
 
   const isIdle = t.phase === "idle";
