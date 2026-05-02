@@ -83,12 +83,14 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         mode: initial.mode ?? "circuit",
         type: initial.type ?? "circuit",
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
+        targetRounds: initial.targetRounds ?? 1,
         notes: initial.notes ?? "",
       }),
     [initial],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, notes }) !== initialSnapshot;
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, targetRounds, notes }) !==
+    initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
