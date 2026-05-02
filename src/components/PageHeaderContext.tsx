@@ -18,7 +18,10 @@ interface PageHeaderContextValue {
   setState: (state: PageHeaderState) => void;
 }
 
-const PageHeaderContext = createContext<PageHeaderContextValue | null>(null);
+const PageHeaderStateContext = createContext<PageHeaderState>({ title: "" });
+const PageHeaderSetStateContext = createContext<
+  ((state: PageHeaderState) => void) | null
+>(null);
 
 export function PageHeaderProvider({
   children,
@@ -27,12 +30,17 @@ export function PageHeaderProvider({
   children: React.ReactNode;
   value: PageHeaderContextValue;
 }) {
-  return <PageHeaderContext.Provider value={value}>{children}</PageHeaderContext.Provider>;
+  return (
+    <PageHeaderSetStateContext.Provider value={value.setState}>
+      <PageHeaderStateContext.Provider value={value.state}>
+        {children}
+      </PageHeaderStateContext.Provider>
+    </PageHeaderSetStateContext.Provider>
+  );
 }
 
 export function usePageHeaderState(): PageHeaderState {
-  const ctx = useContext(PageHeaderContext);
-  return ctx?.state ?? { title: "" };
+  return useContext(PageHeaderStateContext);
 }
 
 interface UsePageHeaderOptions {
@@ -55,8 +63,7 @@ export function usePageHeader(
   onBackOrOptions?: (() => void) | UsePageHeaderOptions,
   tone: PageHeaderTone = "default",
 ) {
-  const ctx = useContext(PageHeaderContext);
-  const setState = ctx?.setState;
+  const setState = useContext(PageHeaderSetStateContext);
 
   const isOptions =
     typeof onBackOrOptions === "object" && onBackOrOptions !== null;
