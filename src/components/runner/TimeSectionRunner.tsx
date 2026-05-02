@@ -217,7 +217,7 @@ export function TimeSectionRunner({
     titleText = sectionTitle;
     const upNextText = t.nextItem
       ? `Up next: ${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
-      : "Section complete";
+      : "Up next: Section complete";
     const exerciseCount = section.items.length;
     const currentItemIdx = t.currentInterval.itemIndex ?? 0;
     const exerciseNum = Math.min(exerciseCount, currentItemIdx + 1);
