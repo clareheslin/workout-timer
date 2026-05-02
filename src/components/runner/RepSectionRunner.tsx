@@ -60,7 +60,7 @@ export function RepSectionRunner({
     return () => {
       audio.endSession();
     };
-  }, [phase, audio]);
+  }, [phase]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
