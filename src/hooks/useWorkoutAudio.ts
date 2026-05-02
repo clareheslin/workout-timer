@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const MUTE_KEY = "workout-audio-muted";
@@ -157,15 +157,28 @@ export function useWorkoutAudio(): UseWorkoutAudioResult {
     };
   }, []);
 
-  return {
-    muted,
-    toggleMute,
-    unlock,
-    startSession,
-    endSession,
-    playTransitionBeep,
-    playCountdownBeep,
-    playSectionEndBeep,
-    playMidpointClick,
-  };
+  return useMemo(
+    () => ({
+      muted,
+      toggleMute,
+      unlock,
+      startSession,
+      endSession,
+      playTransitionBeep,
+      playCountdownBeep,
+      playSectionEndBeep,
+      playMidpointClick,
+    }),
+    [
+      muted,
+      toggleMute,
+      unlock,
+      startSession,
+      endSession,
+      playTransitionBeep,
+      playCountdownBeep,
+      playSectionEndBeep,
+      playMidpointClick,
+    ],
+  );
 }
