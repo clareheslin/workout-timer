@@ -93,5 +93,8 @@ export function useWorkouts() {
     [setWorkouts],
   );
 
-  return { workouts: safeWorkouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout };
+  return useMemo(
+    () => ({ workouts: safeWorkouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout }),
+    [safeWorkouts, setWorkouts, addWorkout, updateWorkout, deleteWorkout, duplicateWorkout],
+  );
 }

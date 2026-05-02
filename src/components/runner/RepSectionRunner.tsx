@@ -37,8 +37,11 @@ export function RepSectionRunner({
   onSkipSection,
 }: Props) {
   const isAmrap = (section.type ?? "circuit") === "amrap";
-  const timeCap = Math.max(1, section.timeCap ?? 0);
-  const repExercises = section.repExercises ?? [];
+  const timeCap = Math.max(1, section.timeCap ?? 3600);
+  const repExercises = useMemo(
+    () => section.repExercises ?? [],
+    [section.repExercises],
+  );
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsed, setElapsed] = useState(0);
@@ -76,7 +79,7 @@ export function RepSectionRunner({
       sectionType: isAmrap ? "amrap" : "forTime",
       repItems: repExercises.map((ex) => ({
         exerciseName: ex.name || "Exercise",
-        reps: Math.max(1, Math.floor(ex.reps)),
+        reps: Math.max(1, Math.floor(ex.reps ?? 1)),
       })),
       durationSeconds: Math.max(0, Math.floor(durationSeconds)),
     }),

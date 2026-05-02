@@ -605,24 +605,50 @@ export function useWorkoutTimer(
     return { startedAt: startedAtRef.current, sections };
   }, [workout.sections]);
 
-  return {
-    phase,
-    currentSectionIndex: sectionIndex,
-    currentSection,
-    currentItem,
-    currentInterval,
-    currentRound: currentPlanned?.round ?? 1,
-    totalRounds: currentItem ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1)) : 1,
-    timeRemaining,
-    nextItem,
-    start,
-    pause,
-    resume,
-    nextSection,
-    finish,
-    skipInterval,
-    endSection,
-    startedAt: startedAtRef.current,
-    getRunSummary,
-  };
+  const currentRound = currentPlanned?.round ?? 1;
+  const totalRounds = currentItem ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1)) : 1;
+  const startedAt = startedAtRef.current;
+
+  return useMemo(
+    () => ({
+      phase,
+      currentSectionIndex: sectionIndex,
+      currentSection,
+      currentItem,
+      currentInterval,
+      currentRound,
+      totalRounds,
+      timeRemaining,
+      nextItem,
+      start,
+      pause,
+      resume,
+      nextSection,
+      finish,
+      skipInterval,
+      endSection,
+      startedAt,
+      getRunSummary,
+    }),
+    [
+      phase,
+      sectionIndex,
+      currentSection,
+      currentItem,
+      currentInterval,
+      currentRound,
+      totalRounds,
+      timeRemaining,
+      nextItem,
+      start,
+      pause,
+      resume,
+      nextSection,
+      finish,
+      skipInterval,
+      endSection,
+      startedAt,
+      getRunSummary,
+    ],
+  );
 }
