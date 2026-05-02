@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 import type { WorkoutLog } from "@/types";
 
@@ -75,5 +75,8 @@ export function useWorkoutDiary() {
 
   const clearDiary = useCallback(() => setLogs([]), [setLogs]);
 
-  return { logs, setLogs, addLog, deleteLog, clearDiary };
+  return useMemo(
+    () => ({ logs, setLogs, addLog, deleteLog, clearDiary }),
+    [logs, setLogs, addLog, deleteLog, clearDiary],
+  );
 }

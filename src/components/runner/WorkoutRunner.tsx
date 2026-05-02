@@ -59,7 +59,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       };
       diary.addLog(log);
     },
-    [diary, workout.id, workout.name],
+    [diary.addLog, workout.id, workout.name],
   );
 
   const clearInProgress = () => {
@@ -95,7 +95,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         setPhase("between-sections");
       }
     },
-    [isLastSection, onExit, writeDiary, workout.id, workout.name],
+    [isLastSection, writeDiary, workout.id, workout.name],
   );
 
   const handleNextSection = () => {
@@ -121,7 +121,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       setSectionIndex((i) => i + 1);
       setPhase("running-section");
     }
-  }, [isLastSection, onExit, writeDiary]);
+  }, [isLastSection, writeDiary]);
 
   if (!currentSection) {
     return null;
