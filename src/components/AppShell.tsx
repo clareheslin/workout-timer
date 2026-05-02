@@ -65,26 +65,25 @@ export function AppShell() {
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
   const diary = useWorkoutDiary();
-  // Lazy init so the snapshot is consumed before the first render commits.
-  const [interrupted, setInterrupted] = useState<InProgressSnapshot | null>(() =>
-    consumeInterruptedSnapshot(),
-  );
+  const [interrupted, setInterrupted] = useState<InProgressSnapshot | null>(null);
 
-  // Persist the recovered entry to the diary on mount.
+  // Recover only after hydration so SSR and client render the same initial HTML.
   useEffect(() => {
-    if (!interrupted) return;
-    const startedAtMs = new Date(interrupted.startedAt).getTime();
-    const lastSectionMs = new Date(interrupted.lastSectionAt).getTime();
+    const snapshot = consumeInterruptedSnapshot();
+    if (!snapshot) return;
+    setInterrupted(snapshot);
+    const startedAtMs = new Date(snapshot.startedAt).getTime();
+    const lastSectionMs = new Date(snapshot.lastSectionAt).getTime();
     const totalDurationSeconds = Math.max(0, Math.round((lastSectionMs - startedAtMs) / 1000));
     const log: WorkoutLog = {
       id: createId("log"),
-      workoutId: interrupted.workoutId,
-      workoutName: interrupted.workoutName,
-      startedAt: interrupted.startedAt,
+      workoutId: snapshot.workoutId,
+      workoutName: snapshot.workoutName,
+      startedAt: snapshot.startedAt,
       // Use the last completed section's timestamp, NOT the recovery time.
-      completedAt: interrupted.lastSectionAt,
+      completedAt: snapshot.lastSectionAt,
       totalDurationSeconds,
-      sectionBreakdown: interrupted.sectionBreakdown,
+      sectionBreakdown: snapshot.sectionBreakdown,
       incomplete: true,
     };
     diary.addLog(log);
