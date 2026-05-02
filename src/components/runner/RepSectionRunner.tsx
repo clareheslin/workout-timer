@@ -271,9 +271,11 @@ export function RepSectionRunner({
             <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
               {ex.name}
             </span>
-            <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
-              ×{ex.reps}
-            </span>
+            {ex.reps !== undefined && ex.reps > 0 && (
+              <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
+                ×{ex.reps}
+              </span>
+            )}
           </li>
         ))
       )}
