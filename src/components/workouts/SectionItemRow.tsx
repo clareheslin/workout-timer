@@ -81,13 +81,18 @@ export function SectionItemRow({ item, onChange, onDelete }: Props) {
               <input
                 type="number"
                 inputMode="numeric"
-                min={1}
+                min={0}
                 autoFocus
                 value={exerciseSecs}
                 onChange={(e) => {
-                  const n = Number(e.target.value);
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    onChange({ durationSeconds: 0 });
+                    return;
+                  }
+                  const n = Number(raw);
                   onChange({
-                    durationSeconds: Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1,
+                    durationSeconds: Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0,
                   });
                 }}
                 onBlur={() => setEditing(null)}
