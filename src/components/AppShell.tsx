@@ -127,19 +127,22 @@ export function AppShell() {
   const tone = headerState.tone ?? "default";
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
-  const isImmersive = isExercise || isRest;
+  const isPaused = tone === "paused";
+  const isImmersive = isExercise || isRest || isPaused;
   const hideNav = isImmersive || running !== null;
   const toneClass = isExercise
     ? "bg-exercise text-exercise-foreground"
     : isRest
       ? "bg-rest text-rest-foreground"
-      : "bg-background text-foreground";
+      : isPaused
+        ? "bg-paused text-paused-foreground"
+        : "bg-background text-foreground";
 
   return (
     <PageHeaderProvider value={ctxValue}>
       <div
         className={`min-h-screen flex justify-center transition-colors ${
-          isExercise ? "bg-exercise" : isRest ? "bg-rest" : "bg-background text-foreground"
+          isExercise ? "bg-exercise" : isRest ? "bg-rest" : isPaused ? "bg-paused" : "bg-background text-foreground"
         }`}
       >
         <div
