@@ -169,7 +169,7 @@ export function TimeSectionRunner({
     content = (
       <>
         {section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
-        <ul className="flex flex-col divide-y divide-black/15 border-y border-black/15">
+        <ul className="flex flex-col divide-y divide-border border-y border-border">
           {section.items.length === 0 ? (
             <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
           ) : (
@@ -202,7 +202,7 @@ export function TimeSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
       >
         Start Section
       </button>
@@ -253,7 +253,7 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.pause}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
         >
           Pause
         </button>
@@ -263,7 +263,7 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.resume}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
         >
           Resume
         </button>
@@ -277,7 +277,7 @@ export function TimeSectionRunner({
 
   return (
     <>
-      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}>
+      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-background text-foreground" : "flex min-h-full flex-1 flex-col"}>
         <RunnerScaffold
           eyebrow={eyebrow}
           title={titleText}

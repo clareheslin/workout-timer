@@ -71,30 +71,30 @@
   --popover: oklch(0.965 0.025 100);
   --popover-foreground: oklch(0.255 0 0);
   --primary: oklch(0.36 0.1 145); /* #1f5014 deep green */
-  --primary-foreground: oklch(0.972 0 0);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.87 0.03 155); /* #cbddd1 mint */
   --secondary-foreground: oklch(0.36 0.1 145);
   --muted: oklch(0.965 0.025 100); /* cream */
-  --muted-foreground: oklch(0.45 0.04 140); /* sage, darker for contrast on white */
+  --muted-foreground: oklch(0.255 0 0); /* #272727 dark grey for max contrast */
   --accent: oklch(0.87 0.03 155);
   --accent-foreground: oklch(0.36 0.1 145);
-  --destructive: oklch(0.42 0.13 27); /* muted deep red */
-  --destructive-foreground: oklch(0.972 0 0);
-  --border: oklch(0.91 0.015 120); /* soft cream-tinted border */
-  --input: oklch(0.91 0.015 120);
+  --destructive: oklch(0.42 0.13 27); /* #7e2a1f muted deep red */
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.711 0 0); /* #a9a9a9 grey */
+  --input: oklch(0.711 0 0);
   --ring: oklch(0.66 0.15 150); /* #43ac6d brand green */
   --chart-1: oklch(0.36 0.1 145);
   --chart-2: oklch(0.66 0.15 150);
   --chart-3: oklch(0.62 0.05 140);
   --chart-4: oklch(0.87 0.03 155);
-  --chart-5: oklch(0.71 0 0);
+  --chart-5: oklch(0.711 0 0);
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.255 0 0);
   --sidebar-primary: oklch(0.36 0.1 145);
-  --sidebar-primary-foreground: oklch(0.972 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.965 0.025 100);
   --sidebar-accent-foreground: oklch(0.36 0.1 145);
-  --sidebar-border: oklch(0.91 0.015 120);
+  --sidebar-border: oklch(0.711 0 0);
   --sidebar-ring: oklch(0.66 0.15 150);
 }
 
@@ -107,30 +107,30 @@
   --popover: oklch(0.965 0.025 100);
   --popover-foreground: oklch(0.255 0 0);
   --primary: oklch(0.36 0.1 145);
-  --primary-foreground: oklch(0.972 0 0);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.87 0.03 155);
   --secondary-foreground: oklch(0.36 0.1 145);
   --muted: oklch(0.965 0.025 100);
-  --muted-foreground: oklch(0.45 0.04 140);
+  --muted-foreground: oklch(0.255 0 0);
   --accent: oklch(0.87 0.03 155);
   --accent-foreground: oklch(0.36 0.1 145);
   --destructive: oklch(0.42 0.13 27);
-  --destructive-foreground: oklch(0.972 0 0);
-  --border: oklch(0.91 0.015 120);
-  --input: oklch(0.91 0.015 120);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.711 0 0);
+  --input: oklch(0.711 0 0);
   --ring: oklch(0.66 0.15 150);
   --chart-1: oklch(0.36 0.1 145);
   --chart-2: oklch(0.66 0.15 150);
   --chart-3: oklch(0.62 0.05 140);
   --chart-4: oklch(0.87 0.03 155);
-  --chart-5: oklch(0.71 0 0);
+  --chart-5: oklch(0.711 0 0);
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.255 0 0);
   --sidebar-primary: oklch(0.36 0.1 145);
-  --sidebar-primary-foreground: oklch(0.972 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.965 0.025 100);
   --sidebar-accent-foreground: oklch(0.36 0.1 145);
-  --sidebar-border: oklch(0.91 0.015 120);
+  --sidebar-border: oklch(0.711 0 0);
   --sidebar-ring: oklch(0.66 0.15 150);
 }
 
@@ -147,20 +147,20 @@
 
 :root {
   --exercise: oklch(0.66 0.15 150); /* #43ac6d brand green */
-  --exercise-foreground: oklch(0.972 0 0);
-  --rest: oklch(0.965 0.025 100); /* cream */
+  --exercise-foreground: oklch(1 0 0);
+  --rest: oklch(0.965 0.025 100); /* #f6f6e9 light yellow */
   --rest-foreground: oklch(0.255 0 0);
-  --paused: oklch(0.9 0.17 95); /* warm yellow */
-  --paused-foreground: oklch(0.2 0 0);
+  --paused: oklch(0.965 0.025 100); /* #f6f6e9 light yellow */
+  --paused-foreground: oklch(0.255 0 0);
 }
 
 .dark {
   --exercise: oklch(0.66 0.15 150);
-  --exercise-foreground: oklch(0.972 0 0);
+  --exercise-foreground: oklch(1 0 0);
   --rest: oklch(0.965 0.025 100);
   --rest-foreground: oklch(0.255 0 0);
-  --paused: oklch(0.9 0.17 95);
-  --paused-foreground: oklch(0.2 0 0);
+  --paused: oklch(0.965 0.025 100);
+  --paused-foreground: oklch(0.255 0 0);
 }
 
 @layer base {

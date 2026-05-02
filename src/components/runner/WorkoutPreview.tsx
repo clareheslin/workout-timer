@@ -45,7 +45,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
 
   return (
     <>
-      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+      <div className="flex min-h-full flex-1 flex-col bg-background text-foreground">
         <RunnerScaffold
           eyebrow="Workout Preview"
           title={workout.name}
@@ -54,7 +54,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
             <button
               type="button"
               onClick={onBegin}
-              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
             >
               Start Workout
             </button>
@@ -64,7 +64,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
             <CoachNotes notes={workout.notes} label="Workout notes" defaultOpen />
           )}
 
-          <ul className="flex flex-col divide-y divide-black/15 border-y border-black/15">
+          <ul className="flex flex-col divide-y divide-border border-y border-border">
             {workout.sections.length === 0 ? (
               <li className="px-1 py-3 text-sm opacity-70">No sections.</li>
             ) : (
