@@ -271,20 +271,24 @@ function DoneScreen({
 
   return (
     <>
-      <RunnerScaffold
-        eyebrow="Workout complete"
-        title="Nice work!"
-        subtext="Returning to Diary…"
-        primary={
-          <button
-            type="button"
-            onClick={onExit}
-            className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-          >
-            Finish
-          </button>
-        }
-      />
+      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+        <RunnerScaffold
+          title={"\u00A0"}
+          primary={
+            <button
+              type="button"
+              onClick={onExit}
+              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+            >
+              Exit
+            </button>
+          }
+        >
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="text-2xl font-bold">Workout complete</p>
+          </div>
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
