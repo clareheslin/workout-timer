@@ -91,7 +91,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         setPhase("done");
         writeDiary(sectionsWereSkippedRef.current);
         clearInProgress();
-        window.setTimeout(() => onExit("done"), 2000);
       } else {
         setPhase("between-sections");
       }
