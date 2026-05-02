@@ -176,6 +176,9 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         type,
         repExercises: repItems,
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
+        ...(type === "forTime"
+          ? { targetRounds: Math.max(1, Math.floor(targetRounds)) }
+          : { targetRounds: undefined }),
         // mode is irrelevant for rep sections but kept for back-compat
         mode,
         notes: trimmedNotes ? trimmedNotes : undefined,
@@ -190,6 +193,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
+        targetRounds: undefined,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
