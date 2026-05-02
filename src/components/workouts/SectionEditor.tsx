@@ -181,7 +181,13 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         repExercises: repItems,
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
         ...(type === "forTime"
-          ? { targetRounds: Math.max(1, Math.floor(targetRounds)) }
+          ? {
+              targetRounds: Math.max(1, Math.floor(targetRounds)),
+              timeCap:
+                forTimeMaxCap !== undefined && forTimeMaxCap > 0
+                  ? Math.max(1, Math.floor(forTimeMaxCap))
+                  : undefined,
+            }
           : { targetRounds: undefined }),
         // mode is irrelevant for rep sections but kept for back-compat
         mode,
