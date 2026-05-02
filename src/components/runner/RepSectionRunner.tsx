@@ -221,6 +221,8 @@ export function RepSectionRunner({
   let primaryHint: React.ReactNode = null;
 
   const targetRounds = Math.max(1, Math.floor(section.targetRounds ?? 1));
+  const isIdle = phase === "idle";
+  const isActive = phase === "running" || phase === "paused";
 
   if (phase === "idle") {
     eyebrow = "Section Preview";
@@ -247,23 +249,19 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleContinue}
-        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+        className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
       >
         Continue
       </button>
     );
   } else {
-    // running / paused
-    eyebrow = isAmrap ? "Time remaining" : "Elapsed";
-    subtext = isAmrap
-      ? `Cap ${formatDuration(timeCap)}`
-      : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`;
+    // running / paused — no eyebrow/subtext (reserved for empty in scaffold)
     if (phase === "running") {
       primary = (
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           {isAmrap ? "Pause" : "Stop"}
         </button>
@@ -273,7 +271,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           Resume
         </button>
@@ -284,21 +282,46 @@ export function RepSectionRunner({
           onTap={handlePauseResume}
           onHoldComplete={handleEnd}
           label="Resume / Finish"
-          hint="Tap to resume · Hold to finish section"
+          hint=""
         />
       );
+      primaryHint = "Tap to resume · Hold to finish section";
     }
   }
 
-  const isIdle = phase === "idle";
+  const renderExerciseList = (idleStyle: boolean) => (
+    <ul
+      className={
+        idleStyle
+          ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
+          : "flex flex-col divide-y divide-current/15 border-y border-current/15"
+      }
+    >
+      {repExercises.length === 0 ? (
+        <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
+      ) : (
+        repExercises.map((ex) => (
+          <li
+            key={ex.id}
+            className="flex items-start justify-between gap-3 px-1 py-3"
+          >
+            <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
+              {ex.name}
+            </span>
+            <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>×{ex.reps}</span>
+          </li>
+        ))
+      )}
+    </ul>
+  );
 
   return (
     <>
       <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}>
         <RunnerScaffold
-          eyebrow={eyebrow}
+          eyebrow={isActive ? undefined : eyebrow}
           title={sectionTitle}
-          subtext={subtext}
+          subtext={isActive ? undefined : subtext}
           primary={primary}
           primaryHint={primaryHint}
         >
@@ -306,42 +329,32 @@ export function RepSectionRunner({
             <CoachNotes notes={section.notes} label="Section notes" />
           )}
 
-          <ul
-            className={
-              isIdle
-                ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
-                : "flex flex-col divide-y divide-border border-y border-border"
-            }
-          >
-            {repExercises.length === 0 ? (
-              <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
-            ) : (
-              repExercises.map((ex) => (
-                <li
-                  key={ex.id}
-                  className="flex items-start justify-between gap-3 px-1 py-3"
+          {isActive ? (
+            <div className="flex flex-1 flex-col gap-4 min-h-0">
+              <ScrollArea className="flex-1 min-h-0">
+                {renderExerciseList(false)}
+              </ScrollArea>
+              <div className="flex flex-col items-center gap-2 shrink-0">
+                {!isAmrap && (
+                  <p className="text-sm opacity-80">
+                    {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
+                  </p>
+                )}
+                <p className="text-6xl font-bold tabular-nums" aria-live="polite">
+                  {liveTimerLabel}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleEnd}
+                  className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+                  aria-label="Skip to end of section"
                 >
-                  <span className={`min-w-0 flex-1 break-words text-base ${isIdle ? "font-bold" : ""}`}>{ex.name}</span>
-                  <span className={`shrink-0 text-sm tabular-nums ${isIdle ? "opacity-70" : "opacity-80"}`}>×{ex.reps}</span>
-                </li>
-              ))
-            )}
-          </ul>
-
-          {(phase === "running" || phase === "paused") && (
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
-                {liveTimerLabel}
-              </p>
-              <button
-                type="button"
-                onClick={handleEnd}
-                className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-                aria-label="Skip to end of section"
-              >
-                Skip Interval ›
-              </button>
+                  Skip Interval ›
+                </button>
+              </div>
             </div>
+          ) : (
+            renderExerciseList(isIdle)
           )}
         </RunnerScaffold>
       </div>
