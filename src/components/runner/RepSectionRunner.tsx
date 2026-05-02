@@ -237,7 +237,7 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
       >
         Start Section
       </button>
@@ -249,7 +249,7 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleContinue}
-        className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
       >
         Continue
       </button>
@@ -261,7 +261,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
         >
           {isAmrap ? "Pause" : "Stop"}
         </button>
@@ -271,7 +271,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
         >
           Resume
         </button>
@@ -293,7 +293,7 @@ export function RepSectionRunner({
     <ul
       className={
         idleStyle
-          ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
+          ? "flex flex-col divide-y divide-border border-y border-border"
           : "flex flex-col [&>li+li]:border-t [&>li+li]:border-current/20 border-y border-current/20"
       }
     >
@@ -317,7 +317,7 @@ export function RepSectionRunner({
 
   return (
     <>
-      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}>
+      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-background text-foreground" : "flex min-h-full flex-1 flex-col"}>
         <RunnerScaffold
           eyebrow={isActive ? undefined : eyebrow}
           title={sectionTitle}

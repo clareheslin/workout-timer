@@ -224,14 +224,14 @@ function BetweenSectionsScreen({
 
   return (
     <>
-      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+      <div className="flex min-h-full flex-1 flex-col bg-background text-foreground">
         <RunnerScaffold
           title={"\u00A0"}
           primary={
             <button
               type="button"
               onClick={onNext}
-              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
             >
               Preview
             </button>
@@ -271,14 +271,14 @@ function DoneScreen({
 
   return (
     <>
-      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+      <div className="flex min-h-full flex-1 flex-col bg-background text-foreground">
         <RunnerScaffold
           title={"\u00A0"}
           primary={
             <button
               type="button"
               onClick={onExit}
-              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
             >
               Exit
             </button>
