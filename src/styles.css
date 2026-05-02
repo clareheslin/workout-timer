@@ -141,6 +141,8 @@
   --color-exercise-foreground: var(--exercise-foreground);
   --color-rest: var(--rest);
   --color-rest-foreground: var(--rest-foreground);
+  --color-paused: var(--paused);
+  --color-paused-foreground: var(--paused-foreground);
 }
 
 :root {
@@ -148,6 +150,8 @@
   --exercise-foreground: oklch(0.972 0 0);
   --rest: oklch(0.965 0.025 100); /* cream */
   --rest-foreground: oklch(0.255 0 0);
+  --paused: oklch(0.9 0.17 95); /* warm yellow */
+  --paused-foreground: oklch(0.2 0 0);
 }
 
 .dark {
@@ -155,6 +159,8 @@
   --exercise-foreground: oklch(0.972 0 0);
   --rest: oklch(0.965 0.025 100);
   --rest-foreground: oklch(0.255 0 0);
+  --paused: oklch(0.9 0.17 95);
+  --paused-foreground: oklch(0.2 0 0);
 }
 
 @layer base {

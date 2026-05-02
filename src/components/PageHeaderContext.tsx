@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 
-export type PageHeaderTone = "default" | "exercise" | "rest";
+export type PageHeaderTone = "default" | "exercise" | "rest" | "paused";
 
 export interface PageHeaderState {
   /** Right-of-logo title text shown in the AppShell header. */
