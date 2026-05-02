@@ -224,20 +224,25 @@ function BetweenSectionsScreen({
 
   return (
     <>
-      <RunnerScaffold
-        eyebrow="Section complete"
-        title={currentSectionName}
-        subtext={`Ready for ${nextSectionName}?`}
-        primary={
-          <button
-            type="button"
-            onClick={onNext}
-            className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-          >
-            Preview
-          </button>
-        }
-      />
+      <div className="bg-white">
+        <RunnerScaffold
+          title={"\u00A0"}
+          primary={
+            <button
+              type="button"
+              onClick={onNext}
+              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+            >
+              Preview
+            </button>
+          }
+        >
+          <div className="flex flex-1 flex-col items-center justify-center text-center gap-2">
+            <p className="text-2xl font-bold">{currentSectionName} complete</p>
+            <p className="text-sm opacity-70">Up next: {nextSectionName}</p>
+          </div>
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
