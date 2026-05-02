@@ -201,36 +201,43 @@ export function TimeSectionRunner({
     );
   } else if ((t.phase === "running" || t.phase === "paused") && t.currentInterval) {
     const intervalLabel =
-      t.currentInterval.kind === "rest" && !t.currentInterval.isPrep
-        ? "Rest"
-        : t.currentInterval.name;
-    eyebrow = intervalLabel;
+      t.currentInterval.isPrep
+        ? "Get ready…"
+        : t.currentInterval.kind === "rest"
+          ? "Rest"
+          : t.currentInterval.name;
     titleText = sectionTitle;
-    subtext = !t.currentInterval.isPrep
-      ? `Round ${t.currentRound} of ${t.totalRounds}`
-      : undefined;
+    const upNextText = t.nextItem
+      ? `Up next: ${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
+      : "Section complete";
+    const exerciseCount = section.items.length;
+    const currentItemIdx = t.currentInterval.itemIndex ?? 0;
+    const exerciseNum = Math.min(exerciseCount, currentItemIdx + 1);
+    const isSets = (section.type ?? "circuit") === "sets";
+    const roundLabel = isSets ? "Set" : "Round";
+    const meta = !t.currentInterval.isPrep
+      ? `Exercise ${exerciseNum} of ${exerciseCount} · ${roundLabel} ${t.currentRound} of ${t.totalRounds}`
+      : "\u00A0";
     content = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <div
-          className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/20"
-          aria-live="polite"
-        >
-          <span className="text-7xl font-bold tabular-nums">{t.timeRemaining}</span>
+      <div className="flex flex-1 flex-col items-center justify-between gap-4 text-center">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-3xl font-bold">{intervalLabel}</p>
+          <p className="text-sm opacity-80">{upNextText}</p>
         </div>
-        <div className="min-h-[1.25rem] text-sm opacity-80">
-          <span className="opacity-60">Up next: </span>
-          {t.nextItem
-            ? `${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
-            : "Section complete"}
+        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+          {t.timeRemaining}
+        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-xs opacity-70">{meta}</p>
+          <button
+            type="button"
+            onClick={t.skipInterval}
+            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+            aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
+          >
+            Skip Interval ›
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={t.skipInterval}
-          className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-          aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
-        >
-          Skip Interval ›
-        </button>
       </div>
     );
     if (t.phase === "running") {
@@ -238,20 +245,9 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.pause}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           Pause
-        </button>
-      );
-      primaryHint = "Tap to pause";
-    } else if (!t.nextItem && t.timeRemaining === 0) {
-      primary = (
-        <button
-          type="button"
-          onClick={t.skipInterval}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-        >
-          Finish
         </button>
       );
     } else {
@@ -259,7 +255,7 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.resume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           Resume
         </button>
