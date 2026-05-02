@@ -55,7 +55,7 @@ export function TimeSectionRunner({
     [audio.playTransitionBeep, audio.playCountdownBeep, audio.playSectionEndBeep, audio.playMidpointClick],
   );
 
-  const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: true });
+  const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: false });
   const completedRef = useRef(false);
 
   useEffect(() => {
@@ -82,7 +82,9 @@ export function TimeSectionRunner({
       items: sb?.items ?? [],
       sectionType: section.type ?? "circuit",
     };
-    onComplete(log);
+    // Pause briefly so the user sees the timer hit 00:00 before transitioning.
+    const handle = window.setTimeout(() => onComplete(log), 3000);
+    return () => window.clearTimeout(handle);
   }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
 
   const isActive = t.phase === "running" || t.phase === "paused";
