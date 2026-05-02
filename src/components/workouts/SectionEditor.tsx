@@ -310,6 +310,71 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </div>
       )}
 
+      {type === "forTime" && (
+        (() => {
+          const maxMinutes = forTimeMaxCap !== undefined ? Math.floor(forTimeMaxCap / 60) : 0;
+          const maxSeconds = forTimeMaxCap !== undefined ? forTimeMaxCap % 60 : 0;
+          const isSet = forTimeMaxCap !== undefined;
+          const updateMax = (m: number, s: number) => {
+            const total = m * 60 + s;
+            setForTimeMaxCap(total > 0 ? total : undefined);
+          };
+          return (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Max time (optional)</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={isSet ? maxMinutes : ""}
+                  placeholder="—"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setForTimeMaxCap(undefined);
+                      return;
+                    }
+                    const n = Number(raw);
+                    const m = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+                    updateMax(m, maxSeconds);
+                  }}
+                  aria-label="Max minutes"
+                  onFocus={(e) => e.target.select()}
+                  className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-sm text-muted-foreground">min</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={59}
+                  value={isSet ? maxSeconds : ""}
+                  placeholder="—"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      updateMax(maxMinutes, 0);
+                      return;
+                    }
+                    const n = Number(raw);
+                    const s = Number.isFinite(n) ? Math.min(59, Math.max(0, Math.floor(n))) : 0;
+                    updateMax(maxMinutes, s);
+                  }}
+                  aria-label="Max seconds"
+                  onFocus={(e) => e.target.select()}
+                  className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-sm text-muted-foreground">sec</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                If not set, defaults to 1 hour. This is a failsafe to stop the timer if the app is left running.
+              </p>
+            </div>
+          );
+        })()
+      )}
+
       {type === "amrap" && (
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-muted-foreground">Time cap</span>
