@@ -117,7 +117,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       setPhase("done");
       writeDiary(true);
       clearInProgress();
-      window.setTimeout(() => onExit("done"), 2000);
     } else {
       setSectionIndex((i) => i + 1);
       setPhase("running-section");
