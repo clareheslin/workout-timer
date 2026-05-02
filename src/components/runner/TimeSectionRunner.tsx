@@ -88,10 +88,16 @@ export function TimeSectionRunner({
   }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
 
   const isActive = t.phase === "running" || t.phase === "paused";
+  const isWorkInterval =
+    !!t.currentInterval &&
+    !t.currentInterval.isPrep &&
+    t.currentInterval.kind !== "rest";
   const tone: PageHeaderTone = isActive
     ? t.phase === "paused"
       ? "paused"
-      : "exercise"
+      : isWorkInterval
+        ? "exercise"
+        : "paused"
     : "default";
 
   const handleExit = () => {
