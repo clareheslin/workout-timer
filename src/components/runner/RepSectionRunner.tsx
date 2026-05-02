@@ -205,16 +205,22 @@ export function RepSectionRunner({
   let primary: React.ReactNode = null;
   let primaryHint: React.ReactNode = null;
 
+  const targetRounds = Math.max(1, Math.floor(section.targetRounds ?? 1));
+
   if (phase === "idle") {
     eyebrow = "Section Preview";
-    subtext = isAmrap
-      ? `Cap ${formatDuration(timeCap)}`
-      : `${repExercises.length} ${repExercises.length === 1 ? "exercise" : "exercises"}`;
+    const exerciseCount = repExercises.length;
+    const exLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
+    if (isAmrap) {
+      subtext = `${exLabel} · ${formatDuration(timeCap)}`;
+    } else {
+      subtext = `${exLabel} · ${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`;
+    }
     primary = (
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
       >
         Start Section
       </button>
