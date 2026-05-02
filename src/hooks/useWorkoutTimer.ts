@@ -123,16 +123,21 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   const pushExerciseAndRest = (item: SectionItem, itemIndex: number, round: number) => {
     emitted += 1;
     const isLastOfSection = emitted === totalEmissions;
-    out.push({
-      kind: "exercise",
-      name: item.exercise.name || `Exercise ${itemIndex + 1}`,
-      durationSeconds: Math.max(0, item.exercise.durationSeconds),
-      sectionIndex,
-      itemIndex,
-      round,
-      isPrep: false,
-    });
+    const exerciseSecs = Math.max(0, item.exercise.durationSeconds);
     const restSecs = Math.max(0, item.rest.durationSeconds);
+    // Skip exercises with 0 duration; if rest is also 0, skip the entire item.
+    if (exerciseSecs === 0 && restSecs === 0) return;
+    if (exerciseSecs > 0) {
+      out.push({
+        kind: "exercise",
+        name: item.exercise.name || `Exercise ${itemIndex + 1}`,
+        durationSeconds: exerciseSecs,
+        sectionIndex,
+        itemIndex,
+        round,
+        isPrep: false,
+      });
+    }
     if (restSecs > 0 && !isLastOfSection) {
       out.push({
         kind: "rest",

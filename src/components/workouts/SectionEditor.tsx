@@ -69,6 +69,9 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
   const mode: SectionMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+  const [forTimeMaxCap, setForTimeMaxCap] = useState<number | undefined>(
+    initial.type === "forTime" ? initial.timeCap : undefined,
+  );
   const [targetRounds, setTargetRounds] = useState<number>(initial.targetRounds ?? 1);
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
@@ -83,13 +86,14 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         mode: initial.mode ?? "circuit",
         type: initial.type ?? "circuit",
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
+        forTimeMaxCap: initial.type === "forTime" ? initial.timeCap : undefined,
         targetRounds: initial.targetRounds ?? 1,
         notes: initial.notes ?? "",
       }),
     [initial],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, targetRounds, notes }) !==
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, notes }) !==
     initialSnapshot;
 
   const canDone = isRepBased
@@ -177,7 +181,13 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         repExercises: repItems,
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
         ...(type === "forTime"
-          ? { targetRounds: Math.max(1, Math.floor(targetRounds)) }
+          ? {
+              targetRounds: Math.max(1, Math.floor(targetRounds)),
+              timeCap:
+                forTimeMaxCap !== undefined && forTimeMaxCap > 0
+                  ? Math.max(1, Math.floor(forTimeMaxCap))
+                  : undefined,
+            }
           : { targetRounds: undefined }),
         // mode is irrelevant for rep sections but kept for back-compat
         mode,
@@ -298,6 +308,71 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
             />
           </div>
         </div>
+      )}
+
+      {type === "forTime" && (
+        (() => {
+          const maxMinutes = forTimeMaxCap !== undefined ? Math.floor(forTimeMaxCap / 60) : 0;
+          const maxSeconds = forTimeMaxCap !== undefined ? forTimeMaxCap % 60 : 0;
+          const isSet = forTimeMaxCap !== undefined;
+          const updateMax = (m: number, s: number) => {
+            const total = m * 60 + s;
+            setForTimeMaxCap(total > 0 ? total : undefined);
+          };
+          return (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Max time (optional)</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={isSet ? maxMinutes : ""}
+                  placeholder="—"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setForTimeMaxCap(undefined);
+                      return;
+                    }
+                    const n = Number(raw);
+                    const m = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+                    updateMax(m, maxSeconds);
+                  }}
+                  aria-label="Max minutes"
+                  onFocus={(e) => e.target.select()}
+                  className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-sm text-muted-foreground">min</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={59}
+                  value={isSet ? maxSeconds : ""}
+                  placeholder="—"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      updateMax(maxMinutes, 0);
+                      return;
+                    }
+                    const n = Number(raw);
+                    const s = Number.isFinite(n) ? Math.min(59, Math.max(0, Math.floor(n))) : 0;
+                    updateMax(maxMinutes, s);
+                  }}
+                  aria-label="Max seconds"
+                  onFocus={(e) => e.target.select()}
+                  className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-sm text-muted-foreground">sec</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                If not set, defaults to 1 hour. This is a failsafe to stop the timer if the app is left running.
+              </p>
+            </div>
+          );
+        })()
       )}
 
       {type === "amrap" && (
