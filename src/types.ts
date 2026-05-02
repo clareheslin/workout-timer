@@ -47,6 +47,8 @@ export interface Section {
   repExercises?: RepExercise[];
   /** Time cap in seconds. AMRAP only. */
   timeCap?: number;
+  /** Number of rounds. Stopwatch (forTime) only. Defaults to 1 when missing. */
+  targetRounds?: number;
   /** Optional coach notes (markdown) shown on the section's Ready screen. */
   notes?: string;
 }

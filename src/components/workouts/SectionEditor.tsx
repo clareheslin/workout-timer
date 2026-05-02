@@ -69,6 +69,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
   const mode: SectionMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+  const [targetRounds, setTargetRounds] = useState<number>(initial.targetRounds ?? 1);
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
@@ -82,12 +83,14 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         mode: initial.mode ?? "circuit",
         type: initial.type ?? "circuit",
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
+        targetRounds: initial.targetRounds ?? 1,
         notes: initial.notes ?? "",
       }),
     [initial],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, notes }) !== initialSnapshot;
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, targetRounds, notes }) !==
+    initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
@@ -173,6 +176,9 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         type,
         repExercises: repItems,
         ...(type === "amrap" ? { timeCap: Math.max(1, Math.floor(timeCap)) } : {}),
+        ...(type === "forTime"
+          ? { targetRounds: Math.max(1, Math.floor(targetRounds)) }
+          : { targetRounds: undefined }),
         // mode is irrelevant for rep sections but kept for back-compat
         mode,
         notes: trimmedNotes ? trimmedNotes : undefined,
@@ -187,6 +193,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
+        targetRounds: undefined,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
@@ -268,6 +275,30 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </p>
       </div>
 
+
+      {type === "forTime" && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="section-target-rounds" className="text-xs font-medium text-muted-foreground">
+            Rounds
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="section-target-rounds"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={targetRounds}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                const v = Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1;
+                setTargetRounds(v);
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      )}
 
       {type === "amrap" && (
         <div className="flex flex-col gap-2">
