@@ -202,10 +202,11 @@ export function AppShell() {
   );
 }
 
-function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
+function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" }) {
   const { title, onBack, headerRight } = usePageHeaderState();
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
+  const isPaused = tone === "paused";
   const logo = isExercise ? femLogoWhite : femLogo;
   return (
     <header
@@ -215,7 +216,9 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
           ? "border-exercise-foreground/20 bg-exercise text-exercise-foreground"
           : isRest
             ? "border-rest-foreground/20 bg-rest text-rest-foreground"
-            : "border-border bg-background text-foreground"
+            : isPaused
+              ? "border-paused-foreground/20 bg-paused text-paused-foreground"
+              : "border-border bg-background text-foreground"
       }`}
     >
       <img src={logo} alt="FEM" className="h-7 w-auto shrink-0" />
@@ -229,7 +232,9 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" }) {
               ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
               : isRest
                 ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                : isPaused
+                  ? "text-paused-foreground/80 hover:bg-paused-foreground/10 hover:text-paused-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           <ChevronLeft className="h-5 w-5" />
