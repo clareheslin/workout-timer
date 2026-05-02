@@ -276,6 +276,30 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
       </div>
 
 
+      {type === "forTime" && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="section-target-rounds" className="text-xs font-medium text-muted-foreground">
+            Rounds
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="section-target-rounds"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={targetRounds}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                const v = Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1;
+                setTargetRounds(v);
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      )}
+
       {type === "amrap" && (
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-muted-foreground">Time cap</span>
