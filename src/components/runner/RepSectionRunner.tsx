@@ -172,9 +172,13 @@ export function RepSectionRunner({
     },
   });
 
+  const tone: PageHeaderTone =
+    phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
+
   const headerOpts = useMemo(
     () => ({
       onBack: handleBack,
+      tone,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
@@ -192,7 +196,7 @@ export function RepSectionRunner({
         </>
       ),
     }),
-    [handleBack, sectionIndex, totalSections, audio, onSkipSection],
+    [handleBack, tone, sectionIndex, totalSections, audio, onSkipSection],
   );
   usePageHeader(workoutName, headerOpts);
 
