@@ -62,11 +62,17 @@ export function RepItemRow({ item, onChange, onDelete }: Props) {
             <input
               type="number"
               inputMode="numeric"
-              min={1}
-              value={item.reps}
+              min={0}
+              value={item.reps ?? ""}
+              placeholder="—"
               onChange={(e) => {
-                const n = Number(e.target.value);
-                onChange({ reps: Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1 });
+                const raw = e.target.value;
+                if (raw === "") {
+                  onChange({ reps: undefined });
+                  return;
+                }
+                const n = Number(raw);
+                onChange({ reps: Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined });
               }}
               aria-label="Reps"
               onFocus={(e) => e.target.select()}
