@@ -294,7 +294,7 @@ export function RepSectionRunner({
       className={
         idleStyle
           ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
-          : "flex flex-col divide-y divide-current/15 border-y border-current/15"
+          : "flex flex-col divide-y divide-white/20 border-y border-white/20"
       }
     >
       {repExercises.length === 0 ? (
