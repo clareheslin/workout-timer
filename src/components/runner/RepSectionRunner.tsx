@@ -275,51 +275,69 @@ export function RepSectionRunner({
     }
   }
 
+  const isIdle = phase === "idle";
+
   return (
     <>
-      <RunnerScaffold
-        eyebrow={eyebrow}
-        title={sectionTitle}
-        subtext={subtext}
-        primary={primary}
-        primaryHint={primaryHint}
-      >
-        {phase === "idle" && section.notes && (
-          <CoachNotes notes={section.notes} label="Section notes" />
-        )}
-
-        <ul className="flex flex-col divide-y divide-border border-y border-border">
-          {repExercises.length === 0 ? (
-            <li className="px-1 py-3 text-sm text-muted-foreground">No exercises.</li>
-          ) : (
-            repExercises.map((ex) => (
-              <li
-                key={ex.id}
-                className="flex items-start justify-between gap-3 px-1 py-3"
-              >
-                <span className="min-w-0 flex-1 break-words text-base">{ex.name}</span>
-                <span className="shrink-0 text-sm tabular-nums opacity-80">×{ex.reps}</span>
-              </li>
-            ))
+      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}>
+        <RunnerScaffold
+          eyebrow={eyebrow}
+          title={sectionTitle}
+          subtext={subtext}
+          primary={primary}
+          primaryHint={primaryHint}
+        >
+          {isIdle && section.notes && (
+            <CoachNotes notes={section.notes} label="Section notes" />
           )}
-        </ul>
 
-        {(phase === "running" || phase === "paused") && (
-          <div className="flex flex-col items-center gap-3">
-            <p className="text-5xl font-bold tabular-nums" aria-live="polite">
-              {liveTimerLabel}
-            </p>
-            <button
-              type="button"
-              onClick={handleEnd}
-              className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
-              aria-label="Skip to end of section"
-            >
-              Skip Interval ›
-            </button>
-          </div>
-        )}
-      </RunnerScaffold>
+          <ul
+            className={
+              isIdle
+                ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
+                : "flex flex-col divide-y divide-border border-y border-border"
+            }
+          >
+            {repExercises.length === 0 ? (
+              <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
+            ) : (
+              repExercises.map((ex) => (
+                <li
+                  key={ex.id}
+                  className="flex items-start justify-between gap-3 px-1 py-3"
+                >
+                  <span className={`min-w-0 flex-1 break-words text-base ${isIdle ? "font-bold" : ""}`}>{ex.name}</span>
+                  <span className={`shrink-0 text-sm tabular-nums ${isIdle ? "opacity-70" : "opacity-80"}`}>×{ex.reps}</span>
+                </li>
+              ))
+            )}
+          </ul>
+
+          {isIdle && (
+            isAmrap ? (
+              <p className="text-sm opacity-70">Time cap: {formatDuration(timeCap)}</p>
+            ) : (
+              <p className="text-sm opacity-70">Rounds: {targetRounds}</p>
+            )
+          )}
+
+          {(phase === "running" || phase === "paused") && (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-5xl font-bold tabular-nums" aria-live="polite">
+                {liveTimerLabel}
+              </p>
+              <button
+                type="button"
+                onClick={handleEnd}
+                className="rounded-full border border-border px-4 py-1.5 text-xs font-medium opacity-90 hover:opacity-100"
+                aria-label="Skip to end of section"
+              >
+                Skip Interval ›
+              </button>
+            </div>
+          )}
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
