@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Workout } from "@/types";
 import { sectionTotalSeconds, sectionType, formatDuration } from "@/lib/duration";
+import { workoutTotalSeconds } from "@/lib/workout";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader } from "@/components/PageHeaderContext";
 import { useExitConfirm } from "./useExitConfirm";
