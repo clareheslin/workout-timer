@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
 export interface QuickStartSettings {
@@ -36,14 +37,26 @@ export function useQuickStartSettings() {
     QUICK_START_DEFAULTS,
   );
 
-  const updateAmrap = (next: QuickStartSettings["amrap"]) =>
-    setSettings((prev) => ({ ...prev, amrap: next }));
+  const updateAmrap = useCallback(
+    (next: QuickStartSettings["amrap"]) =>
+      setSettings((prev) => ({ ...prev, amrap: next })),
+    [setSettings],
+  );
 
-  const updateEmom = (next: QuickStartSettings["emom"]) =>
-    setSettings((prev) => ({ ...prev, emom: next }));
+  const updateEmom = useCallback(
+    (next: QuickStartSettings["emom"]) =>
+      setSettings((prev) => ({ ...prev, emom: next })),
+    [setSettings],
+  );
 
-  const updateCircuit = (next: QuickStartSettings["circuit"]) =>
-    setSettings((prev) => ({ ...prev, circuit: next }));
+  const updateCircuit = useCallback(
+    (next: QuickStartSettings["circuit"]) =>
+      setSettings((prev) => ({ ...prev, circuit: next })),
+    [setSettings],
+  );
 
-  return { settings, updateAmrap, updateEmom, updateCircuit };
+  return useMemo(
+    () => ({ settings, updateAmrap, updateEmom, updateCircuit }),
+    [settings, updateAmrap, updateEmom, updateCircuit],
+  );
 }
