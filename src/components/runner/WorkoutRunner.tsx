@@ -91,7 +91,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         setPhase("done");
         writeDiary(sectionsWereSkippedRef.current);
         clearInProgress();
-        window.setTimeout(() => onExit("done"), 2000);
       } else {
         setPhase("between-sections");
       }
@@ -118,7 +117,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       setPhase("done");
       writeDiary(true);
       clearInProgress();
-      window.setTimeout(() => onExit("done"), 2000);
     } else {
       setSectionIndex((i) => i + 1);
       setPhase("running-section");
@@ -226,20 +224,25 @@ function BetweenSectionsScreen({
 
   return (
     <>
-      <RunnerScaffold
-        eyebrow="Section complete"
-        title={currentSectionName}
-        subtext={`Ready for ${nextSectionName}?`}
-        primary={
-          <button
-            type="button"
-            onClick={onNext}
-            className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-          >
-            Preview
-          </button>
-        }
-      />
+      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+        <RunnerScaffold
+          title={"\u00A0"}
+          primary={
+            <button
+              type="button"
+              onClick={onNext}
+              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+            >
+              Preview
+            </button>
+          }
+        >
+          <div className="flex flex-1 flex-col items-center justify-center text-center gap-2">
+            <p className="text-2xl font-bold">{currentSectionName} complete</p>
+            <p className="text-sm opacity-70">Up next: {nextSectionName}</p>
+          </div>
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
@@ -268,20 +271,24 @@ function DoneScreen({
 
   return (
     <>
-      <RunnerScaffold
-        eyebrow="Workout complete"
-        title="Nice work!"
-        subtext="Returning to Diary…"
-        primary={
-          <button
-            type="button"
-            onClick={onExit}
-            className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
-          >
-            Finish
-          </button>
-        }
-      />
+      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
+        <RunnerScaffold
+          title={"\u00A0"}
+          primary={
+            <button
+              type="button"
+              onClick={onExit}
+              className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+            >
+              Exit
+            </button>
+          }
+        >
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="text-2xl font-bold">Workout complete</p>
+          </div>
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
