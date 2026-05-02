@@ -270,17 +270,21 @@ export function TimeSectionRunner({
     titleText = sectionTitle;
   }
 
+  const isIdle = t.phase === "idle";
+
   return (
     <>
-      <RunnerScaffold
-        eyebrow={eyebrow}
-        title={titleText}
-        subtext={subtext}
-        primary={primary}
-        primaryHint={primaryHint}
-      >
-        {content}
-      </RunnerScaffold>
+      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}>
+        <RunnerScaffold
+          eyebrow={eyebrow}
+          title={titleText}
+          subtext={subtext}
+          primary={primary}
+          primaryHint={primaryHint}
+        >
+          {content}
+        </RunnerScaffold>
+      </div>
       {sheet}
     </>
   );
