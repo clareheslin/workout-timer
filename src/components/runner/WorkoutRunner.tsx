@@ -224,7 +224,7 @@ function BetweenSectionsScreen({
 
   return (
     <>
-      <div className="bg-white">
+      <div className="flex min-h-full flex-1 flex-col bg-white text-black">
         <RunnerScaffold
           title={"\u00A0"}
           primary={
