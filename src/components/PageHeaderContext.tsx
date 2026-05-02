@@ -75,9 +75,13 @@ export function usePageHeader(
   useEffect(() => {
     if (!setState) return;
     setState(latestRef.current);
+  }, [setState, title, onBack, resolvedTone, headerRight]);
+
+  useEffect(() => {
+    if (!setState) return;
     return () => {
       setState({ title: "", onBack: undefined, tone: "default", headerRight: undefined });
     };
-  }, [setState, title, onBack, resolvedTone]);
+  }, [setState]);
 }
 
