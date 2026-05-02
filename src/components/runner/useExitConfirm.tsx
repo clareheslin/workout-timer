@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,14 +37,21 @@ interface ExitConfirm {
 export function useExitConfirm(guarded: boolean, opts: Options): ExitConfirm {
   const [open, setOpen] = useState(false);
 
+  // Keep latest opts in a ref so handleBack identity stays stable across
+  // renders (callers usually pass a fresh object literal each render).
+  const optsRef = useRef(opts);
+  useEffect(() => {
+    optsRef.current = opts;
+  }, [opts]);
+
   const handleBack = useCallback(() => {
     if (guarded) {
-      opts.onOpen?.();
+      optsRef.current.onOpen?.();
       setOpen(true);
     } else {
-      opts.onConfirm();
+      optsRef.current.onConfirm();
     }
-  }, [guarded, opts]);
+  }, [guarded]);
 
   const sheet = (
     <Dialog open={open} onOpenChange={setOpen}>

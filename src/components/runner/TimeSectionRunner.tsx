@@ -217,7 +217,7 @@ export function TimeSectionRunner({
     titleText = sectionTitle;
     const upNextText = t.nextItem
       ? `Up next: ${t.nextItem.name} · ${formatDuration(t.nextItem.durationSeconds)}`
-      : "Section complete";
+      : "Up next: Section complete";
     const exerciseCount = section.items.length;
     const currentItemIdx = t.currentInterval.itemIndex ?? 0;
     const exerciseNum = Math.min(exerciseCount, currentItemIdx + 1);
@@ -270,7 +270,16 @@ export function TimeSectionRunner({
       );
     }
   } else {
+    // section-complete or done — brief bridge screen before we hand off to
+    // the parent runner (it transitions ~3s after onComplete fires).
+    eyebrow = "Section complete";
     titleText = sectionTitle;
+    subtext = "Loading next…";
+    content = (
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <p className="text-3xl font-bold">Nice work</p>
+      </div>
+    );
   }
 
   const isIdle = t.phase === "idle";
