@@ -43,7 +43,6 @@ export function RepSectionRunner({
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
-  const [finalDuration, setFinalDuration] = useState<number | null>(null);
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
@@ -88,11 +87,11 @@ export function RepSectionRunner({
     (durationSeconds: number) => {
       if (completedRef.current) return;
       completedRef.current = true;
-      setFinalDuration(Math.max(0, Math.floor(durationSeconds)));
-      setPhase("done");
+      const duration = Math.max(0, Math.floor(durationSeconds));
       audio.playSectionEndBeep();
+      onComplete(buildLog(duration));
     },
-    [audio],
+    [audio, onComplete, buildLog],
   );
 
   useEffect(() => {
@@ -137,7 +136,6 @@ export function RepSectionRunner({
   const handleStart = () => {
     audio.unlock();
     completedRef.current = false;
-    setFinalDuration(null);
     if (isAmrap) setRemaining(timeCap);
     else setElapsed(0);
     setPhase("running");
@@ -153,26 +151,6 @@ export function RepSectionRunner({
     const duration = isAmrap ? timeCap - remainingRef.current : elapsedRef.current;
     finalize(duration);
   };
-
-  const handleContinue = useCallback(() => {
-    if (finalDuration === null) return;
-    onComplete(buildLog(finalDuration));
-  }, [finalDuration, onComplete, buildLog]);
-
-  const handleContinueRef = useRef(handleContinue);
-  useEffect(() => {
-    handleContinueRef.current = handleContinue;
-  }, [handleContinue]);
-
-  // AMRAP auto-transitions 3s after the timer hits 0 / finalize is called.
-  useEffect(() => {
-    if (!isAmrap) return;
-    if (phase !== "done") return;
-    const handle = window.setTimeout(() => {
-      handleContinueRef.current();
-    }, 3000);
-    return () => window.clearTimeout(handle);
-  }, [isAmrap, phase]);
 
   // Back chevron is ALWAYS guarded inside the runner — confirms before exiting.
   const { handleBack, sheet } = useExitConfirm(true, {
@@ -214,7 +192,6 @@ export function RepSectionRunner({
   usePageHeader(workoutName, headerOpts);
 
   const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
-  const doneTimerLabel = formatDuration(finalDuration ?? 0);
   const sectionTitle = section.name || `Section ${sectionIndex + 1}`;
 
   // Build screen content based on phase, but keep elements at consistent Y.
@@ -243,18 +220,6 @@ export function RepSectionRunner({
         className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
       >
         Start Section
-      </button>
-    );
-  } else if (phase === "done") {
-    eyebrow = isAmrap ? "Time" : "Your time";
-    subtext = doneTimerLabel;
-    primary = (
-      <button
-        type="button"
-        onClick={handleContinue}
-        className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
-      >
-        Continue
       </button>
     );
   } else {
