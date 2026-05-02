@@ -1,21 +1,57 @@
-I’ll implement the approved timer fix with the final-interval behavior scoped to time-based CIRCUIT/SETS sections.
+## Apply brand palette
 
-Plan:
+### 1. `src/styles.css` — repoint all tokens
 
-1. Update `useWorkoutTimer` to accept an optional options object, e.g. `holdOnFinalInterval`, defaulting to `false`.
+Replace the `:root` and `.dark` blocks (and the runner-tone block) with values mapped to the brand palette. All values in `oklch()` (hex in trailing comments).
 
-2. Fix `pause()` so it first captures the current wall-clock remaining time and only pauses when that computed value is still above zero. This ensures tapping Pause during the final interval freezes the actual remaining value and does not route through any skip/end behavior.
+| Token | Hex | Brand |
+|---|---|---|
+| `--background` | `#FFFFFF` | White |
+| `--foreground` | `#272727` | Dark Grey |
+| `--card` / `--popover` / `--muted` | `#F6F6E9` | Light Yellow |
+| `--card-foreground` / `--popover-foreground` | `#272727` | Dark Grey |
+| `--primary` | `#1F5014` | Dark Green |
+| `--primary-foreground` | `#FFFFFF` | White |
+| `--secondary` | `#CBDDD1` | Light Green |
+| `--secondary-foreground` | `#1F5014` | Dark Green |
+| `--muted-foreground` | `#272727` | Dark Grey |
+| `--accent` | `#CBDDD1` | Light Green |
+| `--accent-foreground` | `#1F5014` | Dark Green |
+| `--destructive` | `#7E2A1F` | Muted Red (kept) |
+| `--destructive-foreground` | `#FFFFFF` | White |
+| `--border` / `--input` | `#A9A9A9` | Grey |
+| `--ring` | `#43AC6D` | FEM Green |
+| `--chart-1` | `#1F5014` | Dark Green |
+| `--chart-2` | `#43AC6D` | FEM Green |
+| `--chart-3` | `#7D9B76` | Grey Green |
+| `--chart-4` | `#CBDDD1` | Light Green |
+| `--chart-5` | `#A9A9A9` | Grey |
+| Sidebar tokens | mirror corresponding tokens | — |
+| `--exercise` | `#43AC6D` | FEM Green |
+| `--exercise-foreground` | `#FFFFFF` | White |
+| `--rest` | `#F6F6E9` | Light Yellow |
+| `--rest-foreground` | `#272727` | Dark Grey |
+| `--paused` | `#F6F6E9` | Light Yellow |
+| `--paused-foreground` | `#272727` | Dark Grey |
 
-3. Add final-interval hold behavior only when `holdOnFinalInterval` is enabled:
-   - If the current interval naturally reaches zero and there is no next interval, keep the timer on the current interval at `timeRemaining = 0`.
-   - Set the phase to `paused` so the UI can wait for user input.
-   - Do not auto-complete the section/workout at that moment.
+Light and dark theme blocks remain identical.
 
-4. Update `TimeSectionRunner.tsx` to pass `holdOnFinalInterval: true` because this component is used for CIRCUIT/SETS sections only.
+### 2. Runner files — replace literal black/white with tokens
 
-5. Keep the primary action button routing strict:
-   - `running` -> label `Pause`, call `t.pause`
-   - `paused` with `timeRemaining > 0` -> label `Resume`, call `t.resume`
-   - final interval with `timeRemaining === 0` and `t.nextItem === null` -> label `Finish`, call `t.skipInterval`
+In:
+- `src/components/runner/WorkoutPreview.tsx`
+- `src/components/runner/WorkoutRunner.tsx`
+- `src/components/runner/RepSectionRunner.tsx`
+- `src/components/runner/TimeSectionRunner.tsx`
 
-6. Leave STOPWATCH and TIME CAP flows untouched. They use `RepSectionRunner.tsx`, not `useWorkoutTimer`, so their natural completion behavior will not change.
+Swap:
+- `bg-black` → `bg-foreground`
+- `text-white` (on those buttons) → `text-background`
+- `bg-white` → `bg-background`
+- `text-black` → `text-foreground`
+- `divide-black/15` → `divide-border`
+- `border-black/15` → `border-border`
+
+### Out of scope
+- Shadcn dialog/sheet scrim overlays (`bg-black/50` etc.) stay as-is.
+- No layout, copy, or behaviour changes.
