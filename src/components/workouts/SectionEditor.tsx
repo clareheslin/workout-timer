@@ -69,6 +69,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
   // Mode is derived from type: "circuit" type => circuit mode, "sets" type => sets mode.
   const mode: SectionMode = type === "sets" ? "sets" : "circuit";
   const [timeCap, setTimeCap] = useState<number>(initial.timeCap ?? DEFAULT_AMRAP_CAP);
+  const [targetRounds, setTargetRounds] = useState<number>(initial.targetRounds ?? 1);
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
