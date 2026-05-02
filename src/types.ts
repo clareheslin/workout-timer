@@ -22,7 +22,7 @@ export interface SectionItem {
 export interface RepExercise {
   id: string;
   name: string;
-  reps: number;
+  reps: number | undefined;
 }
 
 /** How rounds are ordered within a section.
