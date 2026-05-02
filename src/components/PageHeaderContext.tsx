@@ -82,7 +82,7 @@ export function usePageHeader(
   useEffect(() => {
     if (!setState) return;
     setState(latestRef.current);
-  }, [setState, title, onBack, resolvedTone, headerRight]);
+  }, [setState, title, onBack, resolvedTone, onBackOrOptions]);
 
   useEffect(() => {
     if (!setState) return;
