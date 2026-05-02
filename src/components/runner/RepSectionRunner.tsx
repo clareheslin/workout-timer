@@ -24,7 +24,6 @@ interface Props {
 
 type Phase = "idle" | "running" | "paused" | "done";
 
-
 /** Runs a single forTime or amrap section. The exercise list is static.
  *  Supports pause/resume, skip (jump to end), and end-section (same as skip). */
 export function RepSectionRunner({
@@ -170,10 +169,10 @@ export function RepSectionRunner({
     if (!isAmrap) return;
     if (phase !== "done") return;
     const handle = window.setTimeout(() => {
-      handleContinueRef.current();
+      handleContinue();
     }, 3000);
     return () => window.clearTimeout(handle);
-  }, [isAmrap, phase]);
+  }, [isAmrap, phase, handleContinue]);
 
   // Back chevron is ALWAYS guarded inside the runner — confirms before exiting.
   const { handleBack, sheet } = useExitConfirm(true, {
@@ -187,8 +186,7 @@ export function RepSectionRunner({
     },
   });
 
-  const tone: PageHeaderTone =
-    phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
+  const tone: PageHeaderTone = phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
 
   const headerOpts = useMemo(
     () => ({
@@ -242,7 +240,7 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
       >
         Start Section
       </button>
@@ -254,7 +252,7 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleContinue}
-        className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+        className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
       >
         Continue
       </button>
@@ -266,7 +264,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           {isAmrap ? "Pause" : "Stop"}
         </button>
@@ -276,19 +274,14 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
         >
           Resume
         </button>
       );
     } else {
       primary = (
-        <HoldToExitButton
-          onTap={handlePauseResume}
-          onHoldComplete={handleEnd}
-          label="Resume / Finish"
-          hint=""
-        />
+        <HoldToExitButton onTap={handlePauseResume} onHoldComplete={handleEnd} label="Resume / Finish" hint="" />
       );
       primaryHint = "Tap to resume · Hold to finish section";
     }
@@ -298,7 +291,7 @@ export function RepSectionRunner({
     <ul
       className={
         idleStyle
-          ? "flex flex-col divide-y divide-border border-y border-border"
+          ? "flex flex-col divide-y divide-black/15 border-y border-black/15"
           : "flex flex-col [&>li+li]:border-t [&>li+li]:border-current/20 border-y border-current/20"
       }
     >
@@ -306,14 +299,13 @@ export function RepSectionRunner({
         <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
       ) : (
         repExercises.map((ex) => (
-          <li
-            key={ex.id}
-            className="flex items-start justify-between gap-3 px-1 py-3"
-          >
+          <li key={ex.id} className="flex items-start justify-between gap-3 px-1 py-3">
             <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
               {ex.name}
             </span>
-            <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>×{ex.reps}</span>
+            <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
+              ×{ex.reps}
+            </span>
           </li>
         ))
       )}
@@ -322,7 +314,9 @@ export function RepSectionRunner({
 
   return (
     <>
-      <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-background text-foreground" : "flex min-h-full flex-1 flex-col"}>
+      <div
+        className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
+      >
         <RunnerScaffold
           eyebrow={isActive ? undefined : eyebrow}
           title={sectionTitle}
@@ -330,15 +324,11 @@ export function RepSectionRunner({
           primary={primary}
           primaryHint={primaryHint}
         >
-          {isIdle && section.notes && (
-            <CoachNotes notes={section.notes} label="Section notes" />
-          )}
+          {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActive ? (
             <div className="flex flex-1 flex-col gap-4 min-h-0">
-              <ScrollArea className="flex-1 min-h-0">
-                {renderExerciseList(false)}
-              </ScrollArea>
+              <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
               <div className="flex flex-col items-center gap-2 shrink-0">
                 {!isAmrap && (
                   <p className="text-sm opacity-80">
