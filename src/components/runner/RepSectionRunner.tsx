@@ -7,8 +7,9 @@ import { HoldToExitButton } from "./HoldToExitButton";
 import { MuteButton } from "./MuteButton";
 import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
-import { usePageHeader } from "@/components/PageHeaderContext";
+import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
   section: Section;
