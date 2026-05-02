@@ -153,6 +153,7 @@ export function TimeSectionRunner({
 
   if (t.phase === "idle") {
     eyebrow = "Section Preview";
+    titleText = sectionTitle;
     const exerciseCount = section.items.length;
     const totalSecs = sectionTotalSeconds(section);
     subtext =
