@@ -75,8 +75,8 @@ export function SectionItemRow({ item, onChange, onDelete }: Props) {
             onChange={(name) => onChange({ name })}
           />
 
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-xs text-muted-foreground">Exercise</span>
+          <div className="flex flex-nowrap items-center gap-2 text-sm">
+            <span className="text-xs text-muted-foreground">Work</span>
             {editing === "exercise" ? (
               <input
                 type="number"
@@ -143,7 +143,7 @@ export function SectionItemRow({ item, onChange, onDelete }: Props) {
               </button>
             )}
 
-            <span className="ml-2 text-xs text-muted-foreground">Rounds</span>
+            
             {editing === "rounds" ? (
               <input
                 type="number"

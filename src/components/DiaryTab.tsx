@@ -241,7 +241,7 @@ function EmptyState() {
 
 export function DiaryTab() {
   const { logs, deleteLog, setLogs } = useWorkoutDiary();
-  usePageHeader("Workout Log");
+  usePageHeader("Diary");
 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

@@ -28,7 +28,7 @@ interface Props {
   onDone: (section: Section) => void;
 }
 
-const DEFAULT_AMRAP_CAP = 600; // 10:00
+const DEFAULT_AMRAP_CAP = 300; // 5:00
 
 function makeNewItem(itemIndex: number): SectionItem {
   return {
