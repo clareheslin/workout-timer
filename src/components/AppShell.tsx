@@ -181,13 +181,13 @@ export function AppShell() {
                 onClick={() => setTab("quickstart")}
               />
               <TabButton
-                label="Builder"
+                label="Workouts"
                 icon={<Dumbbell className="h-5 w-5" />}
                 active={tab === "workouts"}
                 onClick={() => setTab("workouts")}
               />
               <TabButton
-                label="Log"
+                label="Diary"
                 icon={<BookOpen className="h-5 w-5" />}
                 active={tab === "diary"}
                 onClick={() => setTab("diary")}
