@@ -97,7 +97,8 @@ export function AppShell() {
         prev.title === s.title &&
         prev.onBack === s.onBack &&
         (prev.tone ?? "default") === (s.tone ?? "default") &&
-        prev.headerRight === s.headerRight
+        prev.headerRight === s.headerRight &&
+        prev.backIcon === s.backIcon
       ) {
         return prev;
       }
@@ -202,11 +203,12 @@ export function AppShell() {
 }
 
 function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" }) {
-  const { title, onBack, headerRight } = usePageHeaderState();
+  const { title, onBack, headerRight, backIcon } = usePageHeaderState();
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
   const isPaused = tone === "paused";
   const logo = isExercise ? femLogoWhite : femLogo;
+  const BackIcon = backIcon === "x" ? X : ChevronLeft;
   return (
     <header
       style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
@@ -225,7 +227,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
+          aria-label={backIcon === "x" ? "Exit" : "Back"}
           className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
             isExercise
               ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
@@ -236,7 +238,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <BackIcon className="h-5 w-5" />
         </button>
       )}
       {title && (
