@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { QuickStartShell } from "./QuickStartShell";
-import { TimerCircle } from "./TimerCircle";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
+import { useExitConfirm } from "@/components/runner/useExitConfirm";
+import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
+import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
   onBack: () => void;
 }
 
-type Phase = "idle" | "running" | "stopped";
+type Phase = "idle" | "running" | "paused";
 
 function format(ms: number): string {
   const total = Math.floor(ms / 1000);
@@ -51,13 +53,13 @@ export function StopwatchScreen({ onBack }: Props) {
     setPhase("running");
   };
 
-  const handleStop = () => {
+  const handlePause = () => {
     if (startRef.current !== null) {
       baseRef.current += performance.now() - startRef.current;
       startRef.current = null;
     }
     setElapsedMs(baseRef.current);
-    setPhase("stopped");
+    setPhase("paused");
   };
 
   const handleResume = () => {
@@ -72,55 +74,75 @@ export function StopwatchScreen({ onBack }: Props) {
     setPhase("idle");
   };
 
-  return (
-    <QuickStartShell
-      title="Stopwatch"
-      guarded={phase === "running"}
-      onBack={onBack}
-      tone={phase === "running" ? "exercise" : "default"}
-    >
-      <div className="flex flex-1 flex-col items-center justify-center gap-12">
-        <TimerCircle time={format(elapsedMs)} />
+  const exit = () => {
+    handleReset();
+    onBack();
+  };
 
-        <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
-          {phase === "idle" && (
-            <button
-              type="button"
-              onClick={handleStart}
-              className="rounded-full bg-foreground py-4 text-base font-semibold text-background"
-            >
-              Start
-            </button>
-          )}
-          {phase === "running" && (
-            <button
-              type="button"
-              onClick={handleStop}
-              className="rounded-full bg-foreground py-4 text-base font-semibold text-background"
-            >
-              Stop
-            </button>
-          )}
-          {phase === "stopped" && (
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleResume}
-                className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
-              >
-                Resume
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
-              >
-                Reset
-              </button>
-            </div>
-          )}
-        </div>
+  const { handleBack, sheet } = useExitConfirm(true, {
+    title: "Exit timer?",
+    description: "",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
+    onConfirm: exit,
+  });
+
+  // Stopwatch settings background = light yellow (--rest); active = exercise green; paused = rest.
+  const tone: PageHeaderTone =
+    phase === "running" ? "exercise" : "rest";
+
+  const headerOpts = useMemo(
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
+    [handleBack, tone],
+  );
+  usePageHeader("", headerOpts);
+
+  let primary: React.ReactNode = null;
+  if (phase === "idle") {
+    primary = (
+      <button
+        type="button"
+        onClick={handleStart}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+      >
+        Start
+      </button>
+    );
+  } else if (phase === "running") {
+    primary = (
+      <button
+        type="button"
+        onClick={handlePause}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+      >
+        Pause
+      </button>
+    );
+  } else {
+    primary = (
+      <HoldToExitButton
+        onTap={handleResume}
+        onHoldComplete={handleReset}
+        label="Resume / Reset"
+        hint="Tap to resume · Hold to reset"
+      />
+    );
+  }
+
+  const subtext = phase === "idle" ? "Settings" : undefined;
+
+  return (
+    <>
+      <div className="flex min-h-full flex-1 flex-col">
+        <RunnerScaffold title="Stopwatch" subtext={subtext} primary={primary}>
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+              {format(elapsedMs)}
+            </p>
+          </div>
+        </RunnerScaffold>
       </div>
-    </QuickStartShell>
+      {sheet}
+    </>
   );
 }
