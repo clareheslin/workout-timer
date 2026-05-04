@@ -240,7 +240,6 @@ export function AmrapScreen({ onBack }: Props) {
           title="AMRAP"
           subtext={subtext}
           primary={primary}
-          primaryHint={primaryHint}
         >
           {content}
         </RunnerScaffold>
