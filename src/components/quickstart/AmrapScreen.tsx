@@ -209,17 +209,12 @@ export function AmrapScreen({ onBack }: Props) {
       );
     } else if (phase === "paused") {
       primary = (
-        <button
-          type="button"
-          onClick={handleResume}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            handleReset();
-          }}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
-        >
-          Resume / Reset
-        </button>
+        <HoldToExitButton
+          onTap={handleResume}
+          onHoldComplete={handleReset}
+          label="Resume / Reset"
+          hint="Tap to resume · Hold to reset"
+        />
       );
     } else if (phase === "done") {
       primary = (
