@@ -229,7 +229,7 @@ export function AmrapScreen({ onBack }: Props) {
     }
   }
 
-  const primaryHint = phase === "paused" ? "Tap to resume · Hold to reset" : undefined;
+  // HoldToExitButton renders its own hint; no extra primaryHint needed.
 
   const bgClass = phase === "idle" ? "bg-background text-foreground" : "";
 
