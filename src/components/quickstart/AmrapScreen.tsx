@@ -7,6 +7,7 @@ import { useWallClockCountdown } from "@/hooks/useWallClockCountdown";
 import { formatMMSS } from "./time";
 import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
 import { useExitConfirm } from "@/components/runner/useExitConfirm";
+import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
