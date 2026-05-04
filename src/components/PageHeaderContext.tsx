@@ -5,8 +5,10 @@ export type PageHeaderTone = "default" | "exercise" | "rest" | "paused";
 export interface PageHeaderState {
   /** Right-of-logo title text shown in the AppShell header. */
   title: string;
-  /** Optional back action — when present, a chevron-left appears before the title. */
+  /** Optional back action — when present, a back icon appears before the title. */
   onBack?: () => void;
+  /** Icon used for the back action — defaults to a chevron-left. */
+  backIcon?: "chevron" | "x";
   /** Background tone for the page (header + content area). Default = neutral. */
   tone?: PageHeaderTone;
   /** Optional custom content rendered in the header's right slot (e.g. mute button). */
