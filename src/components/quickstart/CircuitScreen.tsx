@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { QuickStartShell } from "./QuickStartShell";
-import { TimerCircle } from "./TimerCircle";
 import { NumberInput, SecondsInput } from "./Inputs";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { useQuickStartSettings } from "@/hooks/useQuickStartSettings";
 import { useWallClockCountdown } from "@/hooks/useWallClockCountdown";
 import { formatMMSS } from "./time";
+import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
+import { useExitConfirm } from "@/components/runner/useExitConfirm";
+import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
+import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
   onBack: () => void;
@@ -18,8 +20,10 @@ const PREP_SECONDS = 10;
 
 interface Step {
   kind: "work" | "rest";
-  exerciseIndex: number; // 1-based
+  exerciseIndex: number;
   durationSeconds: number;
+  /** 1-based round number this step belongs to. */
+  round: number;
 }
 
 function buildSchedule(
@@ -32,20 +36,16 @@ function buildSchedule(
   const steps: Step[] = [];
   for (let r = 1; r <= rounds; r++) {
     for (let e = 1; e <= exerciseCount; e++) {
-      steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds });
+      steps.push({ kind: "work", exerciseIndex: e, durationSeconds: workSeconds, round: r });
       if (e < exerciseCount && restSeconds > 0) {
-        steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds });
+        steps.push({ kind: "rest", exerciseIndex: e, durationSeconds: restSeconds, round: r });
       }
     }
     if (r < rounds && roundRestSeconds > 0) {
-      steps.push({ kind: "rest", exerciseIndex: 0, durationSeconds: roundRestSeconds });
+      steps.push({ kind: "rest", exerciseIndex: 0, durationSeconds: roundRestSeconds, round: r });
     }
   }
   return steps;
-}
-
-function stepLabel(step: Step): string {
-  return step.kind === "rest" ? "Rest" : `Exercise ${step.exerciseIndex}`;
 }
 
 export function CircuitScreen({ onBack }: Props) {
@@ -68,7 +68,6 @@ export function CircuitScreen({ onBack }: Props) {
 
   const lastBeepRef = useRef<string | null>(null);
   const midpointFiredRef = useRef(false);
-  // Wall-clock anchors for the current step.
   const anchorAtRef = useRef<number>(0);
   const anchorRemainingRef = useRef<number>(0);
   const tickRef = useRef<number | null>(null);
@@ -89,7 +88,6 @@ export function CircuitScreen({ onBack }: Props) {
 
   useWakeLock(phase === "running" || phase === "prep");
 
-  // Hold a real media session while a timer is active.
   useEffect(() => {
     if (phase === "prep" || phase === "running" || phase === "paused") {
       audio.startSession();
@@ -101,7 +99,6 @@ export function CircuitScreen({ onBack }: Props) {
     };
   }, [phase, audio]);
 
-  /** Advance through any fully-elapsed steps using wall-clock truth. */
   const recomputeRunning = useCallback(() => {
     if (phaseRef.current !== "running") return;
     if (anchorAtRef.current === 0) return;
@@ -138,7 +135,6 @@ export function CircuitScreen({ onBack }: Props) {
         continue;
       }
 
-      // End of circuit.
       audio.playSectionEndBeep();
       anchorAtRef.current = 0;
       anchorRemainingRef.current = 0;
@@ -150,7 +146,6 @@ export function CircuitScreen({ onBack }: Props) {
     }
   }, [audio]);
 
-  // Tick loop while running — pure re-render trigger.
   useEffect(() => {
     if (phase !== "running") {
       if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -164,7 +159,6 @@ export function CircuitScreen({ onBack }: Props) {
     };
   }, [phase, recomputeRunning]);
 
-  // Snap on tab return.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const handler = () => {
@@ -176,7 +170,6 @@ export function CircuitScreen({ onBack }: Props) {
     return () => document.removeEventListener("visibilitychange", handler);
   }, [phase, recomputeRunning]);
 
-  // Countdown beeps for prep.
   useEffect(() => {
     if (phase !== "prep") return;
     if (prepRemaining > 0 && prepRemaining <= 3) {
@@ -188,7 +181,6 @@ export function CircuitScreen({ onBack }: Props) {
     }
   }, [phase, prepRemaining, audio]);
 
-  // Countdown beeps for running interval.
   useEffect(() => {
     if (phase !== "running") {
       if (phase !== "prep") lastBeepRef.current = null;
@@ -203,7 +195,6 @@ export function CircuitScreen({ onBack }: Props) {
     }
   }, [remaining, phase, stepIdx, audio]);
 
-  // Midpoint click for work intervals only.
   useEffect(() => {
     if (phase !== "running") return;
     const cur = schedule[stepIdx];
@@ -277,16 +268,6 @@ export function CircuitScreen({ onBack }: Props) {
     }
   };
 
-  const handleSkipPrep = () => {
-    audio.unlock();
-    audio.playTransitionBeep();
-    lastBeepRef.current = null;
-    prep.stop();
-    setPrepRemaining(0);
-    setPhase("running");
-    startStep(0);
-  };
-
   const handleResume = () => {
     audio.unlock();
     anchorAtRef.current = Date.now();
@@ -309,184 +290,190 @@ export function CircuitScreen({ onBack }: Props) {
     startStep(0);
   };
 
+  const exit = () => {
+    prep.stop();
+    anchorAtRef.current = 0;
+    onBack();
+  };
+
+  const guarded = phase !== "done";
+  const { handleBack, sheet } = useExitConfirm(guarded, {
+    title: "Exit timer?",
+    description: "",
+    confirmLabel: "Exit",
+    cancelLabel: "Cancel",
+    onConfirm: exit,
+  });
+
   const current = schedule[stepIdx];
-  const upNext = schedule[stepIdx + 1];
   const isPrep = phase === "prep";
-  const isActive = phase === "prep" || phase === "running" || phase === "paused";
   const isRestStep =
     (phase === "running" || phase === "paused") && current?.kind === "rest";
-  const tone = isPrep || isRestStep ? "rest" : isActive ? "exercise" : "default";
+  const isWorkActive = phase === "running" && current?.kind === "work";
+  const tone: PageHeaderTone = isPrep
+    ? "rest"
+    : isWorkActive
+      ? "exercise"
+      : phase === "running" || phase === "paused" || phase === "done"
+        ? "rest"
+        : "default";
 
-  return (
-    <QuickStartShell
-      title="Circuit"
-      guarded={isActive}
-      onBack={onBack}
-      tone={tone}
-    >
-      {phase === "idle" ? (
-        <div className="flex flex-1 flex-col">
-          <div className="space-y-3">
-            <NumberInput
-              label="Exercises"
-              value={exerciseCount}
-              min={1}
-              max={10}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount: v, workSeconds, restSeconds, rounds, roundRestSeconds })
-              }
-            />
-            <SecondsInput
-              label="Work"
-              valueSeconds={workSeconds}
-              minSeconds={1}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds: v, restSeconds, rounds, roundRestSeconds })
-              }
-            />
-            <SecondsInput
-              label="Rest"
-              valueSeconds={restSeconds}
-              minSeconds={0}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds: v, rounds, roundRestSeconds })
-              }
-            />
-            <NumberInput
-              label="Rounds"
-              value={rounds}
-              min={1}
-              onChange={(v) => {
-                const nextRoundRest =
-                  v > 1 && rounds <= 1 ? restSeconds : roundRestSeconds;
-                updateCircuit({
-                  exerciseCount,
-                  workSeconds,
-                  restSeconds,
-                  rounds: v,
-                  roundRestSeconds: nextRoundRest,
-                });
-              }}
-            />
-            <SecondsInput
-              label="Round Rest"
-              valueSeconds={roundRestSeconds}
-              minSeconds={0}
-              disabled={rounds <= 1}
-              onChange={(v) =>
-                updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds: v })
-              }
-            />
-            {(() => {
-              const roundRestActive = rounds > 1;
-              const total =
-                exerciseCount > 0 && workSeconds > 0 && rounds > 0
-                  ? rounds * exerciseCount * workSeconds +
-                    rounds * Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds) +
-                    (roundRestActive
-                      ? Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
-                      : 0)
-                  : 0;
-              return (
-                <p className="pt-1 text-sm opacity-80">
-                  {total > 0 ? `Total Time: ${formatMMSS(total)}` : "Total Time: --:--"}
-                </p>
-              );
-            })()}
-          </div>
-          <div className="mt-auto pb-2">
-            <button
-              type="button"
-              onClick={handleStart}
-              className="w-full rounded-full bg-foreground py-4 text-base font-semibold text-background"
-            >
-              Start
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-10">
-          <TimerCircle
-            label={isPrep ? "Get Ready" : current ? stepLabel(current) : ""}
-            time={formatMMSS(isPrep ? prepRemaining : remaining)}
-            hint={
-              isPrep
-                ? `Up next: ${schedule[0] ? stepLabel(schedule[0]) : ""} · ${formatMMSS(schedule[0]?.durationSeconds ?? 0)}`
-                : upNext
-                  ? `Up next: ${stepLabel(upNext)} · ${formatMMSS(upNext.durationSeconds)}`
-                  : phase === "done"
-                    ? "Complete"
-                    : "Last interval"
+  const headerOpts = useMemo(
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
+    [handleBack, tone],
+  );
+  usePageHeader("", headerOpts);
+
+  const currentRound = current?.round ?? 1;
+
+  let content: React.ReactNode = null;
+  let primary: React.ReactNode = null;
+  let subtext: string | undefined;
+
+  if (phase === "idle") {
+    subtext = "Settings";
+    const roundRestActive = rounds > 1;
+    const total =
+      exerciseCount > 0 && workSeconds > 0 && rounds > 0
+        ? rounds * exerciseCount * workSeconds +
+          rounds * Math.max(0, exerciseCount - 1) * Math.max(0, restSeconds) +
+          (roundRestActive
+            ? Math.max(0, rounds - 1) * Math.max(0, roundRestSeconds)
+            : 0)
+        : 0;
+    content = (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+        <div className="w-full max-w-xs space-y-3">
+          <NumberInput
+            label="Exercises"
+            value={exerciseCount}
+            min={1}
+            max={10}
+            onChange={(v) =>
+              updateCircuit({ exerciseCount: v, workSeconds, restSeconds, rounds, roundRestSeconds })
             }
           />
-
-          <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
-            {phase === "prep" && (
-              <button
-                type="button"
-                onClick={handleSkipPrep}
-                className="rounded-full border border-current/40 bg-transparent py-4 text-base font-semibold"
-              >
-                Skip
-              </button>
-            )}
-            {phase === "running" && (
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handlePause}
-                  className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
-                >
-                  Pause
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
-                >
-                  Skip
-                </button>
-              </div>
-            )}
-            {phase === "paused" && (
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleResume}
-                  className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
-                >
-                  Resume
-                </button>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
-                >
-                  Reset
-                </button>
-              </div>
-            )}
-            {phase === "done" && (
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleRepeat}
-                  className="flex-1 rounded-full bg-foreground py-4 text-base font-semibold text-background"
-                >
-                  Repeat
-                </button>
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="flex-1 rounded-full border border-border bg-background py-4 text-base font-semibold text-foreground"
-                >
-                  Done
-                </button>
-              </div>
-            )}
-          </div>
+          <SecondsInput
+            label="Work"
+            valueSeconds={workSeconds}
+            minSeconds={1}
+            onChange={(v) =>
+              updateCircuit({ exerciseCount, workSeconds: v, restSeconds, rounds, roundRestSeconds })
+            }
+          />
+          <SecondsInput
+            label="Rest"
+            valueSeconds={restSeconds}
+            minSeconds={0}
+            onChange={(v) =>
+              updateCircuit({ exerciseCount, workSeconds, restSeconds: v, rounds, roundRestSeconds })
+            }
+          />
+          <NumberInput
+            label="Rounds"
+            value={rounds}
+            min={1}
+            onChange={(v) => {
+              const nextRoundRest =
+                v > 1 && rounds <= 1 ? restSeconds : roundRestSeconds;
+              updateCircuit({
+                exerciseCount,
+                workSeconds,
+                restSeconds,
+                rounds: v,
+                roundRestSeconds: nextRoundRest,
+              });
+            }}
+          />
+          <SecondsInput
+            label="Round Rest"
+            valueSeconds={roundRestSeconds}
+            minSeconds={0}
+            disabled={rounds <= 1}
+            onChange={(v) =>
+              updateCircuit({ exerciseCount, workSeconds, restSeconds, rounds, roundRestSeconds: v })
+            }
+          />
+          <p className="pt-1 text-center text-sm text-muted-foreground">
+            {total > 0 ? `Total Time: ${formatMMSS(total)}` : "Total Time: --:--"}
+          </p>
         </div>
-      )}
-    </QuickStartShell>
+      </div>
+    );
+    primary = (
+      <button
+        type="button"
+        onClick={handleStart}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+      >
+        Start
+      </button>
+    );
+  } else {
+    subtext = `Round ${currentRound} of ${rounds}`;
+    const intervalLabel = isPrep ? "Get Ready" : isRestStep ? "Rest" : "Work";
+    const showSkip = phase === "running";
+    content = (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+        <p className="text-sm font-medium uppercase tracking-wider opacity-80">
+          {intervalLabel}
+        </p>
+        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+          {formatMMSS(isPrep ? prepRemaining : remaining)}
+        </p>
+        {showSkip && (
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+          >
+            Skip Interval ›
+          </button>
+        )}
+      </div>
+    );
+    if (phase === "running" || phase === "prep") {
+      primary = (
+        <button
+          type="button"
+          onClick={handlePause}
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        >
+          Pause
+        </button>
+      );
+    } else if (phase === "paused") {
+      primary = (
+        <HoldToExitButton
+          onTap={handleResume}
+          onHoldComplete={handleReset}
+          label="Resume / Reset"
+          hint="Tap to resume · Hold to reset"
+        />
+      );
+    } else if (phase === "done") {
+      primary = (
+        <button
+          type="button"
+          onClick={handleRepeat}
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        >
+          Repeat
+        </button>
+      );
+    }
+  }
+
+  const bgClass = phase === "idle" ? "bg-background text-foreground" : "";
+
+  return (
+    <>
+      <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
+        <RunnerScaffold title="Circuit" subtext={subtext} primary={primary}>
+          {content}
+        </RunnerScaffold>
+      </div>
+      {sheet}
+    </>
   );
 }
