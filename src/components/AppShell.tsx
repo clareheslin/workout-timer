@@ -97,7 +97,8 @@ export function AppShell() {
         prev.title === s.title &&
         prev.onBack === s.onBack &&
         (prev.tone ?? "default") === (s.tone ?? "default") &&
-        prev.headerRight === s.headerRight
+        prev.headerRight === s.headerRight &&
+        prev.backIcon === s.backIcon
       ) {
         return prev;
       }
