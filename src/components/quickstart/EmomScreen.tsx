@@ -316,8 +316,8 @@ export function EmomScreen({ onBack }: Props) {
       </button>
     );
   } else {
-    // Zone 2 line 2: empty during countdown, "Work" during interval.
-    subtext = isPrep ? "\u00A0" : "Work";
+    // Zone 2 line 2: empty/reserved during all running states; Paused when paused.
+    subtext = phase === "paused" ? "Paused" : "\u00A0";
     // Skip interval is shown during prep + running, hidden (but reserved) when paused/done.
     const showSkip = phase === "running" || phase === "prep";
     const onSkip = isPrep
@@ -331,9 +331,9 @@ export function EmomScreen({ onBack }: Props) {
       : handleSkip;
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* Zone 3 top label — round counter, always reserved. */}
+        {/* Zone 3 top label — "Get ready…" during countdown, otherwise round counter. */}
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {`Round ${round} of ${rounds}`}
+          {isPrep ? "Get ready…" : `Round ${round} of ${rounds}`}
         </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
