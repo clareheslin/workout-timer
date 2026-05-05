@@ -83,7 +83,8 @@ export function StopwatchScreen({ onBack }: Props) {
     onBack();
   };
 
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const guarded = phase !== "idle";
+  const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
     description: "",
     confirmLabel: "Exit",
@@ -99,6 +100,8 @@ export function StopwatchScreen({ onBack }: Props) {
     [handleBack, tone],
   );
   usePageHeader("", headerOpts);
+
+  const subtext = phase === "paused" ? "Paused" : "\u00A0";
 
   let primary: React.ReactNode = null;
   if (phase === "idle") {
