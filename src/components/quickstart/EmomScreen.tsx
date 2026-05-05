@@ -252,7 +252,7 @@ export function EmomScreen({ onBack }: Props) {
     onBack();
   };
 
-  const guarded = phase !== "done";
+  const guarded = phase !== "idle" && phase !== "done";
   const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
     description: "",
