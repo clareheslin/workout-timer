@@ -138,7 +138,7 @@ export function StopwatchScreen({ onBack }: Props) {
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col">
-        <RunnerScaffold title="Stopwatch" subtext={"\u00A0"} primary={primary}>
+        <RunnerScaffold title="Stopwatch" subtext={subtext} primary={primary}>
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
             {/* Reserved top-of-zone-3 label slot. */}
             <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
