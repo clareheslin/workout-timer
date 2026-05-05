@@ -122,11 +122,10 @@ export function AmrapScreen({ onBack }: Props) {
     wc.resume();
   };
 
+  // Hold-to-reset → restart from initial countdown (do not exit).
   const handleReset = () => {
     wc.stop();
-    setPhase("idle");
-    setRemaining(duration);
-    setPrepRemaining(PREP_SECONDS);
+    handleStart();
   };
 
   const handleRepeat = () => {
@@ -141,7 +140,6 @@ export function AmrapScreen({ onBack }: Props) {
     onBack();
   };
 
-  // Done state: no confirmation; idle/active states: confirm.
   const guarded = phase !== "done";
   const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
@@ -162,7 +160,8 @@ export function AmrapScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  const subtext = phase === "idle" ? "Settings" : "Time remaining";
+  // Zone 2 line 2: "Settings" on idle; nbsp otherwise (AMRAP runner).
+  const subtext = phase === "idle" ? "Settings" : "\u00A0";
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
@@ -191,7 +190,11 @@ export function AmrapScreen({ onBack }: Props) {
     );
   } else {
     content = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-6">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+        {/* Zone 3 top label — static "Time remaining" for AMRAP. */}
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          Time remaining
+        </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
@@ -228,8 +231,6 @@ export function AmrapScreen({ onBack }: Props) {
       );
     }
   }
-
-  // HoldToExitButton renders its own hint; no extra primaryHint needed.
 
   const bgClass = phase === "idle" ? "bg-background text-foreground" : "";
 

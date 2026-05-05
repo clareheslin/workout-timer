@@ -67,15 +67,19 @@ export function StopwatchScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  // Hold-to-reset → restart from the beginning (do not exit).
   const handleReset = () => {
+    baseRef.current = 0;
+    startRef.current = performance.now();
+    setElapsedMs(0);
+    setPhase("running");
+  };
+
+  const exit = () => {
     startRef.current = null;
     baseRef.current = 0;
     setElapsedMs(0);
     setPhase("idle");
-  };
-
-  const exit = () => {
-    handleReset();
     onBack();
   };
 
@@ -87,7 +91,6 @@ export function StopwatchScreen({ onBack }: Props) {
     onConfirm: exit,
   });
 
-  // Stopwatch settings background = light yellow (--rest); active = exercise green; paused = rest.
   const tone: PageHeaderTone =
     phase === "running" ? "exercise" : "rest";
 
@@ -129,13 +132,15 @@ export function StopwatchScreen({ onBack }: Props) {
     );
   }
 
-  const subtext = phase === "idle" ? "Settings" : undefined;
-
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col">
-        <RunnerScaffold title="Stopwatch" subtext={subtext} primary={primary}>
-          <div className="flex flex-1 flex-col items-center justify-center">
+        <RunnerScaffold title="Stopwatch" subtext={"\u00A0"} primary={primary}>
+          <div className="flex flex-1 flex-col items-center justify-center gap-4">
+            {/* Reserved top-of-zone-3 label slot. */}
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {"\u00A0"}
+            </p>
             <p className="text-7xl font-bold tabular-nums" aria-live="polite">
               {format(elapsedMs)}
             </p>

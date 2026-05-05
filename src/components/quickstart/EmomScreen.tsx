@@ -229,14 +229,12 @@ export function EmomScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  // Hold-to-reset → restart from initial countdown (do not exit).
   const handleReset = () => {
     prep.stop();
     sessionAnchorAtRef.current = 0;
     elapsedAtAnchorRef.current = 0;
-    setPhase("idle");
-    setRound(1);
-    setRemaining(interval);
-    setPrepRemaining(PREP_SECONDS);
+    handleStart();
   };
 
   const handleRepeat = () => {
@@ -277,7 +275,7 @@ export function EmomScreen({ onBack }: Props) {
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
-  let subtext: string | undefined;
+  let subtext: string;
 
   if (phase === "idle") {
     subtext = "Settings";
@@ -314,25 +312,40 @@ export function EmomScreen({ onBack }: Props) {
       </button>
     );
   } else {
-    subtext = `Round ${round} of ${rounds}`;
-    const showSkip = phase === "running";
+    // Zone 2 line 2: empty during countdown, "Work" during interval.
+    subtext = isPrep ? "\u00A0" : "Work";
+    // Skip interval is shown during prep + running, hidden (but reserved) when paused/done.
+    const showSkip = phase === "running" || phase === "prep";
+    const onSkip = isPrep
+      ? () => {
+          prep.stop();
+          audio.playTransitionBeep();
+          lastBeepRef.current = null;
+          setPrepRemaining(0);
+          startRunningFromZero();
+        }
+      : handleSkip;
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="text-sm font-medium uppercase tracking-wider opacity-80">
-          {isPrep ? "Get Ready" : "Work"}
+        {/* Zone 3 top label — round counter, always reserved. */}
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          {`Round ${round} of ${rounds}`}
         </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {showSkip && (
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-          >
-            Skip Interval ›
-          </button>
-        )}
+        {/* Reserved space for the skip button. */}
+        <div className="min-h-[2rem] flex items-center">
+          {showSkip && (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+            >
+              Skip Interval ›
+            </button>
+          )}
+        </div>
       </div>
     );
     if (phase === "running" || phase === "prep") {
