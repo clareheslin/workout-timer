@@ -274,14 +274,12 @@ export function CircuitScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  // Hold-to-reset → restart from initial countdown (do not exit).
   const handleReset = () => {
     prep.stop();
     anchorAtRef.current = 0;
     anchorRemainingRef.current = 0;
-    setPhase("idle");
-    setStepIdx(0);
-    setRemaining(0);
-    setPrepRemaining(PREP_SECONDS);
+    handleStart();
   };
 
   const handleRepeat = () => {
