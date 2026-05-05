@@ -229,14 +229,12 @@ export function EmomScreen({ onBack }: Props) {
     setPhase("running");
   };
 
+  // Hold-to-reset → restart from initial countdown (do not exit).
   const handleReset = () => {
     prep.stop();
     sessionAnchorAtRef.current = 0;
     elapsedAtAnchorRef.current = 0;
-    setPhase("idle");
-    setRound(1);
-    setRemaining(interval);
-    setPrepRemaining(PREP_SECONDS);
+    handleStart();
   };
 
   const handleRepeat = () => {
