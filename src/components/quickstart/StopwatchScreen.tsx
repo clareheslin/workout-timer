@@ -67,12 +67,12 @@ export function StopwatchScreen({ onBack }: Props) {
     setPhase("running");
   };
 
-  // Hold-to-reset → restart from the beginning (do not exit).
+  // Hold-to-reset → return to settings/idle (wait for user to tap Start).
   const handleReset = () => {
+    startRef.current = null;
     baseRef.current = 0;
-    startRef.current = performance.now();
     setElapsedMs(0);
-    setPhase("running");
+    setPhase("idle");
   };
 
   const exit = () => {
@@ -83,7 +83,8 @@ export function StopwatchScreen({ onBack }: Props) {
     onBack();
   };
 
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const guarded = phase !== "idle";
+  const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
     description: "",
     confirmLabel: "Exit",
@@ -99,6 +100,8 @@ export function StopwatchScreen({ onBack }: Props) {
     [handleBack, tone],
   );
   usePageHeader("", headerOpts);
+
+  const subtext = phase === "paused" ? "Paused" : "\u00A0";
 
   let primary: React.ReactNode = null;
   if (phase === "idle") {
@@ -135,7 +138,7 @@ export function StopwatchScreen({ onBack }: Props) {
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col">
-        <RunnerScaffold title="Stopwatch" subtext={"\u00A0"} primary={primary}>
+        <RunnerScaffold title="Stopwatch" subtext={subtext} primary={primary}>
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
             {/* Reserved top-of-zone-3 label slot. */}
             <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">

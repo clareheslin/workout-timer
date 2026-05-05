@@ -122,10 +122,13 @@ export function AmrapScreen({ onBack }: Props) {
     wc.resume();
   };
 
-  // Hold-to-reset → restart from initial countdown (do not exit).
+  // Hold-to-reset → return to settings/idle (wait for user to tap Start).
   const handleReset = () => {
     wc.stop();
-    handleStart();
+    setRemaining(duration);
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("idle");
   };
 
   const handleRepeat = () => {
@@ -140,7 +143,7 @@ export function AmrapScreen({ onBack }: Props) {
     onBack();
   };
 
-  const guarded = phase !== "done";
+  const guarded = phase !== "idle" && phase !== "done";
   const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
     description: "",
@@ -160,8 +163,9 @@ export function AmrapScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  // Zone 2 line 2: "Settings" on idle; nbsp otherwise (AMRAP runner).
-  const subtext = phase === "idle" ? "Settings" : "\u00A0";
+  // Zone 2 line 2: Settings on idle, Paused when paused, nbsp otherwise.
+  const subtext =
+    phase === "idle" ? "Settings" : phase === "paused" ? "Paused" : "\u00A0";
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
@@ -189,15 +193,35 @@ export function AmrapScreen({ onBack }: Props) {
       </button>
     );
   } else {
+    const onSkipPrep = () => {
+      wc.stop();
+      audio.playTransitionBeep();
+      lastBeepRef.current = null;
+      setPrepRemaining(0);
+      setPhase("running");
+      startRunning(duration);
+    };
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* Zone 3 top label — static "Time remaining" for AMRAP. */}
+        {/* Zone 3 top label — "Get ready…" during countdown, otherwise "Time remaining". */}
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          Time remaining
+          {isPrep ? "Get ready…" : "Time remaining"}
         </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
+        {/* Reserved space for skip button (only visible during prep). */}
+        <div className="min-h-[2rem] flex items-center">
+          {isPrep && (
+            <button
+              type="button"
+              onClick={onSkipPrep}
+              className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+            >
+              Skip Interval ›
+            </button>
+          )}
+        </div>
       </div>
     );
     if (phase === "running" || phase === "prep") {
