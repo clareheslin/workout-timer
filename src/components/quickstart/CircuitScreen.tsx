@@ -412,8 +412,14 @@ export function CircuitScreen({ onBack }: Props) {
       </button>
     );
   } else {
-    // Zone 2 line 2: empty during countdown, "Work"/"Rest" during interval.
-    subtext = isPrep ? "\u00A0" : isRestStep ? "Rest" : "Work";
+    // Zone 2 line 2: countdown=nbsp, paused=Paused, otherwise Work/Rest.
+    subtext = isPrep
+      ? "\u00A0"
+      : phase === "paused"
+        ? "Paused"
+        : isRestStep
+          ? "Rest"
+          : "Work";
     // Skip interval is shown during prep + running; reserved space when paused/done.
     const showSkip = phase === "running" || phase === "prep";
     const onSkip = isPrep
@@ -426,12 +432,30 @@ export function CircuitScreen({ onBack }: Props) {
           startStep(0);
         }
       : handleSkip;
+    const exerciseIdx =
+      current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount;
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* Zone 3 top label — round counter, always reserved. */}
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {`Round ${currentRound} of ${rounds}`}
-        </p>
+        {/* Zone 3 top label — two reserved lines. During countdown: "Get ready…" + nbsp. */}
+        {isPrep ? (
+          <>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              Get ready…
+            </p>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {"\u00A0"}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {`Round ${currentRound} of ${rounds}`}
+            </p>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {`Exercise ${exerciseIdx} of ${exerciseCount}`}
+            </p>
+          </>
+        )}
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
