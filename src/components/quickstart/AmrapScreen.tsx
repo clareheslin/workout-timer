@@ -143,7 +143,7 @@ export function AmrapScreen({ onBack }: Props) {
     onBack();
   };
 
-  const guarded = phase !== "done";
+  const guarded = phase !== "idle" && phase !== "done";
   const { handleBack, sheet } = useExitConfirm(guarded, {
     title: "Exit timer?",
     description: "",
@@ -163,8 +163,9 @@ export function AmrapScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  // Zone 2 line 2: "Settings" on idle; nbsp otherwise (AMRAP runner).
-  const subtext = phase === "idle" ? "Settings" : "\u00A0";
+  // Zone 2 line 2: Settings on idle, Paused when paused, nbsp otherwise.
+  const subtext =
+    phase === "idle" ? "Settings" : phase === "paused" ? "Paused" : "\u00A0";
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
