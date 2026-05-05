@@ -67,12 +67,12 @@ export function StopwatchScreen({ onBack }: Props) {
     setPhase("running");
   };
 
-  // Hold-to-reset → restart from the beginning (do not exit).
+  // Hold-to-reset → return to settings/idle (wait for user to tap Start).
   const handleReset = () => {
+    startRef.current = null;
     baseRef.current = 0;
-    startRef.current = performance.now();
     setElapsedMs(0);
-    setPhase("running");
+    setPhase("idle");
   };
 
   const exit = () => {
