@@ -122,10 +122,13 @@ export function AmrapScreen({ onBack }: Props) {
     wc.resume();
   };
 
-  // Hold-to-reset → restart from initial countdown (do not exit).
+  // Hold-to-reset → return to settings/idle (wait for user to tap Start).
   const handleReset = () => {
     wc.stop();
-    handleStart();
+    setRemaining(duration);
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("idle");
   };
 
   const handleRepeat = () => {
