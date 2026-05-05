@@ -274,12 +274,16 @@ export function CircuitScreen({ onBack }: Props) {
     setPhase("running");
   };
 
-  // Hold-to-reset → restart from initial countdown (do not exit).
+  // Hold-to-reset → return to settings/idle (wait for user to tap Start).
   const handleReset = () => {
     prep.stop();
     anchorAtRef.current = 0;
     anchorRemainingRef.current = 0;
-    handleStart();
+    setStepIdx(0);
+    setRemaining(schedule[0]?.durationSeconds ?? 0);
+    setPrepRemaining(PREP_SECONDS);
+    lastBeepRef.current = null;
+    setPhase("idle");
   };
 
   const handleRepeat = () => {
