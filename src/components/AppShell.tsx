@@ -129,7 +129,11 @@ export function AppShell() {
   const isRest = tone === "rest";
   const isPaused = tone === "paused";
   const isImmersive = isExercise || isRest || isPaused;
-  const hideNav = isImmersive || running !== null;
+  // Quick Start sub-screens (settings + runner) set backIcon "x" — keep zone 4
+  // anchored to the viewport bottom by hiding the tab nav for them too, so the
+  // primary button doesn't shift between settings and active states.
+  const isQuickStartSubScreen = headerState.backIcon === "x";
+  const hideNav = isImmersive || running !== null || isQuickStartSubScreen;
   const toneClass = isExercise
     ? "bg-exercise text-exercise-foreground"
     : isRest
