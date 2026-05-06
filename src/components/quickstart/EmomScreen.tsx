@@ -279,6 +279,7 @@ export function EmomScreen({ onBack }: Props) {
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
+  let primaryHint: string = "\u00A0";
   let subtext: string;
 
   if (phase === "idle") {
@@ -310,15 +311,14 @@ export function EmomScreen({ onBack }: Props) {
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start
       </button>
     );
   } else {
-    // Zone 2 line 2: empty/reserved during all running states; Paused when paused.
-    subtext = phase === "paused" ? "Paused" : "\u00A0";
-    // Skip interval is shown during prep + running, hidden (but reserved) when paused/done.
+    // Zone 2 line 2: only nbsp during running states (Paused moved to zone 3).
+    subtext = "\u00A0";
     const showSkip = phase === "running" || phase === "prep";
     const onSkip = isPrep
       ? () => {
@@ -329,16 +329,30 @@ export function EmomScreen({ onBack }: Props) {
           startRunningFromZero();
         }
       : handleSkip;
+    // Zone 3 top labels: line 1 always nbsp; line 2 holds the single content line.
+    const line1 = "\u00A0";
+    const line2 =
+      phase === "done"
+        ? "Complete"
+        : isPrep
+          ? "Get ready…"
+          : `Round ${round} of ${rounds}`;
+    const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* Zone 3 top label — "Get ready…" during countdown, otherwise round counter. */}
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {isPrep ? "Get ready…" : `Round ${round} of ${rounds}`}
+          {line1}
+        </p>
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          {line2}
         </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {/* Reserved space for the skip button. */}
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          {wrpLabel}
+        </p>
+        {/* Reserved space for the skip button (EMOM always reserves). */}
         <div className="min-h-[2rem] flex items-center">
           {showSkip && (
             <button
@@ -357,7 +371,7 @@ export function EmomScreen({ onBack }: Props) {
         <button
           type="button"
           onClick={handlePause}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Pause
         </button>
@@ -371,12 +385,13 @@ export function EmomScreen({ onBack }: Props) {
           hint="Tap to resume · Hold to reset"
         />
       );
+      primaryHint = "Tap to resume · Hold to reset";
     } else if (phase === "done") {
       primary = (
         <button
           type="button"
           onClick={handleRepeat}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Repeat
         </button>
@@ -389,7 +404,12 @@ export function EmomScreen({ onBack }: Props) {
   return (
     <>
       <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
-        <RunnerScaffold title="EMOM" subtext={subtext} primary={primary}>
+        <RunnerScaffold
+          title="EMOM"
+          subtext={subtext}
+          primary={primary}
+          primaryHint={primaryHint}
+        >
           {content}
         </RunnerScaffold>
       </div>
@@ -397,3 +417,4 @@ export function EmomScreen({ onBack }: Props) {
     </>
   );
 }
+

@@ -101,15 +101,17 @@ export function StopwatchScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  const subtext = phase === "paused" ? "Paused" : "\u00A0";
+  // Zone 2 line 2: Stopwatch never shows "Settings"; always nbsp.
+  const subtext = "\u00A0";
 
   let primary: React.ReactNode = null;
+  let primaryHint: string = "\u00A0";
   if (phase === "idle") {
     primary = (
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start
       </button>
@@ -119,7 +121,7 @@ export function StopwatchScreen({ onBack }: Props) {
       <button
         type="button"
         onClick={handlePause}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Pause
       </button>
@@ -133,19 +135,37 @@ export function StopwatchScreen({ onBack }: Props) {
         hint="Tap to resume · Hold to reset"
       />
     );
+    primaryHint = "Tap to resume · Hold to reset";
   }
+
+  // Zone 3 top labels: line 1 always nbsp; line 2 holds single content line.
+  const line1 = "\u00A0";
+  const line2 = phase === "idle" ? "\u00A0" : "\u00A0";
+  // (Stopwatch has no countdown/complete; Running/Paused show nbsp.)
+  // Work/Rest/Paused slot under timer:
+  const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
 
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col">
-        <RunnerScaffold title="Stopwatch" subtext={subtext} primary={primary}>
+        <RunnerScaffold
+          title="Stopwatch"
+          subtext={subtext}
+          primary={primary}
+          primaryHint={primaryHint}
+        >
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            {/* Reserved top-of-zone-3 label slot. */}
             <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {"\u00A0"}
+              {line1}
+            </p>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {line2}
             </p>
             <p className="text-7xl font-bold tabular-nums" aria-live="polite">
               {format(elapsedMs)}
+            </p>
+            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+              {wrpLabel}
             </p>
           </div>
         </RunnerScaffold>
@@ -154,3 +174,4 @@ export function StopwatchScreen({ onBack }: Props) {
     </>
   );
 }
+

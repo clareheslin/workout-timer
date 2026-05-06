@@ -163,12 +163,12 @@ export function AmrapScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  // Zone 2 line 2: Settings on idle, Paused when paused, nbsp otherwise.
-  const subtext =
-    phase === "idle" ? "Settings" : phase === "paused" ? "Paused" : "\u00A0";
+  // Zone 2 line 2: "Settings" only on idle, nbsp otherwise.
+  const subtext = phase === "idle" ? "Settings" : "\u00A0";
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
+  let primaryHint: string = "\u00A0";
 
   if (phase === "idle") {
     content = (
@@ -187,7 +187,7 @@ export function AmrapScreen({ onBack }: Props) {
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start
       </button>
@@ -201,27 +201,36 @@ export function AmrapScreen({ onBack }: Props) {
       setPhase("running");
       startRunning(duration);
     };
+    // Zone 3 top labels — line 1 always nbsp; line 2 holds the single content line.
+    const line1 = "\u00A0";
+    const line2 =
+      phase === "done" ? "Complete" : isPrep ? "Get ready…" : "Time remaining";
+    // Work/Rest/Paused slot — only "Paused" on AMRAP, nbsp otherwise.
+    const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* Zone 3 top label — "Get ready…" during countdown, otherwise "Time remaining". */}
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {isPrep ? "Get ready…" : "Time remaining"}
+          {line1}
+        </p>
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          {line2}
         </p>
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {/* Reserved space for skip button (only visible during prep). */}
-        <div className="min-h-[2rem] flex items-center">
-          {isPrep && (
-            <button
-              type="button"
-              onClick={onSkipPrep}
-              className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-            >
-              Skip Interval ›
-            </button>
-          )}
-        </div>
+        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
+          {wrpLabel}
+        </p>
+        {/* AMRAP: skip slot is NOT reserved when absent. */}
+        {isPrep && (
+          <button
+            type="button"
+            onClick={onSkipPrep}
+            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+          >
+            Skip Interval ›
+          </button>
+        )}
       </div>
     );
     if (phase === "running" || phase === "prep") {
@@ -229,7 +238,7 @@ export function AmrapScreen({ onBack }: Props) {
         <button
           type="button"
           onClick={handlePause}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Pause
         </button>
@@ -243,12 +252,13 @@ export function AmrapScreen({ onBack }: Props) {
           hint="Tap to resume · Hold to reset"
         />
       );
+      primaryHint = "Tap to resume · Hold to reset";
     } else if (phase === "done") {
       primary = (
         <button
           type="button"
           onClick={handleRepeat}
-          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Repeat
         </button>
@@ -265,6 +275,7 @@ export function AmrapScreen({ onBack }: Props) {
           title="AMRAP"
           subtext={subtext}
           primary={primary}
+          primaryHint={primaryHint}
         >
           {content}
         </RunnerScaffold>
@@ -273,3 +284,4 @@ export function AmrapScreen({ onBack }: Props) {
     </>
   );
 }
+
