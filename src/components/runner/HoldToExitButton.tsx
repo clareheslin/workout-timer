@@ -93,25 +93,22 @@ export function HoldToExitButton({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <button
-        type="button"
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerEnd}
-        onPointerLeave={handlePointerCancel}
-        onPointerCancel={handlePointerCancel}
-        style={{ touchAction: "none" }}
-        className="relative overflow-hidden rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background select-none"
-        aria-label={`${label}. Hold to finish.`}
-      >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 bg-muted-foreground/80 transition-[width] duration-75 ease-linear"
-          style={{ width: `${progress * 100}%` }}
-        />
-        <span className="relative z-10">{label}</span>
-      </button>
-      <p className="text-[11px] opacity-70">{hint}</p>
-    </div>
+    <button
+      type="button"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerEnd}
+      onPointerLeave={handlePointerCancel}
+      onPointerCancel={handlePointerCancel}
+      style={{ touchAction: "none" }}
+      className="relative overflow-hidden rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background select-none min-w-[200px]"
+      aria-label={`${label}. ${hint}`}
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 bg-muted-foreground/80 transition-[width] duration-75 ease-linear"
+        style={{ width: `${progress * 100}%` }}
+      />
+      <span className="relative z-10">{label}</span>
+    </button>
   );
 }
