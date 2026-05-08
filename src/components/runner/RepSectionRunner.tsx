@@ -173,6 +173,7 @@ export function RepSectionRunner({
     () => ({
       onBack: handleBack,
       tone,
+      backIcon: "x" as const,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
@@ -220,7 +221,7 @@ export function RepSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-black px-8 py-4 text-lg font-semibold text-white"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start Section
       </button>
@@ -232,7 +233,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           {isAmrap ? "Pause" : "Stop"}
         </button>
@@ -242,7 +243,7 @@ export function RepSectionRunner({
         <button
           type="button"
           onClick={handlePauseResume}
-          className="rounded-full bg-black px-8 py-3 text-base font-semibold text-white"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Resume
         </button>

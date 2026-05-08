@@ -119,6 +119,7 @@ export function TimeSectionRunner({
     () => ({
       onBack: handleBack,
       tone,
+      backIcon: "x" as const,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
@@ -200,7 +201,7 @@ export function TimeSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start Section
       </button>
@@ -251,7 +252,7 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.pause}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Pause
         </button>
@@ -261,7 +262,7 @@ export function TimeSectionRunner({
         <button
           type="button"
           onClick={t.resume}
-          className="rounded-full bg-foreground px-8 py-3 text-base font-semibold text-background"
+          className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
         >
           Resume
         </button>

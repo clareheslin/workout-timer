@@ -163,8 +163,9 @@ export function AmrapScreen({ onBack }: Props) {
   );
   usePageHeader("", headerOpts);
 
-  // Zone 2 line 2: "Settings" only on idle, nbsp otherwise.
-  const subtext = phase === "idle" ? "Settings" : "\u00A0";
+  // Zone 2: "Settings" eyebrow only on idle.
+  const eyebrow = phase === "idle" ? "Settings" : undefined;
+  const subtext = "\u00A0";
 
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
@@ -272,6 +273,7 @@ export function AmrapScreen({ onBack }: Props) {
     <>
       <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
         <RunnerScaffold
+          eyebrow={eyebrow}
           title="AMRAP"
           subtext={subtext}
           primary={primary}

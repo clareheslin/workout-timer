@@ -280,10 +280,11 @@ export function EmomScreen({ onBack }: Props) {
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
   let primaryHint: string = "\u00A0";
-  let subtext: string;
+  let subtext: string = "\u00A0";
+  let eyebrow: string | undefined = undefined;
 
   if (phase === "idle") {
-    subtext = "Settings";
+    eyebrow = "Settings";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
         <div className="w-full max-w-xs space-y-3">
@@ -405,6 +406,7 @@ export function EmomScreen({ onBack }: Props) {
     <>
       <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
         <RunnerScaffold
+          eyebrow={eyebrow}
           title="EMOM"
           subtext={subtext}
           primary={primary}

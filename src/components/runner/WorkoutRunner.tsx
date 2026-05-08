@@ -219,7 +219,7 @@ function BetweenSectionsScreen({
     cancelLabel: "Cancel",
     onConfirm: onExit,
   });
-  const headerOpts = useMemo(() => ({ onBack: handleBack }), [handleBack]);
+  const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
   usePageHeader(workoutName, headerOpts);
 
   return (
@@ -231,7 +231,7 @@ function BetweenSectionsScreen({
             <button
               type="button"
               onClick={onNext}
-              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
             >
               Preview
             </button>
@@ -266,7 +266,7 @@ function DoneScreen({
     cancelLabel: "Cancel",
     onConfirm: onExitWorkout,
   });
-  const headerOpts = useMemo(() => ({ onBack: handleBack }), [handleBack]);
+  const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
   usePageHeader(workoutName, headerOpts);
 
   return (
@@ -278,7 +278,7 @@ function DoneScreen({
             <button
               type="button"
               onClick={onExit}
-              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
             >
               Exit
             </button>
