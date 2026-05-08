@@ -201,7 +201,7 @@ export function TimeSectionRunner({
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
         Start Section
       </button>
