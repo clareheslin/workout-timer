@@ -54,8 +54,11 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
             <button
               type="button"
               onClick={onBegin}
-              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background"
+              className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
             >
+              Start Workout
+            </button>
+          }
               Start Workout
             </button>
           }
