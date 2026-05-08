@@ -273,6 +273,7 @@ export function AmrapScreen({ onBack }: Props) {
     <>
       <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
         <RunnerScaffold
+          eyebrow={eyebrow}
           title="AMRAP"
           subtext={subtext}
           primary={primary}
