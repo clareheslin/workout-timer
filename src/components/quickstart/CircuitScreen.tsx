@@ -518,6 +518,7 @@ export function CircuitScreen({ onBack }: Props) {
     <>
       <div className={`flex min-h-full flex-1 flex-col ${bgClass}`}>
         <RunnerScaffold
+          eyebrow={eyebrow}
           title="Circuit"
           subtext={subtext}
           primary={primary}
