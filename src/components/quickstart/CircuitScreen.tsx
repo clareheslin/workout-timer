@@ -331,10 +331,11 @@ export function CircuitScreen({ onBack }: Props) {
   let content: React.ReactNode = null;
   let primary: React.ReactNode = null;
   let primaryHint: string = "\u00A0";
-  let subtext: string | undefined;
+  let subtext: string = "\u00A0";
+  let eyebrow: string | undefined = undefined;
 
   if (phase === "idle") {
-    subtext = "Settings";
+    eyebrow = "Settings";
     const roundRestActive = rounds > 1;
     const total =
       exerciseCount > 0 && workSeconds > 0 && rounds > 0
