@@ -173,6 +173,7 @@ export function RepSectionRunner({
     () => ({
       onBack: handleBack,
       tone,
+      backIcon: "x" as const,
       headerRight: (
         <>
           <p className="text-xs opacity-70">
