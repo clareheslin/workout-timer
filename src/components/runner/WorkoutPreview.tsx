@@ -59,9 +59,6 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
               Start Workout
             </button>
           }
-              Start Workout
-            </button>
-          }
         >
           {workout.notes && (
             <CoachNotes notes={workout.notes} label="Workout notes" defaultOpen />
