@@ -34,7 +34,7 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
   });
 
   const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
-  usePageHeader(workout.name, headerOpts);
+  usePageHeader("", headerOpts);
 
   const sectionsCount = workout.sections.length;
   const totalSecs = workoutTotalSeconds(workout);
