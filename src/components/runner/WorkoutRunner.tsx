@@ -220,7 +220,7 @@ function BetweenSectionsScreen({
     onConfirm: onExit,
   });
   const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
-  usePageHeader(workoutName, headerOpts);
+  usePageHeader("", headerOpts);
 
   return (
     <>
@@ -267,7 +267,7 @@ function DoneScreen({
     onConfirm: onExitWorkout,
   });
   const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
-  usePageHeader(workoutName, headerOpts);
+  usePageHeader("", headerOpts);
 
   return (
     <>

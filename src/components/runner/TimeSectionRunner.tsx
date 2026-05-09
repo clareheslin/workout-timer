@@ -139,7 +139,7 @@ export function TimeSectionRunner({
     }),
     [handleBack, tone, sectionIndex, totalSections, audio, onSkipSection],
   );
-  usePageHeader(workoutName, headerOpts);
+  usePageHeader("", headerOpts);
 
   const handleStart = () => {
     audio.unlock();

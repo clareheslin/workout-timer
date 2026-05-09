@@ -193,7 +193,7 @@ export function RepSectionRunner({
     }),
     [handleBack, tone, sectionIndex, totalSections, audio, onSkipSection],
   );
-  usePageHeader(workoutName, headerOpts);
+  usePageHeader("", headerOpts);
 
   const liveTimerLabel = isAmrap ? formatDuration(remaining) : formatDuration(elapsed);
   const sectionTitle = section.name || `Section ${sectionIndex + 1}`;
