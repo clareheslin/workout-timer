@@ -103,8 +103,8 @@ export function TimeSectionRunner({
     onExitWorkout();
   };
 
-  // Back chevron is ALWAYS guarded inside the runner — confirms before exiting.
-  const { handleBack, sheet } = useExitConfirm(true, {
+  // Section preview has no progress yet, so exit directly; running/paused remains guarded.
+  const { handleBack, sheet } = useExitConfirm(t.phase !== "idle", {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
