@@ -25,7 +25,7 @@ const TYPE_LABEL: Record<string, string> = {
  *  workout-level coach notes. The back chevron always opens the standard
  *  Exit-workout confirmation dialog. */
 export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const { handleBack, sheet } = useExitConfirm(false, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
