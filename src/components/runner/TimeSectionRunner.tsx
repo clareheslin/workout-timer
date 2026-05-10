@@ -294,6 +294,7 @@ export function TimeSectionRunner({
         </RunnerScaffold>
       </div>
       {sheet}
+      {navSheet}
     </>
   );
 }
