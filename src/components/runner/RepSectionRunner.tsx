@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { useSectionNav } from "./SectionNavigator";
 import type { Section, WorkoutLogSection } from "@/types";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { formatDuration } from "@/lib/duration";
