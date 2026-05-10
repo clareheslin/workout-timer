@@ -328,6 +328,7 @@ export function RepSectionRunner({
         </RunnerScaffold>
       </div>
       {sheet}
+      {navSheet}
     </>
   );
 }
