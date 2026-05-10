@@ -19,7 +19,7 @@ interface Props {
   audio: UseWorkoutAudioResult;
   onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
-  onSkipSection: () => void;
+  onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
 type Phase = "idle" | "running" | "paused" | "done";
