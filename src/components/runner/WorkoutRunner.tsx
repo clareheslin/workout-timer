@@ -156,6 +156,9 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         workoutName={workout.name}
         currentSectionName={currentSection.name || `Section ${sectionIndex + 1}`}
         nextSectionName={next?.name ?? `Section ${sectionIndex + 2}`}
+        sectionIndex={sectionIndex}
+        totalSections={workout.sections.length}
+        onNavigateToSection={goToSection}
         onNext={handleNextSection}
         onExit={handleExitWorkout}
       />
@@ -176,7 +179,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         audio={audio}
         onComplete={handleSectionComplete}
         onExitWorkout={handleExitWorkout}
-        onSkipSection={handleSkipSection}
+        onNavigateToSection={goToSection}
       />
     );
   }
@@ -191,7 +194,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       audio={audio}
       onComplete={handleSectionComplete}
       onExitWorkout={handleExitWorkout}
-      onSkipSection={handleSkipSection}
+      onNavigateToSection={goToSection}
     />
   );
 }
