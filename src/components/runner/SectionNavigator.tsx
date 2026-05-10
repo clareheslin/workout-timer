@@ -28,29 +28,31 @@ export function SectionNavigator({
   const showNext = sectionIndex < totalSections - 1;
   return (
     <div className="flex items-center gap-1">
-      {showPrev && (
-        <button
-          type="button"
-          onClick={onPrev}
-          aria-label="Previous section"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full opacity-80 hover:opacity-100"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onPrev}
+        aria-label="Previous section"
+        aria-hidden={!showPrev}
+        tabIndex={showPrev ? 0 : -1}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full opacity-80 hover:opacity-100"
+        style={{ visibility: showPrev ? "visible" : "hidden" }}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
       <span className="text-xs opacity-70 whitespace-nowrap">
         Section {sectionIndex + 1} of {totalSections}
       </span>
-      {showNext && (
-        <button
-          type="button"
-          onClick={onNext}
-          aria-label="Next section"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full opacity-80 hover:opacity-100"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label="Next section"
+        aria-hidden={!showNext}
+        tabIndex={showNext ? 0 : -1}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full opacity-80 hover:opacity-100"
+        style={{ visibility: showNext ? "visible" : "hidden" }}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </div>
   );
 }
