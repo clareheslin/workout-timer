@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { ChevronRight } from "lucide-react";
+import { useSectionNav } from "./SectionNavigator";
 import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
