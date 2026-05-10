@@ -169,6 +169,19 @@ export function RepSectionRunner({
 
   const tone: PageHeaderTone = phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
 
+  const isActiveOrPaused = phase === "running" || phase === "paused";
+  const { node: navNode, sheet: navSheet } = useSectionNav({
+    sectionIndex,
+    totalSections,
+    guarded: isActiveOrPaused,
+    onNavigate: (target) => {
+      onNavigateToSection(target, { skipped: isActiveOrPaused });
+    },
+    onOpen: () => {
+      if (phase === "running") setPhase("paused");
+    },
+  });
+
   const headerOpts = useMemo(
     () => ({
       onBack: handleBack,
@@ -176,22 +189,12 @@ export function RepSectionRunner({
       backIcon: "x" as const,
       headerRight: (
         <>
-          <p className="text-xs opacity-70">
-            Section {sectionIndex + 1} of {totalSections}
-          </p>
-          <button
-            type="button"
-            onClick={onSkipSection}
-            aria-label="Skip section"
-            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+          {navNode}
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, tone, sectionIndex, totalSections, audio, onSkipSection],
+    [handleBack, tone, navNode, audio],
   );
   usePageHeader("", headerOpts);
 
