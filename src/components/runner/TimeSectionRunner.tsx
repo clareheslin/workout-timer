@@ -32,7 +32,7 @@ export function TimeSectionRunner({
   audio,
   onComplete,
   onExitWorkout,
-  onSkipSection,
+  onNavigateToSection,
 }: Props) {
   const subWorkout = useMemo<Workout>(
     () => ({
