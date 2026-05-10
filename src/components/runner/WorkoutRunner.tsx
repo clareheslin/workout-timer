@@ -9,6 +9,7 @@ import { WorkoutPreview } from "./WorkoutPreview";
 import { useExitConfirm } from "./useExitConfirm";
 import { RunnerScaffold } from "./RunnerScaffold";
 import { usePageHeader } from "@/components/PageHeaderContext";
+import { SectionNavigator } from "./SectionNavigator";
 
 interface Props {
   workout: Workout;
