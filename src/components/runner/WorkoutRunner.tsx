@@ -203,6 +203,9 @@ interface BetweenSectionsScreenProps {
   workoutName: string;
   currentSectionName: string;
   nextSectionName: string;
+  sectionIndex: number;
+  totalSections: number;
+  onNavigateToSection: (target: number) => void;
   onNext: () => void;
   onExit: () => void;
 }
@@ -211,6 +214,9 @@ function BetweenSectionsScreen({
   workoutName,
   currentSectionName,
   nextSectionName,
+  sectionIndex,
+  totalSections,
+  onNavigateToSection,
   onNext,
   onExit,
 }: BetweenSectionsScreenProps) {
@@ -221,7 +227,21 @@ function BetweenSectionsScreen({
     cancelLabel: "Cancel",
     onConfirm: onExit,
   });
-  const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
+  const headerOpts = useMemo(
+    () => ({
+      onBack: handleBack,
+      backIcon: "x" as const,
+      headerRight: (
+        <SectionNavigator
+          sectionIndex={sectionIndex}
+          totalSections={totalSections}
+          onPrev={() => onNavigateToSection(sectionIndex - 1)}
+          onNext={() => onNavigateToSection(sectionIndex + 1)}
+        />
+      ),
+    }),
+    [handleBack, sectionIndex, totalSections, onNavigateToSection],
+  );
   usePageHeader("", headerOpts);
 
   return (
