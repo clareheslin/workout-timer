@@ -111,18 +111,16 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     onExit("exit");
   }, [onExit]);
 
-  const handleSkipSection = useCallback(() => {
-    sectionsWereSkippedRef.current = true;
-    // Skip discards the current section — no onComplete, no log entry.
-    if (isLastSection) {
-      setPhase("done");
-      writeDiary(true);
-      clearInProgress();
-    } else {
-      setSectionIndex((i) => i + 1);
+  const goToSection = useCallback(
+    (target: number, opts?: { skipped?: boolean }) => {
+      if (target < 0 || target >= workout.sections.length) return;
+      if (target === sectionIndex) return;
+      if (opts?.skipped) sectionsWereSkippedRef.current = true;
+      setSectionIndex(target);
       setPhase("running-section");
-    }
-  }, [isLastSection, writeDiary]);
+    },
+    [workout.sections.length, sectionIndex],
+  );
 
   if (!currentSection) {
     return null;
