@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { ChevronRight } from "lucide-react";
+import { useSectionNav } from "./SectionNavigator";
 import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
@@ -18,7 +18,7 @@ interface Props {
   audio: UseWorkoutAudioResult;
   onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
-  onSkipSection: () => void;
+  onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
 
@@ -32,7 +32,7 @@ export function TimeSectionRunner({
   audio,
   onComplete,
   onExitWorkout,
-  onSkipSection,
+  onNavigateToSection,
 }: Props) {
   const subWorkout = useMemo<Workout>(
     () => ({
@@ -115,6 +115,20 @@ export function TimeSectionRunner({
     },
   });
 
+  const isActiveOrPaused = t.phase === "running" || t.phase === "paused";
+  const { node: navNode, sheet: navSheet } = useSectionNav({
+    sectionIndex,
+    totalSections,
+    guarded: isActiveOrPaused,
+    onNavigate: (target) => {
+      if (t.phase === "running") t.pause();
+      onNavigateToSection(target, { skipped: isActiveOrPaused });
+    },
+    onOpen: () => {
+      if (t.phase === "running") t.pause();
+    },
+  });
+
   const headerOpts = useMemo(
     () => ({
       onBack: handleBack,
@@ -122,22 +136,12 @@ export function TimeSectionRunner({
       backIcon: "x" as const,
       headerRight: (
         <>
-          <p className="text-xs opacity-70">
-            Section {sectionIndex + 1} of {totalSections}
-          </p>
-          <button
-            type="button"
-            onClick={onSkipSection}
-            aria-label="Skip section"
-            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full opacity-80 hover:opacity-100"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+          {navNode}
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, tone, sectionIndex, totalSections, audio, onSkipSection],
+    [handleBack, tone, navNode, audio],
   );
   usePageHeader("", headerOpts);
 
@@ -290,6 +294,7 @@ export function TimeSectionRunner({
         </RunnerScaffold>
       </div>
       {sheet}
+      {navSheet}
     </>
   );
 }

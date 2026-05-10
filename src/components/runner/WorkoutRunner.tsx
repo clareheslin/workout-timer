@@ -9,6 +9,7 @@ import { WorkoutPreview } from "./WorkoutPreview";
 import { useExitConfirm } from "./useExitConfirm";
 import { RunnerScaffold } from "./RunnerScaffold";
 import { usePageHeader } from "@/components/PageHeaderContext";
+import { SectionNavigator } from "./SectionNavigator";
 
 interface Props {
   workout: Workout;
@@ -110,18 +111,16 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     onExit("exit");
   }, [onExit]);
 
-  const handleSkipSection = useCallback(() => {
-    sectionsWereSkippedRef.current = true;
-    // Skip discards the current section — no onComplete, no log entry.
-    if (isLastSection) {
-      setPhase("done");
-      writeDiary(true);
-      clearInProgress();
-    } else {
-      setSectionIndex((i) => i + 1);
+  const goToSection = useCallback(
+    (target: number, opts?: { skipped?: boolean }) => {
+      if (target < 0 || target >= workout.sections.length) return;
+      if (target === sectionIndex) return;
+      if (opts?.skipped) sectionsWereSkippedRef.current = true;
+      setSectionIndex(target);
       setPhase("running-section");
-    }
-  }, [isLastSection, writeDiary]);
+    },
+    [workout.sections.length, sectionIndex],
+  );
 
   if (!currentSection) {
     return null;
@@ -157,6 +156,9 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         workoutName={workout.name}
         currentSectionName={currentSection.name || `Section ${sectionIndex + 1}`}
         nextSectionName={next?.name ?? `Section ${sectionIndex + 2}`}
+        sectionIndex={sectionIndex}
+        totalSections={workout.sections.length}
+        onNavigateToSection={goToSection}
         onNext={handleNextSection}
         onExit={handleExitWorkout}
       />
@@ -177,7 +179,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         audio={audio}
         onComplete={handleSectionComplete}
         onExitWorkout={handleExitWorkout}
-        onSkipSection={handleSkipSection}
+        onNavigateToSection={goToSection}
       />
     );
   }
@@ -192,7 +194,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       audio={audio}
       onComplete={handleSectionComplete}
       onExitWorkout={handleExitWorkout}
-      onSkipSection={handleSkipSection}
+      onNavigateToSection={goToSection}
     />
   );
 }
@@ -201,6 +203,9 @@ interface BetweenSectionsScreenProps {
   workoutName: string;
   currentSectionName: string;
   nextSectionName: string;
+  sectionIndex: number;
+  totalSections: number;
+  onNavigateToSection: (target: number) => void;
   onNext: () => void;
   onExit: () => void;
 }
@@ -209,6 +214,9 @@ function BetweenSectionsScreen({
   workoutName,
   currentSectionName,
   nextSectionName,
+  sectionIndex,
+  totalSections,
+  onNavigateToSection,
   onNext,
   onExit,
 }: BetweenSectionsScreenProps) {
@@ -219,7 +227,21 @@ function BetweenSectionsScreen({
     cancelLabel: "Cancel",
     onConfirm: onExit,
   });
-  const headerOpts = useMemo(() => ({ onBack: handleBack, backIcon: "x" as const }), [handleBack]);
+  const headerOpts = useMemo(
+    () => ({
+      onBack: handleBack,
+      backIcon: "x" as const,
+      headerRight: (
+        <SectionNavigator
+          sectionIndex={sectionIndex}
+          totalSections={totalSections}
+          onPrev={() => onNavigateToSection(sectionIndex - 1)}
+          onNext={() => onNavigateToSection(sectionIndex + 1)}
+        />
+      ),
+    }),
+    [handleBack, sectionIndex, totalSections, onNavigateToSection],
+  );
   usePageHeader("", headerOpts);
 
   return (
