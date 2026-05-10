@@ -34,7 +34,7 @@ export function RepSectionRunner({
   audio,
   onComplete,
   onExitWorkout,
-  onSkipSection,
+  onNavigateToSection,
 }: Props) {
   const isAmrap = (section.type ?? "circuit") === "amrap";
   const timeCap = Math.max(1, section.timeCap ?? 3600);
