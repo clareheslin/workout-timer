@@ -6,18 +6,21 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: SectionItem;
+  /** When true and rounds > 1, render the "From round" row (CIRCUIT only). */
+  showStartFromRound?: boolean;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
     rounds?: number;
+    startFromRound?: number;
     restSeconds?: number;
   }) => void;
   onDelete: () => void;
 }
 
-type EditingField = "exercise" | "rest" | "rounds" | null;
+type EditingField = "exercise" | "rest" | "rounds" | "startFromRound" | null;
 
-export function SectionItemRow({ item, onChange, onDelete }: Props) {
+export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
@@ -186,6 +189,45 @@ export function SectionItemRow({ item, onChange, onDelete }: Props) {
           ✕
         </button>
       </div>
+
+      {showStartFromRound && rounds > 1 && (
+        <div className="mt-2 flex items-center gap-2 pl-10 text-sm">
+          <span className="text-xs text-muted-foreground">From round</span>
+          {editing === "startFromRound" ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={rounds}
+              autoFocus
+              value={Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                const v = Number.isFinite(n)
+                  ? Math.min(rounds, Math.max(1, Math.floor(n)))
+                  : 1;
+                onChange({ startFromRound: v });
+              }}
+              onBlur={() => setEditing(null)}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setEditing(null);
+              }}
+              className="w-16 rounded-md border border-input bg-background px-2 py-1 text-right outline-none focus:ring-2 focus:ring-ring"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditing("startFromRound")}
+              className="rounded-md border border-border px-2 py-1 font-medium hover:bg-accent"
+              aria-label={`Start from round: ${Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}`}
+            >
+              {Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}
+            </button>
+          )}
+          <span className="text-xs text-muted-foreground">of {rounds}</span>
+        </div>
+      )}
     </li>
   );
 }

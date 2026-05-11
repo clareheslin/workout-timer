@@ -180,10 +180,19 @@ export function TimeSectionRunner({
               const work = Math.max(0, it.exercise.durationSeconds);
               const rest = Math.max(0, it.rest.durationSeconds);
               const rounds = exerciseRounds(it);
+              const isCircuit = (section.type ?? "circuit") === "circuit";
+              const startFrom = Math.max(
+                1,
+                Math.min(rounds, Math.floor(it.exercise.startFromRound ?? 1)),
+              );
+              const roundsLabel =
+                isCircuit && startFrom > 1
+                  ? `rounds ${startFrom}–${rounds}`
+                  : `${rounds} ${rounds === 1 ? "round" : "rounds"}`;
               const meta = [
                 `${work}s`,
                 rest > 0 ? `rest ${rest}s` : null,
-                `${rounds} ${rounds === 1 ? "round" : "rounds"}`,
+                roundsLabel,
               ]
                 .filter(Boolean)
                 .join(" · ");

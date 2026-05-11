@@ -152,8 +152,21 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
       prev.map((it) => {
         if (it.exercise.id !== id) return it;
         const { restSeconds, ...exercisePatch } = patch;
+        let nextExercise = { ...it.exercise, ...exercisePatch };
+        // If rounds is reduced to 1, reset startFromRound to 1.
+        if (exercisePatch.rounds !== undefined && exercisePatch.rounds <= 1) {
+          nextExercise = { ...nextExercise, startFromRound: 1 };
+        }
+        // Clamp startFromRound to current rounds.
+        if (nextExercise.startFromRound !== undefined) {
+          const maxR = Math.max(1, Math.floor(nextExercise.rounds ?? 1));
+          nextExercise.startFromRound = Math.min(
+            maxR,
+            Math.max(1, Math.floor(nextExercise.startFromRound)),
+          );
+        }
         return {
-          exercise: { ...it.exercise, ...exercisePatch },
+          exercise: nextExercise,
           rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
         };
       }),
@@ -477,6 +490,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                   <SectionItemRow
                     key={it.exercise.id}
                     item={it}
+                    showStartFromRound={mode === "circuit"}
                     onChange={(patch) => handleUpdate(it.exercise.id, patch)}
                     onDelete={() => handleDelete(it.exercise.id)}
                   />

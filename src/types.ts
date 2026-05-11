@@ -6,6 +6,8 @@ export interface ExerciseInterval {
   durationSeconds: number;
   /** Number of rounds/sets for this exercise. Defaults to 1 when missing. */
   rounds?: number;
+  /** CIRCUIT mode only: round number to start from. Defaults to 1. */
+  startFromRound?: number;
 }
 
 export interface RestInterval {
