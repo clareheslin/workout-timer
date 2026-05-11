@@ -115,7 +115,20 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
 
   const mode = section.mode ?? "circuit";
   const itemCount = section.items.length;
-  const itemRounds = section.items.map((it) => Math.max(1, Math.floor(it.exercise.rounds ?? 1)));
+  const totalRoundsPerItem = section.items.map((it) =>
+    Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
+  );
+  // For circuit mode, honor startFromRound (clamped to [1, total]).
+  // For sets mode, always start from round 1.
+  const startRoundPerItem = section.items.map((it, i) => {
+    if (mode !== "circuit") return 1;
+    const start = Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
+    return Math.min(totalRoundsPerItem[i], start);
+  });
+  // Effective rounds to actually play for each item.
+  const itemRounds = totalRoundsPerItem.map(
+    (total, i) => total - startRoundPerItem[i] + 1,
+  );
   // Total exercise emissions across the whole section — used to know which one is "last".
   const totalEmissions = itemRounds.reduce((a, b) => a + b, 0);
   let emitted = 0;
@@ -154,15 +167,15 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   if (mode === "sets") {
     // All rounds of exercise 1, then all rounds of exercise 2, etc.
     section.items.forEach((item, itemIndex) => {
-      for (let r = 1; r <= itemRounds[itemIndex]; r++) {
+      for (let r = 1; r <= totalRoundsPerItem[itemIndex]; r++) {
         pushExerciseAndRest(item, itemIndex, r);
       }
     });
   } else {
     // Circuit: cycle through exercises that still have rounds remaining.
-    // E.g. A(4), B(3) → A B A B A B A.
+    // Each item starts from its startFromRound and counts up to its total.
     const remaining = [...itemRounds];
-    const round = Array(itemCount).fill(0);
+    const round = startRoundPerItem.map((s) => s - 1);
     let anyLeft = remaining.some((r) => r > 0);
     while (anyLeft) {
       for (let i = 0; i < itemCount; i++) {
