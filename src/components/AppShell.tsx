@@ -107,15 +107,17 @@ export function AppShell() {
   }, []);
   const ctxValue = useMemo(() => ({ state: headerState, setState }), [headerState, setState]);
 
+  const handleRunnerExit = useCallback((reason: "done" | "exit") => {
+    setRunning(null);
+    if (reason === "done") setTab("diary");
+  }, []);
+
   const renderTab = () => {
     if (running) {
       return (
         <WorkoutRunner
           workout={running}
-          onExit={(reason) => {
-            setRunning(null);
-            if (reason === "done") setTab("diary");
-          }}
+          onExit={handleRunnerExit}
         />
       );
     }
