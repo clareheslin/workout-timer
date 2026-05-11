@@ -6,18 +6,21 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: SectionItem;
+  /** When true and rounds > 1, render the "From round" row (CIRCUIT only). */
+  showStartFromRound?: boolean;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
     rounds?: number;
+    startFromRound?: number;
     restSeconds?: number;
   }) => void;
   onDelete: () => void;
 }
 
-type EditingField = "exercise" | "rest" | "rounds" | null;
+type EditingField = "exercise" | "rest" | "rounds" | "startFromRound" | null;
 
-export function SectionItemRow({ item, onChange, onDelete }: Props) {
+export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
