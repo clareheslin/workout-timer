@@ -490,6 +490,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                   <SectionItemRow
                     key={it.exercise.id}
                     item={it}
+                    showStartFromRound={mode === "circuit"}
                     onChange={(patch) => handleUpdate(it.exercise.id, patch)}
                     onDelete={() => handleDelete(it.exercise.id)}
                   />
