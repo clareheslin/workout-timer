@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
@@ -98,13 +98,25 @@ export function useSectionNav(opts: UseSectionNavOptions): UseSectionNavResult {
     [guarded],
   );
 
-  const node = (
-    <SectionNavigator
-      sectionIndex={sectionIndex}
-      totalSections={totalSections}
-      onPrev={() => handleTap(sectionIndex - 1)}
-      onNext={() => handleTap(sectionIndex + 1)}
-    />
+  const onPrev = useCallback(
+    () => handleTap(sectionIndex - 1),
+    [handleTap, sectionIndex],
+  );
+  const onNext = useCallback(
+    () => handleTap(sectionIndex + 1),
+    [handleTap, sectionIndex],
+  );
+
+  const node = useMemo(
+    () => (
+      <SectionNavigator
+        sectionIndex={sectionIndex}
+        totalSections={totalSections}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
+    ),
+    [sectionIndex, totalSections, onPrev, onNext],
   );
 
   const sheet = (
