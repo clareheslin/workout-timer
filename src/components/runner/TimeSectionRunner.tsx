@@ -183,11 +183,12 @@ export function TimeSectionRunner({
               const isCircuit = (section.type ?? "circuit") === "circuit";
               const startFrom = Math.max(
                 1,
-                Math.min(rounds, Math.floor(it.exercise.startFromRound ?? 1)),
+                Math.floor(it.exercise.startFromRound ?? 1),
               );
+              const endRound = Math.max(startFrom, rounds);
               const roundsLabel =
                 isCircuit && startFrom > 1
-                  ? `rounds ${startFrom}–${rounds}`
+                  ? `rounds ${startFrom}–${endRound}`
                   : `${rounds} ${rounds === 1 ? "round" : "rounds"}`;
               const meta = [
                 `${work}s`,
