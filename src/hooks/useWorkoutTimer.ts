@@ -626,7 +626,18 @@ export function useWorkoutTimer(
   }, [workout.sections]);
 
   const currentRound = currentPlanned?.round ?? 1;
-  const totalRounds = currentItem ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1)) : 1;
+  const sectionMode = currentSection?.mode ?? "circuit";
+  const totalRounds = currentSection
+    ? sectionMode === "circuit"
+      ? currentSection.items.reduce((max, it) => {
+          const total = Math.max(1, Math.floor(it.exercise.rounds ?? 1));
+          const start = Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
+          return Math.max(max, start + total - 1);
+        }, 1)
+      : currentItem
+        ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1))
+        : 1
+    : 1;
   const startedAt = startedAtRef.current;
 
   return useMemo(
