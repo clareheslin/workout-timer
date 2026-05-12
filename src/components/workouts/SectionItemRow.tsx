@@ -190,7 +190,7 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
         </button>
       </div>
 
-      {showStartFromRound && rounds > 1 && (
+      {showStartFromRound && (
         <div className="mt-2 flex items-center gap-2 pl-10 text-sm">
           <span className="text-xs text-muted-foreground">From round</span>
           {editing === "startFromRound" ? (
@@ -198,14 +198,11 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
               type="number"
               inputMode="numeric"
               min={1}
-              max={rounds}
               autoFocus
-              value={Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}
+              value={Math.max(1, Math.floor(item.exercise.startFromRound ?? 1))}
               onChange={(e) => {
                 const n = Number(e.target.value);
-                const v = Number.isFinite(n)
-                  ? Math.min(rounds, Math.max(1, Math.floor(n)))
-                  : 1;
+                const v = Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1;
                 onChange({ startFromRound: v });
               }}
               onBlur={() => setEditing(null)}
@@ -220,12 +217,11 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
               type="button"
               onClick={() => setEditing("startFromRound")}
               className="rounded-md border border-border px-2 py-1 font-medium hover:bg-accent"
-              aria-label={`Start from round: ${Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}`}
+              aria-label={`Start from round: ${Math.max(1, Math.floor(item.exercise.startFromRound ?? 1))}`}
             >
-              {Math.max(1, Math.min(rounds, Math.floor(item.exercise.startFromRound ?? 1)))}
+              {Math.max(1, Math.floor(item.exercise.startFromRound ?? 1))}
             </button>
           )}
-          <span className="text-xs text-muted-foreground">of {rounds}</span>
         </div>
       )}
     </li>
