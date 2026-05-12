@@ -118,19 +118,26 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   const totalRoundsPerItem = section.items.map((it) =>
     Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
   );
-  // For circuit mode, honor startFromRound (clamped to [1, total]).
+  // For circuit mode, honor startFromRound (no upper clamp — an exercise may
+  // start beyond its own count, defining a ladder).
   // For sets mode, always start from round 1.
-  const startRoundPerItem = section.items.map((it, i) => {
+  const startRoundPerItem = section.items.map((it) => {
     if (mode !== "circuit") return 1;
-    const start = Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
-    return Math.min(totalRoundsPerItem[i], start);
+    return Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
   });
-  // Effective rounds to actually play for each item.
-  const itemRounds = totalRoundsPerItem.map(
-    (total, i) => total - startRoundPerItem[i] + 1,
+  // Inclusive end-round per item: startFrom + rounds - 1.
+  const endRoundPerItem = totalRoundsPerItem.map(
+    (total, i) => startRoundPerItem[i] + total - 1,
   );
-  // Total exercise emissions across the whole section — used to know which one is "last".
-  const totalEmissions = itemRounds.reduce((a, b) => a + b, 0);
+
+  // Pre-compute total exercise emissions across the whole section so we can
+  // detect "last interval" and skip the trailing rest.
+  let totalEmissions = 0;
+  if (mode === "sets") {
+    totalEmissions = totalRoundsPerItem.reduce((a, b) => a + b, 0);
+  } else {
+    for (let i = 0; i < itemCount; i++) totalEmissions += totalRoundsPerItem[i];
+  }
   let emitted = 0;
 
   const pushExerciseAndRest = (item: SectionItem, itemIndex: number, round: number) => {
@@ -172,19 +179,14 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
       }
     });
   } else {
-    // Circuit: cycle through exercises that still have rounds remaining.
-    // Each item starts from its startFromRound and counts up to its total.
-    const remaining = [...itemRounds];
-    const round = startRoundPerItem.map((s) => s - 1);
-    let anyLeft = remaining.some((r) => r > 0);
-    while (anyLeft) {
+    // Circuit: walk the section round-by-round. For each round r in
+    // [1, sectionMaxRound], emit each item where startFromRound <= r <= endRound.
+    const sectionMaxRound = endRoundPerItem.reduce((a, b) => Math.max(a, b), 0);
+    for (let r = 1; r <= sectionMaxRound; r++) {
       for (let i = 0; i < itemCount; i++) {
-        if (remaining[i] <= 0) continue;
-        round[i] += 1;
-        remaining[i] -= 1;
-        pushExerciseAndRest(section.items[i], i, round[i]);
+        if (r < startRoundPerItem[i] || r > endRoundPerItem[i]) continue;
+        pushExerciseAndRest(section.items[i], i, r);
       }
-      anyLeft = remaining.some((r) => r > 0);
     }
   }
   return out;
