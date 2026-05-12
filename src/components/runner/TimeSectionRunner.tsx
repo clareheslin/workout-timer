@@ -185,7 +185,7 @@ export function TimeSectionRunner({
                 1,
                 Math.floor(it.exercise.startFromRound ?? 1),
               );
-              const endRound = Math.max(startFrom, rounds);
+              const endRound = startFrom + rounds - 1;
               const roundsLabel =
                 isCircuit && startFrom > 1
                   ? `rounds ${startFrom}–${endRound}`
