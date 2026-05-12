@@ -6,7 +6,7 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: SectionItem;
-  /** When true and rounds > 1, render the "From round" row (CIRCUIT only). */
+  /** When true, render the "From round" row (CIRCUIT only). */
   showStartFromRound?: boolean;
   onChange: (patch: {
     name?: string;
