@@ -152,18 +152,10 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
       prev.map((it) => {
         if (it.exercise.id !== id) return it;
         const { restSeconds, ...exercisePatch } = patch;
-        let nextExercise = { ...it.exercise, ...exercisePatch };
-        // If rounds is reduced to 1, reset startFromRound to 1.
-        if (exercisePatch.rounds !== undefined && exercisePatch.rounds <= 1) {
-          nextExercise = { ...nextExercise, startFromRound: 1 };
-        }
-        // Clamp startFromRound to current rounds.
+        const nextExercise = { ...it.exercise, ...exercisePatch };
+        // Floor startFromRound to a positive integer (no upper bound — may exceed rounds).
         if (nextExercise.startFromRound !== undefined) {
-          const maxR = Math.max(1, Math.floor(nextExercise.rounds ?? 1));
-          nextExercise.startFromRound = Math.min(
-            maxR,
-            Math.max(1, Math.floor(nextExercise.startFromRound)),
-          );
+          nextExercise.startFromRound = Math.max(1, Math.floor(nextExercise.startFromRound));
         }
         return {
           exercise: nextExercise,
