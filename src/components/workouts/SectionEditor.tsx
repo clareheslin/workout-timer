@@ -89,6 +89,17 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
 
   const isRepBased = type === "forTime" || type === "amrap";
 
+  const initialTotalRoundsSnapshot = useMemo(() => {
+    const seed = initial.totalRounds;
+    if (typeof seed === "number" && Number.isFinite(seed) && seed >= 1) {
+      return Math.max(1, Math.floor(seed));
+    }
+    return initial.items.reduce(
+      (m, it) => Math.max(m, Math.max(1, Math.floor(it.exercise.rounds ?? 1))),
+      1,
+    );
+  }, [initial]);
+
   const initialSnapshot = useMemo(
     () =>
       JSON.stringify({
@@ -100,12 +111,13 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
         forTimeMaxCap: initial.type === "forTime" ? initial.timeCap : undefined,
         targetRounds: initial.targetRounds ?? 1,
+        totalRounds: initialTotalRoundsSnapshot,
         notes: initial.notes ?? "",
       }),
-    [initial],
+    [initial, initialTotalRoundsSnapshot],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, notes }) !==
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes }) !==
     initialSnapshot;
 
   const canDone = isRepBased
