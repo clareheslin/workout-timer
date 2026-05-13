@@ -28,11 +28,25 @@ export function sectionTotalSeconds(section: Section): number {
   const items = Array.isArray(section.items) ? section.items : [];
   if (items.length === 0) return 0;
   let total = 0;
-  for (const it of items) {
-    const rounds = exerciseRounds(it);
-    const exSecs = Math.max(0, it.exercise.durationSeconds);
-    const restSecs = Math.max(0, it.rest.durationSeconds);
-    total += rounds * (exSecs + restSecs);
+  if (t === "circuit") {
+    const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+    for (const it of items) {
+      const from = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
+      const to = Math.max(from, Math.floor(it.exercise.roundTo ?? sectionRounds));
+      const lo = Math.min(from, sectionRounds);
+      const hi = Math.min(to, sectionRounds);
+      const plays = Math.max(0, hi - lo + 1);
+      const exSecs = Math.max(0, it.exercise.durationSeconds);
+      const restSecs = Math.max(0, it.rest.durationSeconds);
+      total += plays * (exSecs + restSecs);
+    }
+  } else {
+    for (const it of items) {
+      const rounds = exerciseRounds(it);
+      const exSecs = Math.max(0, it.exercise.durationSeconds);
+      const restSecs = Math.max(0, it.rest.durationSeconds);
+      total += rounds * (exSecs + restSecs);
+    }
   }
   // Strip the trailing rest of the very last interval in the section.
   const lastRest = Math.max(0, items[items.length - 1].rest.durationSeconds);
