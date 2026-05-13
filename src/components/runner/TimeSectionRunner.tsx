@@ -166,8 +166,15 @@ export function TimeSectionRunner({
     titleText = sectionTitle;
     const exerciseCount = section.items.length;
     const totalSecs = sectionTotalSeconds(section);
+    const isCircuitSection = (section.type ?? "circuit") === "circuit";
+    const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+    const roundsPart =
+      isCircuitSection
+        ? ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`
+        : "";
     subtext =
       `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}` +
+      roundsPart +
       (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
