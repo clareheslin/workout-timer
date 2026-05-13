@@ -569,6 +569,8 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                     key={it.exercise.id}
                     item={it}
                     showStartFromRound={mode === "circuit"}
+                    hideRoundsChip={mode === "circuit"}
+                    sectionTotalRounds={totalRounds}
                     onChange={(patch) => handleUpdate(it.exercise.id, patch)}
                     onDelete={() => handleDelete(it.exercise.id)}
                   />
