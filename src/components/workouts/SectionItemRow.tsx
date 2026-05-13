@@ -245,7 +245,7 @@ export function SectionItemRow({
                 type="number"
                 inputMode="numeric"
                 min={roundFrom}
-                max={rounds}
+                max={sectionMax}
                 autoFocus
                 value={roundTo}
                 onChange={(e) => {
