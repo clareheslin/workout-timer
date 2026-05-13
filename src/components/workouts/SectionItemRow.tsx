@@ -159,7 +159,7 @@ export function SectionItemRow({
             )}
 
             
-            {editing === "rounds" ? (
+            {!hideRoundsChip && (editing === "rounds" ? (
               <input
                 type="number"
                 inputMode="numeric"
@@ -188,7 +188,7 @@ export function SectionItemRow({
               >
                 ×{rounds}
               </button>
-            )}
+            ))}
           </div>
         </div>
 
@@ -203,8 +203,9 @@ export function SectionItemRow({
       </div>
 
       {showStartFromRound && (() => {
+        const sectionMax = Math.max(1, Math.floor(sectionTotalRounds ?? rounds));
         const roundFrom = Math.max(1, Math.floor(item.exercise.roundFrom ?? 1));
-        const roundTo = Math.max(roundFrom, Math.floor(item.exercise.roundTo ?? rounds));
+        const roundTo = Math.max(roundFrom, Math.floor(item.exercise.roundTo ?? sectionMax));
         return (
           <div className="mt-2 flex items-center gap-2 pl-10 text-sm">
             <span className="text-xs text-muted-foreground">From</span>
