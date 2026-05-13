@@ -180,17 +180,48 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         // Clamp rounds, roundFrom, roundTo to positive integers and reconcile.
         const rounds = Math.max(1, Math.floor(nextExercise.rounds ?? 1));
         nextExercise.rounds = rounds;
+        // For CIRCUIT, the round-range cap is the section-level totalRounds.
+        // For SETS, the cap remains the per-exercise rounds value.
+        const cap = mode === "circuit" ? Math.max(1, Math.floor(totalRounds)) : rounds;
         let roundFrom = Math.max(1, Math.floor(nextExercise.roundFrom ?? 1));
-        let roundTo = Math.max(1, Math.floor(nextExercise.roundTo ?? rounds));
-        // Cap roundTo to rounds when rounds was reduced.
-        if (roundTo > rounds) roundTo = rounds;
-        // Raise roundTo to roundFrom when roundFrom exceeds it.
+        let roundTo = Math.max(1, Math.floor(nextExercise.roundTo ?? cap));
+        if (roundTo > cap) roundTo = cap;
+        if (roundFrom > cap) roundFrom = cap;
         if (roundFrom > roundTo) roundTo = roundFrom;
         nextExercise.roundFrom = roundFrom;
         nextExercise.roundTo = roundTo;
         return {
           exercise: nextExercise,
           rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
+        };
+      }),
+    );
+  };
+
+  const handleSetTotalRounds = (next: number) => {
+    const newTotal = Math.max(1, Math.floor(Number.isFinite(next) ? next : 1));
+    const oldTotal = Math.max(1, Math.floor(totalRounds));
+    setTotalRoundsState(newTotal);
+    if (newTotal === oldTotal) return;
+    setItems((prev) =>
+      prev.map((it) => {
+        const ex = it.exercise;
+        const roundFrom = Math.max(1, Math.floor(ex.roundFrom ?? 1));
+        const prevTo = Math.max(roundFrom, Math.floor(ex.roundTo ?? oldTotal));
+        let nextTo = prevTo;
+        if (newTotal > oldTotal && prevTo === oldTotal) {
+          // Was tracking the old maximum — keep it pinned to the new maximum.
+          nextTo = newTotal;
+        } else if (newTotal < oldTotal && prevTo > newTotal) {
+          // Cap to the new maximum.
+          nextTo = newTotal;
+        }
+        const nextFrom = Math.min(roundFrom, newTotal);
+        const finalTo = Math.max(nextFrom, nextTo);
+        if (nextFrom === roundFrom && finalTo === prevTo) return it;
+        return {
+          ...it,
+          exercise: { ...ex, roundFrom: nextFrom, roundTo: finalTo },
         };
       }),
     );
