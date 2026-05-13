@@ -73,6 +73,18 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     initial.type === "forTime" ? initial.timeCap : undefined,
   );
   const [targetRounds, setTargetRounds] = useState<number>(initial.targetRounds ?? 1);
+  const [totalRounds, setTotalRoundsState] = useState<number>(() => {
+    const seed = initial.totalRounds;
+    if (typeof seed === "number" && Number.isFinite(seed) && seed >= 1) {
+      return Math.max(1, Math.floor(seed));
+    }
+    // Derive from existing items to preserve behavior on first edit.
+    const derived = initial.items.reduce(
+      (m, it) => Math.max(m, Math.max(1, Math.floor(it.exercise.rounds ?? 1))),
+      1,
+    );
+    return derived;
+  });
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
