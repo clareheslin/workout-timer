@@ -62,9 +62,13 @@ function needsMigration(workouts: Workout[]): boolean {
     const obj = w as unknown as Record<string, unknown>;
     if (obj.blocks !== undefined) return true;
     if (!Array.isArray(obj.sections)) return true;
-    return (obj.sections as unknown[]).some(
-      (s) => !Array.isArray((s as Record<string, unknown>).items),
-    );
+    return (obj.sections as unknown[]).some((s) => {
+      const sec = s as Record<string, unknown>;
+      if (!Array.isArray(sec.items)) return true;
+      const secType = sec.type ?? "circuit";
+      if (secType === "circuit" && sec.totalRounds === undefined) return true;
+      return false;
+    });
   });
 }
 
