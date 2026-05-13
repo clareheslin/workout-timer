@@ -121,7 +121,7 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   // For circuit mode, honor roundFrom / roundTo (no upper clamp — values may
   // exceed `rounds`, defining a ladder).
   // For sets mode, always span 1..rounds.
-  const startRoundPerItem = section.items.map((it, i) => {
+  const startRoundPerItem = section.items.map((it) => {
     if (mode !== "circuit") return 1;
     return Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
   });
