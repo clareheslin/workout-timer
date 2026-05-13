@@ -118,17 +118,19 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   const totalRoundsPerItem = section.items.map((it) =>
     Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
   );
-  // For circuit mode, honor startFromRound (no upper clamp — an exercise may
-  // start beyond its own count, defining a ladder).
-  // For sets mode, always start from round 1.
-  const startRoundPerItem = section.items.map((it) => {
+  // For circuit mode, honor roundFrom / roundTo (no upper clamp — values may
+  // exceed `rounds`, defining a ladder).
+  // For sets mode, always span 1..rounds.
+  const startRoundPerItem = section.items.map((it, i) => {
     if (mode !== "circuit") return 1;
-    return Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
+    return Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
   });
-  // Inclusive end-round per item: startFrom + rounds - 1.
-  const endRoundPerItem = totalRoundsPerItem.map(
-    (total, i) => startRoundPerItem[i] + total - 1,
-  );
+  const endRoundPerItem = section.items.map((it, i) => {
+    if (mode !== "circuit") return totalRoundsPerItem[i];
+    const from = startRoundPerItem[i];
+    const to = Math.floor(it.exercise.roundTo ?? totalRoundsPerItem[i]);
+    return Math.max(from, to);
+  });
 
   // Pre-compute total exercise emissions across the whole section so we can
   // detect "last interval" and skip the trailing rest.
