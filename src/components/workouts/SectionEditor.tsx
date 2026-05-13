@@ -271,6 +271,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         repExercises: [],
         timeCap: undefined,
         targetRounds: undefined,
+        totalRounds: type === "circuit" ? Math.max(1, Math.floor(totalRounds)) : undefined,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
