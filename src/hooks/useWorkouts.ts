@@ -39,6 +39,18 @@ function migrateLegacyWorkout(w: unknown): Workout {
       }
       return item;
     });
+    // Derive section.totalRounds for CIRCUIT sections that lack it.
+    const secType = sec.type ?? "circuit";
+    if (secType === "circuit" && sec.totalRounds === undefined) {
+      const items = sec.items as Array<Record<string, unknown>>;
+      let maxRounds = 1;
+      for (const it of items) {
+        const ex = it.exercise as Record<string, unknown> | undefined;
+        const r = Number(ex?.rounds ?? 1);
+        if (Number.isFinite(r) && r > maxRounds) maxRounds = Math.floor(r);
+      }
+      sec.totalRounds = Math.max(1, maxRounds);
+    }
     return sec;
   });
 
@@ -50,9 +62,13 @@ function needsMigration(workouts: Workout[]): boolean {
     const obj = w as unknown as Record<string, unknown>;
     if (obj.blocks !== undefined) return true;
     if (!Array.isArray(obj.sections)) return true;
-    return (obj.sections as unknown[]).some(
-      (s) => !Array.isArray((s as Record<string, unknown>).items),
-    );
+    return (obj.sections as unknown[]).some((s) => {
+      const sec = s as Record<string, unknown>;
+      if (!Array.isArray(sec.items)) return true;
+      const secType = sec.type ?? "circuit";
+      if (secType === "circuit" && sec.totalRounds === undefined) return true;
+      return false;
+    });
   });
 }
 

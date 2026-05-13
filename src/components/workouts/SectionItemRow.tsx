@@ -8,6 +8,10 @@ interface Props {
   item: SectionItem;
   /** When true, render the "From / To" round range row (CIRCUIT only). */
   showStartFromRound?: boolean;
+  /** When true, hide the per-exercise ×n rounds chip (CIRCUIT mode). */
+  hideRoundsChip?: boolean;
+  /** Section-level total rounds. Used as the max for From/To in CIRCUIT. */
+  sectionTotalRounds?: number;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
@@ -21,7 +25,14 @@ interface Props {
 
 type EditingField = "exercise" | "rest" | "rounds" | "roundFrom" | "roundTo" | null;
 
-export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }: Props) {
+export function SectionItemRow({
+  item,
+  showStartFromRound,
+  hideRoundsChip,
+  sectionTotalRounds,
+  onChange,
+  onDelete,
+}: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
@@ -148,7 +159,7 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
             )}
 
             
-            {editing === "rounds" ? (
+            {!hideRoundsChip && (editing === "rounds" ? (
               <input
                 type="number"
                 inputMode="numeric"
@@ -177,7 +188,7 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
               >
                 ×{rounds}
               </button>
-            )}
+            ))}
           </div>
         </div>
 
@@ -192,8 +203,9 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
       </div>
 
       {showStartFromRound && (() => {
+        const sectionMax = Math.max(1, Math.floor(sectionTotalRounds ?? rounds));
         const roundFrom = Math.max(1, Math.floor(item.exercise.roundFrom ?? 1));
-        const roundTo = Math.max(roundFrom, Math.floor(item.exercise.roundTo ?? rounds));
+        const roundTo = Math.max(roundFrom, Math.floor(item.exercise.roundTo ?? sectionMax));
         return (
           <div className="mt-2 flex items-center gap-2 pl-10 text-sm">
             <span className="text-xs text-muted-foreground">From</span>
@@ -233,7 +245,7 @@ export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }:
                 type="number"
                 inputMode="numeric"
                 min={roundFrom}
-                max={rounds}
+                max={sectionMax}
                 autoFocus
                 value={roundTo}
                 onChange={(e) => {

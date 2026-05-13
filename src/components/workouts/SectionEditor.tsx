@@ -73,9 +73,32 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     initial.type === "forTime" ? initial.timeCap : undefined,
   );
   const [targetRounds, setTargetRounds] = useState<number>(initial.targetRounds ?? 1);
+  const [totalRounds, setTotalRoundsState] = useState<number>(() => {
+    const seed = initial.totalRounds;
+    if (typeof seed === "number" && Number.isFinite(seed) && seed >= 1) {
+      return Math.max(1, Math.floor(seed));
+    }
+    // Derive from existing items to preserve behavior on first edit.
+    const derived = initial.items.reduce(
+      (m, it) => Math.max(m, Math.max(1, Math.floor(it.exercise.rounds ?? 1))),
+      1,
+    );
+    return derived;
+  });
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
 
   const isRepBased = type === "forTime" || type === "amrap";
+
+  const initialTotalRoundsSnapshot = useMemo(() => {
+    const seed = initial.totalRounds;
+    if (typeof seed === "number" && Number.isFinite(seed) && seed >= 1) {
+      return Math.max(1, Math.floor(seed));
+    }
+    return initial.items.reduce(
+      (m, it) => Math.max(m, Math.max(1, Math.floor(it.exercise.rounds ?? 1))),
+      1,
+    );
+  }, [initial]);
 
   const initialSnapshot = useMemo(
     () =>
@@ -88,12 +111,13 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         timeCap: initial.timeCap ?? DEFAULT_AMRAP_CAP,
         forTimeMaxCap: initial.type === "forTime" ? initial.timeCap : undefined,
         targetRounds: initial.targetRounds ?? 1,
+        totalRounds: initialTotalRoundsSnapshot,
         notes: initial.notes ?? "",
       }),
-    [initial],
+    [initial, initialTotalRoundsSnapshot],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, notes }) !==
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes }) !==
     initialSnapshot;
 
   const canDone = isRepBased
@@ -156,17 +180,48 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         // Clamp rounds, roundFrom, roundTo to positive integers and reconcile.
         const rounds = Math.max(1, Math.floor(nextExercise.rounds ?? 1));
         nextExercise.rounds = rounds;
+        // For CIRCUIT, the round-range cap is the section-level totalRounds.
+        // For SETS, the cap remains the per-exercise rounds value.
+        const cap = mode === "circuit" ? Math.max(1, Math.floor(totalRounds)) : rounds;
         let roundFrom = Math.max(1, Math.floor(nextExercise.roundFrom ?? 1));
-        let roundTo = Math.max(1, Math.floor(nextExercise.roundTo ?? rounds));
-        // Cap roundTo to rounds when rounds was reduced.
-        if (roundTo > rounds) roundTo = rounds;
-        // Raise roundTo to roundFrom when roundFrom exceeds it.
+        let roundTo = Math.max(1, Math.floor(nextExercise.roundTo ?? cap));
+        if (roundTo > cap) roundTo = cap;
+        if (roundFrom > cap) roundFrom = cap;
         if (roundFrom > roundTo) roundTo = roundFrom;
         nextExercise.roundFrom = roundFrom;
         nextExercise.roundTo = roundTo;
         return {
           exercise: nextExercise,
           rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
+        };
+      }),
+    );
+  };
+
+  const handleSetTotalRounds = (next: number) => {
+    const newTotal = Math.max(1, Math.floor(Number.isFinite(next) ? next : 1));
+    const oldTotal = Math.max(1, Math.floor(totalRounds));
+    setTotalRoundsState(newTotal);
+    if (newTotal === oldTotal) return;
+    setItems((prev) =>
+      prev.map((it) => {
+        const ex = it.exercise;
+        const roundFrom = Math.max(1, Math.floor(ex.roundFrom ?? 1));
+        const prevTo = Math.max(roundFrom, Math.floor(ex.roundTo ?? oldTotal));
+        let nextTo = prevTo;
+        if (newTotal > oldTotal && prevTo === oldTotal) {
+          // Was tracking the old maximum — keep it pinned to the new maximum.
+          nextTo = newTotal;
+        } else if (newTotal < oldTotal && prevTo > newTotal) {
+          // Cap to the new maximum.
+          nextTo = newTotal;
+        }
+        const nextFrom = Math.min(roundFrom, newTotal);
+        const finalTo = Math.max(nextFrom, nextTo);
+        if (nextFrom === roundFrom && finalTo === prevTo) return it;
+        return {
+          ...it,
+          exercise: { ...ex, roundFrom: nextFrom, roundTo: finalTo },
         };
       }),
     );
@@ -216,6 +271,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         repExercises: [],
         timeCap: undefined,
         targetRounds: undefined,
+        totalRounds: type === "circuit" ? Math.max(1, Math.floor(totalRounds)) : undefined,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
     }
@@ -428,6 +484,29 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </div>
       )}
 
+      {type === "circuit" && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="section-total-rounds" className="text-xs font-medium text-muted-foreground">
+            Rounds
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="section-total-rounds"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={totalRounds}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                handleSetTotalRounds(Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1);
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -490,6 +569,8 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                     key={it.exercise.id}
                     item={it}
                     showStartFromRound={mode === "circuit"}
+                    hideRoundsChip={mode === "circuit"}
+                    sectionTotalRounds={totalRounds}
                     onChange={(patch) => handleUpdate(it.exercise.id, patch)}
                     onDelete={() => handleDelete(it.exercise.id)}
                   />

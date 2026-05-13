@@ -166,8 +166,15 @@ export function TimeSectionRunner({
     titleText = sectionTitle;
     const exerciseCount = section.items.length;
     const totalSecs = sectionTotalSeconds(section);
+    const isCircuitSection = (section.type ?? "circuit") === "circuit";
+    const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+    const roundsPart =
+      isCircuitSection
+        ? ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`
+        : "";
     subtext =
       `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}` +
+      roundsPart +
       (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
@@ -179,18 +186,21 @@ export function TimeSectionRunner({
             section.items.map((it) => {
               const work = Math.max(0, it.exercise.durationSeconds);
               const rest = Math.max(0, it.rest.durationSeconds);
-              const rounds = exerciseRounds(it);
               const isCircuit = (section.type ?? "circuit") === "circuit";
-              const roundFrom = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
-              const roundTo = Math.max(
-                roundFrom,
-                Math.floor(it.exercise.roundTo ?? rounds),
-              );
-              const isDefault = roundFrom === 1 && roundTo === rounds;
-              const roundsLabel =
-                isCircuit && !isDefault
-                  ? `rounds ${roundFrom}–${roundTo}`
-                  : `${rounds} ${rounds === 1 ? "round" : "rounds"}`;
+              let roundsLabel: string | null;
+              if (isCircuit) {
+                const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+                const roundFrom = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
+                const roundTo = Math.max(
+                  roundFrom,
+                  Math.floor(it.exercise.roundTo ?? sectionRounds),
+                );
+                const isDefault = roundFrom === 1 && roundTo === sectionRounds;
+                roundsLabel = isDefault ? null : `rounds ${roundFrom}–${roundTo}`;
+              } else {
+                const rounds = exerciseRounds(it);
+                roundsLabel = `${rounds} ${rounds === 1 ? "round" : "rounds"}`;
+              }
               const meta = [
                 `${work}s`,
                 rest > 0 ? `rest ${rest}s` : null,

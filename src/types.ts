@@ -53,6 +53,8 @@ export interface Section {
   timeCap?: number;
   /** Number of rounds. Stopwatch (forTime) only. Defaults to 1 when missing. */
   targetRounds?: number;
+  /** CIRCUIT mode only: number of rounds for the whole section. Defaults to 1. */
+  totalRounds?: number;
   /** Optional coach notes (markdown) shown on the section's Ready screen. */
   notes?: string;
 }

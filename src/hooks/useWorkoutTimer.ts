@@ -118,8 +118,10 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   const totalRoundsPerItem = section.items.map((it) =>
     Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
   );
-  // For circuit mode, honor roundFrom / roundTo (no upper clamp — values may
-  // exceed `rounds`, defining a ladder).
+  // Circuit: total rounds come from the section, not per exercise.
+  const sectionTotalRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+  // For circuit mode, honor roundFrom / roundTo, defaulting to the section's
+  // total round range (1..sectionTotalRounds).
   // For sets mode, always span 1..rounds.
   const startRoundPerItem = section.items.map((it) => {
     if (mode !== "circuit") return 1;
@@ -128,7 +130,7 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   const endRoundPerItem = section.items.map((it, i) => {
     if (mode !== "circuit") return totalRoundsPerItem[i];
     const from = startRoundPerItem[i];
-    const to = Math.floor(it.exercise.roundTo ?? totalRoundsPerItem[i]);
+    const to = Math.floor(it.exercise.roundTo ?? sectionTotalRounds);
     return Math.max(from, to);
   });
 
@@ -138,8 +140,10 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   if (mode === "sets") {
     totalEmissions = totalRoundsPerItem.reduce((a, b) => a + b, 0);
   } else {
-    for (let i = 0; i < itemCount; i++) {
-      totalEmissions += Math.max(0, endRoundPerItem[i] - startRoundPerItem[i] + 1);
+    for (let r = 1; r <= sectionTotalRounds; r++) {
+      for (let i = 0; i < itemCount; i++) {
+        if (r >= startRoundPerItem[i] && r <= endRoundPerItem[i]) totalEmissions += 1;
+      }
     }
   }
   let emitted = 0;
@@ -149,7 +153,6 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
     const isLastOfSection = emitted === totalEmissions;
     const exerciseSecs = Math.max(0, item.exercise.durationSeconds);
     const restSecs = Math.max(0, item.rest.durationSeconds);
-    // Skip exercises with 0 duration; if rest is also 0, skip the entire item.
     if (exerciseSecs === 0 && restSecs === 0) return;
     if (exerciseSecs > 0) {
       out.push({
@@ -176,17 +179,14 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   };
 
   if (mode === "sets") {
-    // All rounds of exercise 1, then all rounds of exercise 2, etc.
     section.items.forEach((item, itemIndex) => {
       for (let r = 1; r <= totalRoundsPerItem[itemIndex]; r++) {
         pushExerciseAndRest(item, itemIndex, r);
       }
     });
   } else {
-    // Circuit: walk the section round-by-round. For each round r in
-    // [1, sectionMaxRound], emit each item where startFromRound <= r <= endRound.
-    const sectionMaxRound = endRoundPerItem.reduce((a, b) => Math.max(a, b), 0);
-    for (let r = 1; r <= sectionMaxRound; r++) {
+    // Circuit: walk the section round-by-round across section.totalRounds.
+    for (let r = 1; r <= sectionTotalRounds; r++) {
       for (let i = 0; i < itemCount; i++) {
         if (r < startRoundPerItem[i] || r > endRoundPerItem[i]) continue;
         pushExerciseAndRest(section.items[i], i, r);
@@ -633,11 +633,7 @@ export function useWorkoutTimer(
   const sectionMode = currentSection?.mode ?? "circuit";
   const totalRounds = currentSection
     ? sectionMode === "circuit"
-      ? currentSection.items.reduce((max, it) => {
-          const total = Math.max(1, Math.floor(it.exercise.rounds ?? 1));
-          const to = Math.max(1, Math.floor(it.exercise.roundTo ?? total));
-          return Math.max(max, to);
-        }, 1)
+      ? Math.max(1, Math.floor(currentSection.totalRounds ?? 1))
       : currentItem
         ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1))
         : 1
