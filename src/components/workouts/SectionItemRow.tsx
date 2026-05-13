@@ -8,6 +8,10 @@ interface Props {
   item: SectionItem;
   /** When true, render the "From / To" round range row (CIRCUIT only). */
   showStartFromRound?: boolean;
+  /** When true, hide the per-exercise ×n rounds chip (CIRCUIT mode). */
+  hideRoundsChip?: boolean;
+  /** Section-level total rounds. Used as the max for From/To in CIRCUIT. */
+  sectionTotalRounds?: number;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
@@ -21,7 +25,14 @@ interface Props {
 
 type EditingField = "exercise" | "rest" | "rounds" | "roundFrom" | "roundTo" | null;
 
-export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }: Props) {
+export function SectionItemRow({
+  item,
+  showStartFromRound,
+  hideRoundsChip,
+  sectionTotalRounds,
+  onChange,
+  onDelete,
+}: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
 
   const exerciseSecs = item.exercise.durationSeconds;
