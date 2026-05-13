@@ -484,6 +484,29 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </div>
       )}
 
+      {type === "circuit" && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="section-total-rounds" className="text-xs font-medium text-muted-foreground">
+            Rounds
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="section-total-rounds"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={totalRounds}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                handleSetTotalRounds(Number.isFinite(n) ? Math.max(1, Math.floor(n)) : 1);
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-20 rounded-md border border-input bg-background px-2 py-2 text-right text-base outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
