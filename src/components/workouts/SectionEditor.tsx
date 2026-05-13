@@ -153,10 +153,17 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         if (it.exercise.id !== id) return it;
         const { restSeconds, ...exercisePatch } = patch;
         const nextExercise = { ...it.exercise, ...exercisePatch };
-        // Floor startFromRound to a positive integer (no upper bound — may exceed rounds).
-        if (nextExercise.startFromRound !== undefined) {
-          nextExercise.startFromRound = Math.max(1, Math.floor(nextExercise.startFromRound));
-        }
+        // Clamp rounds, roundFrom, roundTo to positive integers and reconcile.
+        const rounds = Math.max(1, Math.floor(nextExercise.rounds ?? 1));
+        nextExercise.rounds = rounds;
+        let roundFrom = Math.max(1, Math.floor(nextExercise.roundFrom ?? 1));
+        let roundTo = Math.max(1, Math.floor(nextExercise.roundTo ?? rounds));
+        // Cap roundTo to rounds when rounds was reduced.
+        if (roundTo > rounds) roundTo = rounds;
+        // Raise roundTo to roundFrom when roundFrom exceeds it.
+        if (roundFrom > roundTo) roundTo = roundFrom;
+        nextExercise.roundFrom = roundFrom;
+        nextExercise.roundTo = roundTo;
         return {
           exercise: nextExercise,
           rest: restSeconds === undefined ? it.rest : { ...it.rest, durationSeconds: restSeconds },
