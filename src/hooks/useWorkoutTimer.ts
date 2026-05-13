@@ -138,7 +138,9 @@ function planSection(section: Section, sectionIndex: number): PlannedInterval[] 
   if (mode === "sets") {
     totalEmissions = totalRoundsPerItem.reduce((a, b) => a + b, 0);
   } else {
-    for (let i = 0; i < itemCount; i++) totalEmissions += totalRoundsPerItem[i];
+    for (let i = 0; i < itemCount; i++) {
+      totalEmissions += Math.max(0, endRoundPerItem[i] - startRoundPerItem[i] + 1);
+    }
   }
   let emitted = 0;
 
