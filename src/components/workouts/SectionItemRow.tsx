@@ -6,19 +6,20 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: SectionItem;
-  /** When true, render the "From round" row (CIRCUIT only). */
+  /** When true, render the "From / To" round range row (CIRCUIT only). */
   showStartFromRound?: boolean;
   onChange: (patch: {
     name?: string;
     durationSeconds?: number;
     rounds?: number;
-    startFromRound?: number;
+    roundFrom?: number;
+    roundTo?: number;
     restSeconds?: number;
   }) => void;
   onDelete: () => void;
 }
 
-type EditingField = "exercise" | "rest" | "rounds" | "startFromRound" | null;
+type EditingField = "exercise" | "rest" | "rounds" | "roundFrom" | "roundTo" | null;
 
 export function SectionItemRow({ item, showStartFromRound, onChange, onDelete }: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
