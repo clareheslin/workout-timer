@@ -21,6 +21,24 @@ function migrateLegacyWorkout(w: unknown): Workout {
   out.sections = (out.sections as unknown[]).map((s) => {
     const sec = { ...(s as Record<string, unknown>) };
     if (!Array.isArray(sec.items)) sec.items = [];
+    sec.items = (sec.items as unknown[]).map((it) => {
+      const item = { ...(it as Record<string, unknown>) };
+      const ex = item.exercise as Record<string, unknown> | undefined;
+      if (ex && ex.startFromRound !== undefined) {
+        const start = Number(ex.startFromRound);
+        const rounds = Number(ex.rounds ?? 1);
+        const nextEx = { ...ex };
+        if (nextEx.roundFrom === undefined) {
+          nextEx.roundFrom = Number.isFinite(start) ? start : 1;
+        }
+        if (nextEx.roundTo === undefined) {
+          nextEx.roundTo = Number.isFinite(rounds) ? rounds : 1;
+        }
+        delete nextEx.startFromRound;
+        item.exercise = nextEx;
+      }
+      return item;
+    });
     return sec;
   });
 
