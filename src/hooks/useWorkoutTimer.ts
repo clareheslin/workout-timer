@@ -633,8 +633,8 @@ export function useWorkoutTimer(
     ? sectionMode === "circuit"
       ? currentSection.items.reduce((max, it) => {
           const total = Math.max(1, Math.floor(it.exercise.rounds ?? 1));
-          const start = Math.max(1, Math.floor(it.exercise.startFromRound ?? 1));
-          return Math.max(max, start + total - 1);
+          const to = Math.max(1, Math.floor(it.exercise.roundTo ?? total));
+          return Math.max(max, to);
         }, 1)
       : currentItem
         ? Math.max(1, Math.floor(currentItem.exercise.rounds ?? 1))
