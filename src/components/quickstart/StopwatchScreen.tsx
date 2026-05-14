@@ -24,6 +24,7 @@ function format(ms: number): string {
 }
 
 export function StopwatchScreen({ onBack }: Props) {
+  const audio = useWorkoutAudio();
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsedMs, setElapsedMs] = useState(0);
   const startRef = useRef<number | null>(null);
