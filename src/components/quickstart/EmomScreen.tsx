@@ -9,6 +9,7 @@ import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
 import { useExitConfirm } from "@/components/runner/useExitConfirm";
 import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
+import { MuteButton } from "@/components/runner/MuteButton";
 
 interface Props {
   onBack: () => void;
