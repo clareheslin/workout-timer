@@ -199,7 +199,11 @@ export function TimeSectionRunner({
                 roundsLabel = isDefault ? null : `rounds ${roundFrom}–${roundTo}`;
               } else {
                 const rounds = exerciseRounds(it);
-                roundsLabel = `${rounds} ${rounds === 1 ? "round" : "rounds"}`;
+                const isSetsSection = section.type === "sets";
+                const unit = isSetsSection
+                  ? rounds === 1 ? "set" : "sets"
+                  : rounds === 1 ? "round" : "rounds";
+                roundsLabel = `${rounds} ${unit}`;
               }
               const meta = [
                 `${work}s`,
