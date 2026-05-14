@@ -102,8 +102,8 @@ export function StopwatchScreen({ onBack }: Props) {
     phase === "running" ? "exercise" : "rest";
 
   const headerOpts = useMemo(
-    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
-    [handleBack, tone],
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const, headerRight: <MuteButton audio={audio} /> }),
+    [handleBack, tone, audio],
   );
   usePageHeader("", headerOpts);
 
