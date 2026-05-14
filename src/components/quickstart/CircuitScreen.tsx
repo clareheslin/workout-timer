@@ -322,8 +322,8 @@ export function CircuitScreen({ onBack }: Props) {
         : "default";
 
   const headerOpts = useMemo(
-    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
-    [handleBack, tone],
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const, headerRight: <MuteButton audio={audio} /> }),
+    [handleBack, tone, audio],
   );
   usePageHeader("", headerOpts);
 
