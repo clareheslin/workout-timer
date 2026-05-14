@@ -22,7 +22,9 @@ interface Props {
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
-type Phase = "idle" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done";
+
+const PREP_SECONDS = 10;
 
 /** Runs a single forTime or amrap section. The exercise list is static.
  *  Supports pause/resume, skip (jump to end), and end-section (same as skip). */
