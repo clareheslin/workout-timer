@@ -246,7 +246,9 @@ export function RepSectionRunner({
 
   const targetRounds = Math.max(1, Math.floor(section.targetRounds ?? 1));
   const isIdle = phase === "idle";
+  const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
+  const isActiveOrPrep = isActive || isPrep;
 
   if (phase === "idle") {
     eyebrow = "Section Preview";
@@ -266,6 +268,9 @@ export function RepSectionRunner({
         Start Section
       </button>
     );
+  } else if (isPrep) {
+    // No primary button during prep — skip lives in zone G.
+    primary = null;
   } else {
     // running / paused — no eyebrow/subtext (reserved for empty in scaffold)
     if (phase === "running") {
