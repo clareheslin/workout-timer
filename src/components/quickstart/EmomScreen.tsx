@@ -347,9 +347,14 @@ export function EmomScreen({ onBack }: Props) {
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
           {line2}
         </p>
-        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
-          {formatMMSS(isPrep ? prepRemaining : remaining)}
-        </p>
+        <div
+          className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/30"
+          aria-live="polite"
+        >
+          <p className="text-7xl font-bold tabular-nums">
+            {formatMMSS(isPrep ? prepRemaining : remaining)}
+          </p>
+        </div>
         <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
           {wrpLabel}
         </p>
