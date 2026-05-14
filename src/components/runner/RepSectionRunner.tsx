@@ -22,7 +22,9 @@ interface Props {
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
-type Phase = "idle" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done";
+
+const PREP_SECONDS = 10;
 
 /** Runs a single forTime or amrap section. The exercise list is static.
  *  Supports pause/resume, skip (jump to end), and end-section (same as skip). */
@@ -46,6 +48,7 @@ export function RepSectionRunner({
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
+  const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
@@ -54,7 +57,7 @@ export function RepSectionRunner({
   const remainingRef = useRef(timeCap);
 
   useEffect(() => {
-    if (phase === "running" || phase === "paused") {
+    if (phase === "running" || phase === "paused" || phase === "prep") {
       audio.startSession();
     } else {
       audio.endSession();
@@ -136,13 +139,40 @@ export function RepSectionRunner({
     }
   }, [isAmrap, phase, remaining, audio, finalize, timeCap]);
 
+  // Prep countdown ticking + beeps + auto-advance to running.
+  useEffect(() => {
+    if (phase !== "prep") return;
+    const id = window.setInterval(() => {
+      setPrepRemaining((prev) => {
+        const next = prev - 1;
+        if (next > 0 && next <= 3) audio.playCountdownBeep();
+        if (next <= 0) {
+          window.clearInterval(id);
+          audio.playTransitionBeep();
+          if (isAmrap) setRemaining(timeCap);
+          else setElapsed(0);
+          setPhase("running");
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [phase, audio, isAmrap, timeCap]);
+
   const handleStart = () => {
     audio.unlock();
     completedRef.current = false;
+    setPrepRemaining(PREP_SECONDS);
+    setPhase("prep");
+  };
+
+  const handleSkipPrep = () => {
+    audio.playTransitionBeep();
     if (isAmrap) setRemaining(timeCap);
     else setElapsed(0);
+    setPrepRemaining(0);
     setPhase("running");
-    audio.playTransitionBeep();
   };
 
   const handlePauseResume = () => {
@@ -167,7 +197,14 @@ export function RepSectionRunner({
     },
   });
 
-  const tone: PageHeaderTone = phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
+  const tone: PageHeaderTone =
+    phase === "running"
+      ? "exercise"
+      : phase === "paused"
+        ? "paused"
+        : phase === "prep"
+          ? "rest"
+          : "default";
 
   const isActiveOrPaused = phase === "running" || phase === "paused";
   const { node: navNode, sheet: navSheet } = useSectionNav({
@@ -209,7 +246,9 @@ export function RepSectionRunner({
 
   const targetRounds = Math.max(1, Math.floor(section.targetRounds ?? 1));
   const isIdle = phase === "idle";
+  const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
+  const isActiveOrPrep = isActive || isPrep;
 
   if (phase === "idle") {
     eyebrow = "Section Preview";
@@ -229,6 +268,9 @@ export function RepSectionRunner({
         Start Section
       </button>
     );
+  } else if (isPrep) {
+    // No primary button during prep — skip lives in zone G.
+    primary = null;
   } else {
     // running / paused — no eyebrow/subtext (reserved for empty in scaffold)
     if (phase === "running") {
@@ -292,15 +334,50 @@ export function RepSectionRunner({
         className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
       >
         <RunnerScaffold
-          eyebrow={isActive ? undefined : eyebrow}
+          eyebrow={isActiveOrPrep ? undefined : eyebrow}
           title={sectionTitle}
-          subtext={isActive ? undefined : subtext}
+          subtext={isActiveOrPrep ? undefined : subtext}
           primary={primary}
           primaryHint={primaryHint}
         >
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
-          {isActive ? (
+          {isPrep ? (
+            <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
+              {/* B: Interval label */}
+              <p className="text-3xl font-bold shrink-0">Get ready…</p>
+              {/* C: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* spacer to push timer toward middle/bottom like active layout */}
+              <div className="flex-1 min-h-0" />
+              {/* D: Timer */}
+              <div className="flex justify-center shrink-0">
+                <div
+                  className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
+                  aria-live="polite"
+                >
+                  <p className="text-7xl font-bold tabular-nums">
+                    {formatDuration(prepRemaining)}
+                  </p>
+                </div>
+              </div>
+              {/* E: Status */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* F: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* G: Skip prep */}
+              <div className="flex justify-center shrink-0">
+                <button
+                  type="button"
+                  onClick={handleSkipPrep}
+                  className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+                  aria-label="Skip prep countdown"
+                >
+                  Skip Interval ›
+                </button>
+              </div>
+            </div>
+          ) : isActive ? (
             <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
               {/* B: scrollable list (+ rounds label for stopwatch) */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
