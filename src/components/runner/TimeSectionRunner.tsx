@@ -256,9 +256,14 @@ export function TimeSectionRunner({
           <p className="text-3xl font-bold">{intervalLabel}</p>
           <p className="text-sm opacity-80">{upNextText}</p>
         </div>
-        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
-          {t.timeRemaining}
-        </p>
+        <div
+          className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/30"
+          aria-live="polite"
+        >
+          <p className="text-7xl font-bold tabular-nums">
+            {formatDuration(t.timeRemaining)}
+          </p>
+        </div>
         <div className="flex flex-col items-center gap-3">
           <p className="text-xs opacity-70">{meta}</p>
           <button
