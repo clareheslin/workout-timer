@@ -334,15 +334,50 @@ export function RepSectionRunner({
         className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
       >
         <RunnerScaffold
-          eyebrow={isActive ? undefined : eyebrow}
+          eyebrow={isActiveOrPrep ? undefined : eyebrow}
           title={sectionTitle}
-          subtext={isActive ? undefined : subtext}
+          subtext={isActiveOrPrep ? undefined : subtext}
           primary={primary}
           primaryHint={primaryHint}
         >
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
-          {isActive ? (
+          {isPrep ? (
+            <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
+              {/* B: Interval label */}
+              <p className="text-3xl font-bold shrink-0">Get ready…</p>
+              {/* C: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* spacer to push timer toward middle/bottom like active layout */}
+              <div className="flex-1 min-h-0" />
+              {/* D: Timer */}
+              <div className="flex justify-center shrink-0">
+                <div
+                  className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
+                  aria-live="polite"
+                >
+                  <p className="text-7xl font-bold tabular-nums">
+                    {formatDuration(prepRemaining)}
+                  </p>
+                </div>
+              </div>
+              {/* E: Status */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* F: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* G: Skip prep */}
+              <div className="flex justify-center shrink-0">
+                <button
+                  type="button"
+                  onClick={handleSkipPrep}
+                  className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+                  aria-label="Skip prep countdown"
+                >
+                  Skip Interval ›
+                </button>
+              </div>
+            </div>
+          ) : isActive ? (
             <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
               {/* B: scrollable list (+ rounds label for stopwatch) */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
