@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
 import { useExitConfirm } from "@/components/runner/useExitConfirm";
 import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
+import { MuteButton } from "@/components/runner/MuteButton";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
