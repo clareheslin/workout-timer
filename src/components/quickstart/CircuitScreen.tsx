@@ -430,36 +430,29 @@ export function CircuitScreen({ onBack }: Props) {
       : handleSkip;
     const exerciseIdx =
       current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount;
-    // Zone 3 top labels — two reserved lines.
-    let line1: string;
-    let line2: string;
-    if (phase === "done") {
-      line1 = "\u00A0";
-      line2 = "Complete";
-    } else if (isPrep) {
-      line1 = "\u00A0";
-      line2 = "Get ready…";
-    } else {
-      line1 = `Round ${currentRound} of ${rounds}`;
-      line2 = `Exercise ${exerciseIdx} of ${exerciseCount}`;
-    }
-    // Work/Rest/Paused slot under the timer.
-    const wrpLabel =
-      phase === "paused"
-        ? "Paused"
-        : isWorkActive
-          ? "Work"
-          : phase === "running" && isRestStep
-            ? "Rest"
-            : "\u00A0";
+    // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (counter) / G (skip)
+    const intervalLabel =
+      phase === "done"
+        ? "Complete"
+        : isPrep
+          ? "Get ready…"
+          : isWorkActive
+            ? "Work"
+            : isRestStep
+              ? "Rest"
+              : "\u00A0";
+    const counterLabel =
+      phase === "running" || phase === "paused"
+        ? `Exercise ${current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount} of ${exerciseCount} · Round ${currentRound} of ${rounds}`
+        : "\u00A0";
+    const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line1}
-        </p>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line2}
-        </p>
+        {/* B */}
+        <p className="text-3xl font-bold">{intervalLabel}</p>
+        {/* C */}
+        <p className="text-sm opacity-80">{"\u00A0"}</p>
+        {/* D */}
         <div
           className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
           aria-live="polite"
@@ -468,10 +461,11 @@ export function CircuitScreen({ onBack }: Props) {
             {formatMMSS(isPrep ? prepRemaining : remaining)}
           </p>
         </div>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {wrpLabel}
-        </p>
-        {/* Reserved space for the skip button (Circuit always reserves). */}
+        {/* E */}
+        <p className="text-sm opacity-80">{statusLabel}</p>
+        {/* F */}
+        <p className="text-sm opacity-80">{counterLabel}</p>
+        {/* G — always reserved */}
         <div className="min-h-[2rem] flex items-center">
           {showSkip && (
             <button
