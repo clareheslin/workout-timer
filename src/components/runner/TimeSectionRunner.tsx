@@ -261,7 +261,7 @@ export function TimeSectionRunner({
           <p className="text-sm opacity-80">{upNextText}</p>
         </div>
         <div
-          className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/30"
+          className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
           aria-live="polite"
         >
           <p className="text-7xl font-bold tabular-nums">

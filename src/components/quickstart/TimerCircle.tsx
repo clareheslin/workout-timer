@@ -24,7 +24,7 @@ export function TimerCircle({ label, time, hint }: Props) {
         </div>
       )}
       <div
-        className="flex h-56 w-56 items-center justify-center rounded-full border-4 border-current/20"
+        className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/20"
         aria-live="polite"
       >
         <span className="font-mono text-6xl font-bold tabular-nums tracking-tight">
