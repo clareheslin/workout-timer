@@ -139,13 +139,40 @@ export function RepSectionRunner({
     }
   }, [isAmrap, phase, remaining, audio, finalize, timeCap]);
 
+  // Prep countdown ticking + beeps + auto-advance to running.
+  useEffect(() => {
+    if (phase !== "prep") return;
+    const id = window.setInterval(() => {
+      setPrepRemaining((prev) => {
+        const next = prev - 1;
+        if (next > 0 && next <= 3) audio.playCountdownBeep();
+        if (next <= 0) {
+          window.clearInterval(id);
+          audio.playTransitionBeep();
+          if (isAmrap) setRemaining(timeCap);
+          else setElapsed(0);
+          setPhase("running");
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [phase, audio, isAmrap, timeCap]);
+
   const handleStart = () => {
     audio.unlock();
     completedRef.current = false;
+    setPrepRemaining(PREP_SECONDS);
+    setPhase("prep");
+  };
+
+  const handleSkipPrep = () => {
+    audio.playTransitionBeep();
     if (isAmrap) setRemaining(timeCap);
     else setElapsed(0);
+    setPrepRemaining(0);
     setPhase("running");
-    audio.playTransitionBeep();
   };
 
   const handlePauseResume = () => {
@@ -170,7 +197,14 @@ export function RepSectionRunner({
     },
   });
 
-  const tone: PageHeaderTone = phase === "running" ? "exercise" : phase === "paused" ? "paused" : "default";
+  const tone: PageHeaderTone =
+    phase === "running"
+      ? "exercise"
+      : phase === "paused"
+        ? "paused"
+        : phase === "prep"
+          ? "rest"
+          : "default";
 
   const isActiveOrPaused = phase === "running" || phase === "paused";
   const { node: navNode, sheet: navSheet } = useSectionNav({
