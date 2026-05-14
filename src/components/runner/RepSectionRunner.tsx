@@ -57,7 +57,7 @@ export function RepSectionRunner({
   const remainingRef = useRef(timeCap);
 
   useEffect(() => {
-    if (phase === "running" || phase === "paused") {
+    if (phase === "running" || phase === "paused" || phase === "prep") {
       audio.startSession();
     } else {
       audio.endSession();
