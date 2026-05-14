@@ -331,23 +331,18 @@ export function EmomScreen({ onBack }: Props) {
           startRunningFromZero();
         }
       : handleSkip;
-    // Zone 3 top labels: line 1 always nbsp; line 2 holds the single content line.
-    const line1 = "\u00A0";
-    const line2 =
-      phase === "done"
-        ? "Complete"
-        : isPrep
-          ? "Get ready…"
-          : `Round ${round} of ${rounds}`;
-    const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
+    const intervalLabel =
+      phase === "done" ? "Complete" : isPrep ? "Get ready…" : "\u00A0";
+    const counterLabel =
+      phase === "running" || phase === "paused" ? `Round ${round} of ${rounds}` : "\u00A0";
+    const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line1}
-        </p>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line2}
-        </p>
+        {/* B */}
+        <p className="text-3xl font-bold">{intervalLabel}</p>
+        {/* C */}
+        <p className="text-sm opacity-80">{"\u00A0"}</p>
+        {/* D */}
         <div
           className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
           aria-live="polite"
@@ -356,10 +351,11 @@ export function EmomScreen({ onBack }: Props) {
             {formatMMSS(isPrep ? prepRemaining : remaining)}
           </p>
         </div>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {wrpLabel}
-        </p>
-        {/* Reserved space for the skip button (EMOM always reserves). */}
+        {/* E */}
+        <p className="text-sm opacity-80">{statusLabel}</p>
+        {/* F */}
+        <p className="text-sm opacity-80">{counterLabel}</p>
+        {/* G — always reserved */}
         <div className="min-h-[2rem] flex items-center">
           {showSkip && (
             <button
