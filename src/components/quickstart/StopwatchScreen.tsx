@@ -144,12 +144,10 @@ export function StopwatchScreen({ onBack }: Props) {
     primaryHint = "Tap to resume · Hold to reset";
   }
 
-  // Zone 3 top labels: line 1 always nbsp; line 2 holds single content line.
-  const line1 = "\u00A0";
-  const line2 = phase === "idle" ? "\u00A0" : "\u00A0";
-  // (Stopwatch has no countdown/complete; Running/Paused show nbsp.)
-  // Work/Rest/Paused slot under timer:
-  const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
+  // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (nbsp). No G.
+  const isActive = phase === "running" || phase === "paused";
+  const labelB = isActive ? "Elapsed time" : "\u00A0";
+  const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
 
   return (
     <>
@@ -161,12 +159,11 @@ export function StopwatchScreen({ onBack }: Props) {
           primaryHint={primaryHint}
         >
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {line1}
-            </p>
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {line2}
-            </p>
+            {/* B */}
+            <p className="text-sm opacity-80">{labelB}</p>
+            {/* C */}
+            <p className="text-sm opacity-80">{"\u00A0"}</p>
+            {/* D */}
             <div
               className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
               aria-live="polite"
@@ -175,9 +172,10 @@ export function StopwatchScreen({ onBack }: Props) {
                 {format(elapsedMs)}
               </p>
             </div>
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {wrpLabel}
-            </p>
+            {/* E */}
+            <p className="text-sm opacity-80">{statusLabel}</p>
+            {/* F */}
+            <p className="text-sm opacity-80">{"\u00A0"}</p>
           </div>
         </RunnerScaffold>
       </div>
