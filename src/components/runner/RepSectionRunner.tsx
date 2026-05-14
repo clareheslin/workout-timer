@@ -301,14 +301,20 @@ export function RepSectionRunner({
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActive ? (
-            <div className="flex flex-1 flex-col gap-4 min-h-0">
-              <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
-              <div className="flex flex-col items-center gap-2 shrink-0">
+            <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
+              {/* B: scrollable list (+ rounds label for stopwatch) */}
+              <div className="flex flex-1 flex-col min-h-0 gap-2">
+                <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
                 {!isAmrap && (
-                  <p className="text-sm opacity-80">
+                  <p className="text-sm opacity-80 shrink-0">
                     {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
                   </p>
                 )}
+              </div>
+              {/* C: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* D: Timer */}
+              <div className="flex justify-center shrink-0">
                 <div
                   className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
                   aria-live="polite"
@@ -317,6 +323,13 @@ export function RepSectionRunner({
                     {liveTimerLabel}
                   </p>
                 </div>
+              </div>
+              {/* E: Status */}
+              <p className="text-sm opacity-80 shrink-0">{phase === "paused" ? "Paused" : "\u00A0"}</p>
+              {/* F: blank reserved */}
+              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* G: Skip */}
+              <div className="flex justify-center shrink-0">
                 <button
                   type="button"
                   onClick={handleEnd}

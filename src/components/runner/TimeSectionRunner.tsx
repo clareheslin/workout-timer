@@ -256,10 +256,11 @@ export function TimeSectionRunner({
       : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-between gap-4 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-3xl font-bold">{intervalLabel}</p>
-          <p className="text-sm opacity-80">{upNextText}</p>
-        </div>
+        {/* B: Interval label */}
+        <p className="text-3xl font-bold">{intervalLabel}</p>
+        {/* C: Up next */}
+        <p className="text-sm opacity-80">{upNextText}</p>
+        {/* D: Timer */}
         <div
           className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
           aria-live="polite"
@@ -268,17 +269,19 @@ export function TimeSectionRunner({
             {formatDuration(t.timeRemaining)}
           </p>
         </div>
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-xs opacity-70">{meta}</p>
-          <button
-            type="button"
-            onClick={t.skipInterval}
-            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-            aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
-          >
-            Skip Interval ›
-          </button>
-        </div>
+        {/* E: Status */}
+        <p className="text-sm opacity-80">{t.phase === "paused" ? "Paused" : "\u00A0"}</p>
+        {/* F: Counter */}
+        <p className="text-sm opacity-80">{meta}</p>
+        {/* G: Skip */}
+        <button
+          type="button"
+          onClick={t.skipInterval}
+          className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+          aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
+        >
+          Skip Interval ›
+        </button>
       </div>
     );
     if (t.phase === "running") {
