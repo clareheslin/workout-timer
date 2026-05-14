@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
 import { useExitConfirm } from "@/components/runner/useExitConfirm";
 import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
+import { MuteButton } from "@/components/runner/MuteButton";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 
 interface Props {
@@ -22,6 +24,7 @@ function format(ms: number): string {
 }
 
 export function StopwatchScreen({ onBack }: Props) {
+  const audio = useWorkoutAudio();
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsedMs, setElapsedMs] = useState(0);
   const startRef = useRef<number | null>(null);
@@ -99,8 +102,8 @@ export function StopwatchScreen({ onBack }: Props) {
     phase === "running" ? "exercise" : "rest";
 
   const headerOpts = useMemo(
-    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
-    [handleBack, tone],
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const, headerRight: <MuteButton audio={audio} /> }),
+    [handleBack, tone, audio],
   );
   usePageHeader("", headerOpts);
 
@@ -141,12 +144,10 @@ export function StopwatchScreen({ onBack }: Props) {
     primaryHint = "Tap to resume · Hold to reset";
   }
 
-  // Zone 3 top labels: line 1 always nbsp; line 2 holds single content line.
-  const line1 = "\u00A0";
-  const line2 = phase === "idle" ? "\u00A0" : "\u00A0";
-  // (Stopwatch has no countdown/complete; Running/Paused show nbsp.)
-  // Work/Rest/Paused slot under timer:
-  const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
+  // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (nbsp). No G.
+  const isActive = phase === "running" || phase === "paused";
+  const labelB = isActive ? "Elapsed time" : "\u00A0";
+  const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
 
   return (
     <>
@@ -158,12 +159,11 @@ export function StopwatchScreen({ onBack }: Props) {
           primaryHint={primaryHint}
         >
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {line1}
-            </p>
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {line2}
-            </p>
+            {/* B */}
+            <p className="text-sm opacity-80">{labelB}</p>
+            {/* C */}
+            <p className="text-sm opacity-80">{"\u00A0"}</p>
+            {/* D */}
             <div
               className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
               aria-live="polite"
@@ -172,9 +172,10 @@ export function StopwatchScreen({ onBack }: Props) {
                 {format(elapsedMs)}
               </p>
             </div>
-            <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-              {wrpLabel}
-            </p>
+            {/* E */}
+            <p className="text-sm opacity-80">{statusLabel}</p>
+            {/* F */}
+            <p className="text-sm opacity-80">{"\u00A0"}</p>
           </div>
         </RunnerScaffold>
       </div>

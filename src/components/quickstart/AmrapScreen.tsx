@@ -9,6 +9,7 @@ import { RunnerScaffold } from "@/components/runner/RunnerScaffold";
 import { useExitConfirm } from "@/components/runner/useExitConfirm";
 import { HoldToExitButton } from "@/components/runner/HoldToExitButton";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
+import { MuteButton } from "@/components/runner/MuteButton";
 
 interface Props {
   onBack: () => void;
@@ -158,8 +159,8 @@ export function AmrapScreen({ onBack }: Props) {
     isActive ? (isPrep ? "rest" : "exercise") : phase === "paused" || phase === "done" ? "rest" : "default";
 
   const headerOpts = useMemo(
-    () => ({ onBack: handleBack, tone, backIcon: "x" as const }),
-    [handleBack, tone],
+    () => ({ onBack: handleBack, tone, backIcon: "x" as const, headerRight: <MuteButton audio={audio} /> }),
+    [handleBack, tone, audio],
   );
   usePageHeader("", headerOpts);
 
@@ -202,20 +203,28 @@ export function AmrapScreen({ onBack }: Props) {
       setPhase("running");
       startRunning(duration);
     };
-    // Zone 3 top labels — line 1 always nbsp; line 2 holds the single content line.
-    const line1 = "\u00A0";
-    const line2 =
-      phase === "done" ? "Complete" : isPrep ? "Get ready…" : "Time remaining";
-    // Work/Rest/Paused slot — only "Paused" on AMRAP, nbsp otherwise.
-    const wrpLabel = phase === "paused" ? "Paused" : "\u00A0";
+    const isRunningOrPaused = phase === "running" || phase === "paused";
+    const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
+    // B is large bold for prep/done, small muted for running/paused
+    const labelB =
+      phase === "done"
+        ? { text: "Complete", large: true }
+        : isPrep
+          ? { text: "Get ready…", large: true }
+          : isRunningOrPaused
+            ? { text: "Time remaining", large: false }
+            : { text: "\u00A0", large: false };
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line1}
-        </p>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {line2}
-        </p>
+        {/* B */}
+        {labelB.large ? (
+          <p className="text-3xl font-bold">{labelB.text}</p>
+        ) : (
+          <p className="text-sm opacity-80">{labelB.text}</p>
+        )}
+        {/* C */}
+        <p className="text-sm opacity-80">{"\u00A0"}</p>
+        {/* D */}
         <div
           className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
           aria-live="polite"
@@ -224,19 +233,22 @@ export function AmrapScreen({ onBack }: Props) {
             {formatMMSS(isPrep ? prepRemaining : remaining)}
           </p>
         </div>
-        <p className="min-h-[1.25rem] text-sm font-medium uppercase tracking-wider opacity-80">
-          {wrpLabel}
-        </p>
-        {/* AMRAP: skip slot is NOT reserved when absent. */}
-        {isPrep && (
-          <button
-            type="button"
-            onClick={onSkipPrep}
-            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-          >
-            Skip Interval ›
-          </button>
-        )}
+        {/* E */}
+        <p className="text-sm opacity-80">{statusLabel}</p>
+        {/* F */}
+        <p className="text-sm opacity-80">{"\u00A0"}</p>
+        {/* G — always reserved, button only during prep */}
+        <div className="min-h-[2rem] flex items-center">
+          {isPrep && (
+            <button
+              type="button"
+              onClick={onSkipPrep}
+              className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+            >
+              Skip Interval ›
+            </button>
+          )}
+        </div>
       </div>
     );
     if (phase === "running" || phase === "prep") {
