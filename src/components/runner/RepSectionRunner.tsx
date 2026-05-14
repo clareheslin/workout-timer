@@ -379,8 +379,11 @@ export function RepSectionRunner({
             </div>
           ) : isActive ? (
             <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
-              {/* B: scrollable list (+ rounds label for stopwatch) */}
+              {/* B: static label + scrollable list (+ rounds label for stopwatch) */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
+                <p className="text-sm opacity-80 shrink-0">
+                  {isAmrap ? "Time remaining" : "Elapsed time"}
+                </p>
                 <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
                 {!isAmrap && (
                   <p className="text-sm opacity-80 shrink-0">
