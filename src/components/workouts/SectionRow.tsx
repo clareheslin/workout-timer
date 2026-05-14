@@ -100,13 +100,19 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                   </p>
                 );
               }
+              const isCircuit = (section.mode ?? "circuit") !== "sets";
+              const countLabel = isCircuit
+                ? `${Math.max(1, Math.floor(section.totalRounds ?? 1))} ${
+                    Math.max(1, Math.floor(section.totalRounds ?? 1)) === 1 ? "round" : "rounds"
+                  }`
+                : `${sectionTotalSets(section)} total ${sectionTotalSets(section) === 1 ? "set" : "sets"}`;
               return (
                 <p className="text-xs text-muted-foreground">
                   {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
                   {" · "}
-                  {sectionTotalSets(section)} total {sectionTotalSets(section) === 1 ? "set" : "sets"}
+                  {countLabel}
                   {" · "}
-                  {(section.mode ?? "circuit") === "sets" ? "Sets" : "Circuit"}
+                  {isCircuit ? "Circuit" : "Sets"}
                   {" · "}
                   {formatDuration(sectionTotalSeconds(section))}
                 </p>
