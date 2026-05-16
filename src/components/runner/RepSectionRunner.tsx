@@ -361,18 +361,20 @@ export function RepSectionRunner({
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActiveOrPrep ? (
-            <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
-              {/* B: above-list label + scrollable list */}
+            <div className="flex flex-1 flex-col gap-6 min-h-0 text-center">
+              {/* B: above-list label (fixed-height slot) + scrollable list */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
-                {isPrep ? (
-                  <p className="text-3xl font-bold shrink-0">Get ready…</p>
-                ) : !isAmrap ? (
-                  <p className="text-sm opacity-80 shrink-0">
-                    {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
-                  </p>
-                ) : (
-                  <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-                )}
+                <div className="h-9 shrink-0 flex items-center justify-center">
+                  {isPrep ? (
+                    <p className="text-3xl font-bold">Get ready…</p>
+                  ) : !isAmrap ? (
+                    <p className="text-sm opacity-80">
+                      {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
+                    </p>
+                  ) : (
+                    <p className="text-sm opacity-80">{"\u00A0"}</p>
+                  )}
+                </div>
                 <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
               </div>
               {/* C: eyebrow above timer */}
