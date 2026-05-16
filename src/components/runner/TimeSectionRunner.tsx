@@ -16,6 +16,8 @@ interface Props {
   totalSections: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
+  hasStarted: boolean;
+  onStart: () => void;
   onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
@@ -30,6 +32,8 @@ export function TimeSectionRunner({
   totalSections,
   workoutName,
   audio,
+  hasStarted,
+  onStart,
   onComplete,
   onExitWorkout,
   onNavigateToSection,
