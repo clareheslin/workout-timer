@@ -138,6 +138,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return (
       <WorkoutPreview
         workout={workout}
+        hasStarted={hasStarted}
         onBegin={() => {
           audio.unlock();
           setPhase("running-section");
@@ -151,6 +152,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return (
       <DoneScreen
         workoutName={workout.name}
+        hasStarted={hasStarted}
         onExit={() => onExit("done")}
         onExitWorkout={handleExitWorkout}
       />
@@ -166,6 +168,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         nextSectionName={next?.name ?? `Section ${sectionIndex + 2}`}
         sectionIndex={sectionIndex}
         totalSections={workout.sections.length}
+        hasStarted={hasStarted}
         onNavigateToSection={goToSection}
         onNext={handleNextSection}
         onExit={handleExitWorkout}
@@ -185,12 +188,31 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         totalSections={workout.sections.length}
         workoutName={workout.name}
         audio={audio}
+        hasStarted={hasStarted}
+        onStart={handleSectionStart}
         onComplete={handleSectionComplete}
         onExitWorkout={handleExitWorkout}
         onNavigateToSection={goToSection}
       />
     );
   }
+
+  return (
+    <TimeSectionRunner
+      key={currentSection.id}
+      section={currentSection}
+      sectionIndex={sectionIndex}
+      totalSections={workout.sections.length}
+      workoutName={workout.name}
+      audio={audio}
+      hasStarted={hasStarted}
+      onStart={handleSectionStart}
+      onComplete={handleSectionComplete}
+      onExitWorkout={handleExitWorkout}
+      onNavigateToSection={goToSection}
+    />
+  );
+}
 
   return (
     <TimeSectionRunner
