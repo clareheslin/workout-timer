@@ -170,7 +170,12 @@ export function RepSectionRunner({
     onStart();
     completedRef.current = false;
     setPrepRemaining(PREP_SECONDS);
+    setPrepPaused(false);
     setPhase("prep");
+  };
+
+  const handlePrepPauseResume = () => {
+    setPrepPaused((p) => !p);
   };
 
   const handleSkipPrep = () => {
