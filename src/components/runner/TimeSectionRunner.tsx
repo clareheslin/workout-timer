@@ -235,8 +235,8 @@ export function TimeSectionRunner({
                   <span className="text-xs opacity-70 tabular-nums">{meta}</span>
                 </li>
               );
-            })
-          )}
+            });
+          })()}
         </ul>
       </>
     );
