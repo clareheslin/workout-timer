@@ -220,6 +220,7 @@ interface BetweenSectionsScreenProps {
   nextSectionName: string;
   sectionIndex: number;
   totalSections: number;
+  hasStarted: boolean;
   onNavigateToSection: (target: number) => void;
   onNext: () => void;
   onExit: () => void;
@@ -231,11 +232,12 @@ function BetweenSectionsScreen({
   nextSectionName,
   sectionIndex,
   totalSections,
+  hasStarted,
   onNavigateToSection,
   onNext,
   onExit,
 }: BetweenSectionsScreenProps) {
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
