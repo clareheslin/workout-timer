@@ -33,6 +33,14 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const logSectionsRef = useRef<WorkoutLogSection[]>([]);
   const loggedRef = useRef(false);
   const sectionsWereSkippedRef = useRef(false);
+  const hasStartedRef = useRef(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  const handleSectionStart = useCallback(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    setHasStarted(true);
+  }, []);
 
   const currentSection = workout.sections[sectionIndex];
   const isLastSection = sectionIndex >= workout.sections.length - 1;
