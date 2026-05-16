@@ -17,6 +17,8 @@ interface Props {
   totalSections: number;
   workoutName: string;
   audio: UseWorkoutAudioResult;
+  hasStarted: boolean;
+  onStart: () => void;
   onComplete: (logSection: WorkoutLogSection) => void;
   onExitWorkout: () => void;
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
@@ -34,6 +36,8 @@ export function RepSectionRunner({
   totalSections,
   workoutName,
   audio,
+  hasStarted,
+  onStart,
   onComplete,
   onExitWorkout,
   onNavigateToSection,
@@ -162,6 +166,7 @@ export function RepSectionRunner({
 
   const handleStart = () => {
     audio.unlock();
+    onStart();
     completedRef.current = false;
     setPrepRemaining(PREP_SECONDS);
     setPhase("prep");
@@ -186,7 +191,7 @@ export function RepSectionRunner({
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
-  const { handleBack, sheet } = useExitConfirm(phase !== "idle", {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",

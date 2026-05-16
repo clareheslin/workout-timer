@@ -33,6 +33,14 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   const logSectionsRef = useRef<WorkoutLogSection[]>([]);
   const loggedRef = useRef(false);
   const sectionsWereSkippedRef = useRef(false);
+  const hasStartedRef = useRef(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  const handleSectionStart = useCallback(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    setHasStarted(true);
+  }, []);
 
   const currentSection = workout.sections[sectionIndex];
   const isLastSection = sectionIndex >= workout.sections.length - 1;
@@ -130,6 +138,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return (
       <WorkoutPreview
         workout={workout}
+        hasStarted={hasStarted}
         onBegin={() => {
           audio.unlock();
           setPhase("running-section");
@@ -143,6 +152,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
     return (
       <DoneScreen
         workoutName={workout.name}
+        hasStarted={hasStarted}
         onExit={() => onExit("done")}
         onExitWorkout={handleExitWorkout}
       />
@@ -158,6 +168,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         nextSectionName={next?.name ?? `Section ${sectionIndex + 2}`}
         sectionIndex={sectionIndex}
         totalSections={workout.sections.length}
+        hasStarted={hasStarted}
         onNavigateToSection={goToSection}
         onNext={handleNextSection}
         onExit={handleExitWorkout}
@@ -177,6 +188,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         totalSections={workout.sections.length}
         workoutName={workout.name}
         audio={audio}
+        hasStarted={hasStarted}
+        onStart={handleSectionStart}
         onComplete={handleSectionComplete}
         onExitWorkout={handleExitWorkout}
         onNavigateToSection={goToSection}
@@ -192,6 +205,8 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       totalSections={workout.sections.length}
       workoutName={workout.name}
       audio={audio}
+      hasStarted={hasStarted}
+      onStart={handleSectionStart}
       onComplete={handleSectionComplete}
       onExitWorkout={handleExitWorkout}
       onNavigateToSection={goToSection}
@@ -205,6 +220,7 @@ interface BetweenSectionsScreenProps {
   nextSectionName: string;
   sectionIndex: number;
   totalSections: number;
+  hasStarted: boolean;
   onNavigateToSection: (target: number) => void;
   onNext: () => void;
   onExit: () => void;
@@ -216,11 +232,12 @@ function BetweenSectionsScreen({
   nextSectionName,
   sectionIndex,
   totalSections,
+  hasStarted,
   onNavigateToSection,
   onNext,
   onExit,
 }: BetweenSectionsScreenProps) {
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
@@ -272,16 +289,18 @@ function BetweenSectionsScreen({
 
 function DoneScreen({
   workoutName,
+  hasStarted,
   onExit,
   onExitWorkout,
 }: {
   workoutName: string;
+  hasStarted: boolean;
   onExit: () => void;
   onExitWorkout: () => void;
 }) {
   // Even on the done screen, the back chevron must still confirm before
   // leaving — same as every other runner screen.
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
