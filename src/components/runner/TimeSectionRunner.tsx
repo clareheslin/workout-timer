@@ -261,14 +261,9 @@ export function TimeSectionRunner({
         {/* C: Up next */}
         <p className="text-sm opacity-80">{upNextText}</p>
         {/* D: Timer */}
-        <div
-          className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
-          aria-live="polite"
-        >
-          <p className="text-7xl font-bold tabular-nums">
-            {formatDuration(t.timeRemaining)}
-          </p>
-        </div>
+        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+          {formatDuration(t.timeRemaining)}
+        </p>
         {/* E: Status */}
         <p className="text-sm opacity-80">{t.phase === "paused" ? "Paused" : "\u00A0"}</p>
         {/* F: Counter */}

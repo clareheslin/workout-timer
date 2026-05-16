@@ -352,14 +352,9 @@ export function RepSectionRunner({
               <div className="flex-1 min-h-0" />
               {/* D: Timer */}
               <div className="flex justify-center shrink-0">
-                <div
-                  className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
-                  aria-live="polite"
-                >
-                  <p className="text-7xl font-bold tabular-nums">
-                    {formatDuration(prepRemaining)}
-                  </p>
-                </div>
+                <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+                  {formatDuration(prepRemaining)}
+                </p>
               </div>
               {/* E: Status */}
               <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
@@ -395,14 +390,9 @@ export function RepSectionRunner({
               <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
               {/* D: Timer */}
               <div className="flex justify-center shrink-0">
-                <div
-                  className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
-                  aria-live="polite"
-                >
-                  <p className="text-7xl font-bold tabular-nums">
-                    {liveTimerLabel}
-                  </p>
-                </div>
+                <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+                  {liveTimerLabel}
+                </p>
               </div>
               {/* E: Status */}
               <p className="text-sm opacity-80 shrink-0">{phase === "paused" ? "Paused" : "\u00A0"}</p>
