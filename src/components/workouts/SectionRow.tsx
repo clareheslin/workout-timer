@@ -88,13 +88,17 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 const reps = section.repExercises ?? [];
                 return (
                   <p className="text-xs text-muted-foreground">
-                    {typeLabel}
+                    <span className="whitespace-nowrap">{typeLabel}</span>
                     {" · "}
-                    {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
+                    <span className="whitespace-nowrap">
+                      {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
+                    </span>
                     {t === "amrap" && (
                       <>
                         {" · "}
-                        {formatDuration(section.timeCap ?? 0)}
+                        <span className="whitespace-nowrap">
+                          {formatDuration(section.timeCap ?? 0)}
+                        </span>
                       </>
                     )}
                   </p>
@@ -108,13 +112,19 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 : `${sectionTotalSets(section)} total ${sectionTotalSets(section) === 1 ? "set" : "sets"}`;
               return (
                 <p className="text-xs text-muted-foreground">
-                  {isCircuit ? "Circuit" : "Sets"}
+                  <span className="whitespace-nowrap">
+                    {isCircuit ? "Circuit" : "Sets"}
+                  </span>
                   {" · "}
-                  {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
+                  <span className="whitespace-nowrap">
+                    {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
+                  </span>
                   {" · "}
-                  {countLabel}
+                  <span className="whitespace-nowrap">{countLabel}</span>
                   {" · "}
-                  {formatDuration(sectionTotalSeconds(section))}
+                  <span className="whitespace-nowrap">
+                    {formatDuration(sectionTotalSeconds(section))}
+                  </span>
                 </p>
               );
             })()}
