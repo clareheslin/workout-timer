@@ -166,6 +166,7 @@ export function RepSectionRunner({
 
   const handleStart = () => {
     audio.unlock();
+    onStart();
     completedRef.current = false;
     setPrepRemaining(PREP_SECONDS);
     setPhase("prep");
