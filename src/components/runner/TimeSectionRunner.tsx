@@ -168,13 +168,19 @@ export function TimeSectionRunner({
     const totalSecs = sectionTotalSeconds(section);
     const isCircuitSection = (section.type ?? "circuit") === "circuit";
     const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
-    const roundsPart =
-      isCircuitSection
-        ? ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`
-        : "";
+    let countPart = "";
+    if (isCircuitSection) {
+      countPart = ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`;
+    } else if ((section.type ?? "circuit") === "sets") {
+      const totalSets = section.items.reduce(
+        (sum, it) => sum + Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
+        0,
+      );
+      countPart = ` · ${totalSets} total ${totalSets === 1 ? "set" : "sets"}`;
+    }
     subtext =
       `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}` +
-      roundsPart +
+      countPart +
       (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
@@ -182,21 +188,29 @@ export function TimeSectionRunner({
         <ul className="flex flex-col divide-y divide-border border-y border-border">
           {section.items.length === 0 ? (
             <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
-          ) : (
-            section.items.map((it) => {
+          ) : (() => {
+            const isCircuit = (section.type ?? "circuit") === "circuit";
+            const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+            const anyNonDefault = isCircuit && section.items.some((it) => {
+              const rf = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
+              const rt = Math.max(rf, Math.floor(it.exercise.roundTo ?? sectionRounds));
+              return !(rf === 1 && rt === sectionRounds);
+            });
+            return section.items.map((it) => {
               const work = Math.max(0, it.exercise.durationSeconds);
               const rest = Math.max(0, it.rest.durationSeconds);
-              const isCircuit = (section.type ?? "circuit") === "circuit";
               let roundsLabel: string | null;
               if (isCircuit) {
-                const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
-                const roundFrom = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
-                const roundTo = Math.max(
-                  roundFrom,
-                  Math.floor(it.exercise.roundTo ?? sectionRounds),
-                );
-                const isDefault = roundFrom === 1 && roundTo === sectionRounds;
-                roundsLabel = isDefault ? null : `rounds ${roundFrom}–${roundTo}`;
+                if (anyNonDefault) {
+                  const roundFrom = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
+                  const roundTo = Math.max(
+                    roundFrom,
+                    Math.floor(it.exercise.roundTo ?? sectionRounds),
+                  );
+                  roundsLabel = `rounds ${roundFrom}–${roundTo}`;
+                } else {
+                  roundsLabel = null;
+                }
               } else {
                 const rounds = exerciseRounds(it);
                 const isSetsSection = section.type === "sets";
@@ -221,8 +235,8 @@ export function TimeSectionRunner({
                   <span className="text-xs opacity-70 tabular-nums">{meta}</span>
                 </li>
               );
-            })
-          )}
+            });
+          })()}
         </ul>
       </>
     );

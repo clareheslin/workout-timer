@@ -76,15 +76,28 @@ export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
                   : s.items.length;
                 const exerciseLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
                 let timeLabel: string | null = null;
+                let roundsLabel: string | null = null;
                 if (t === "amrap") {
                   timeLabel = formatDuration(Math.max(0, s.timeCap ?? 0));
                 } else if (t === "forTime") {
                   timeLabel = null;
+                  const r = Math.max(1, Math.floor(s.targetRounds ?? 1));
+                  roundsLabel = `${r} ${r === 1 ? "round" : "rounds"}`;
+                } else if (t === "sets") {
+                  const secs = sectionTotalSeconds(s);
+                  timeLabel = secs > 0 ? formatDuration(secs) : null;
+                  const totalSets = s.items.reduce(
+                    (sum, it) => sum + Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
+                    0,
+                  );
+                  roundsLabel = `${totalSets} total ${totalSets === 1 ? "set" : "sets"}`;
                 } else {
                   const secs = sectionTotalSeconds(s);
                   timeLabel = secs > 0 ? formatDuration(secs) : null;
+                  const r = Math.max(1, Math.floor(s.totalRounds ?? 1));
+                  roundsLabel = `${r} ${r === 1 ? "round" : "rounds"}`;
                 }
-                const meta = [TYPE_LABEL[t] ?? t, timeLabel, exerciseLabel]
+                const meta = [TYPE_LABEL[t] ?? t, exerciseLabel, roundsLabel, timeLabel]
                   .filter(Boolean)
                   .join(" · ");
                 return (

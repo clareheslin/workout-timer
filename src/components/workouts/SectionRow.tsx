@@ -88,13 +88,13 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 const reps = section.repExercises ?? [];
                 return (
                   <p className="text-xs text-muted-foreground">
-                    {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
-                    {" · "}
                     {typeLabel}
+                    {" · "}
+                    {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
                     {t === "amrap" && (
                       <>
                         {" · "}
-                        cap {formatDuration(section.timeCap ?? 0)}
+                        {formatDuration(section.timeCap ?? 0)}
                       </>
                     )}
                   </p>
@@ -108,11 +108,11 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 : `${sectionTotalSets(section)} total ${sectionTotalSets(section) === 1 ? "set" : "sets"}`;
               return (
                 <p className="text-xs text-muted-foreground">
+                  {isCircuit ? "Circuit" : "Sets"}
+                  {" · "}
                   {section.items.length} {section.items.length === 1 ? "exercise" : "exercises"}
                   {" · "}
                   {countLabel}
-                  {" · "}
-                  {isCircuit ? "Circuit" : "Sets"}
                   {" · "}
                   {formatDuration(sectionTotalSeconds(section))}
                 </p>
