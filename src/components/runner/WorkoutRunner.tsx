@@ -256,10 +256,8 @@ function BetweenSectionsScreen({
             onPrev={() => onNavigateToSection(sectionIndex - 1)}
             onNext={() => onNavigateToSection(sectionIndex + 1)}
           />
-          {/* Reserve space for mute toggle so navigator position stays fixed */}
-          <span aria-hidden="true" className="invisible">
-            <span className="inline-block h-5 w-5 p-1.5" />
-          </span>
+          {/* Reserve space matching MuteButton (h-8 w-8) so navigator stays fixed */}
+          <span aria-hidden="true" className="inline-flex h-8 w-8 shrink-0" />
         </>
       ),
     }),
