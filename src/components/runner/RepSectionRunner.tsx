@@ -146,7 +146,7 @@ export function RepSectionRunner({
 
   // Prep countdown ticking + beeps + auto-advance to running.
   useEffect(() => {
-    if (phase !== "prep") return;
+    if (phase !== "prep" || prepPaused) return;
     const id = window.setInterval(() => {
       setPrepRemaining((prev) => {
         const next = prev - 1;
@@ -163,7 +163,7 @@ export function RepSectionRunner({
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [phase, audio, isAmrap, timeCap]);
+  }, [phase, prepPaused, audio, isAmrap, timeCap]);
 
   const handleStart = () => {
     audio.unlock();
