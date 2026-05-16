@@ -280,8 +280,15 @@ export function RepSectionRunner({
       </button>
     );
   } else if (isPrep) {
-    // No primary button during prep — skip lives in zone G.
-    primary = null;
+    primary = (
+      <button
+        type="button"
+        onClick={handlePrepPauseResume}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
+      >
+        {prepPaused ? "Resume" : "Pause"}
+      </button>
+    );
   } else {
     // running / paused — no eyebrow/subtext (reserved for empty in scaffold)
     if (phase === "running") {
