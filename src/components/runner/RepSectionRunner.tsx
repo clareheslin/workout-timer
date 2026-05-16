@@ -53,6 +53,7 @@ export function RepSectionRunner({
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
+  const [prepPaused, setPrepPaused] = useState(false);
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
@@ -145,7 +146,7 @@ export function RepSectionRunner({
 
   // Prep countdown ticking + beeps + auto-advance to running.
   useEffect(() => {
-    if (phase !== "prep") return;
+    if (phase !== "prep" || prepPaused) return;
     const id = window.setInterval(() => {
       setPrepRemaining((prev) => {
         const next = prev - 1;
@@ -162,14 +163,19 @@ export function RepSectionRunner({
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [phase, audio, isAmrap, timeCap]);
+  }, [phase, prepPaused, audio, isAmrap, timeCap]);
 
   const handleStart = () => {
     audio.unlock();
     onStart();
     completedRef.current = false;
     setPrepRemaining(PREP_SECONDS);
+    setPrepPaused(false);
     setPhase("prep");
+  };
+
+  const handlePrepPauseResume = () => {
+    setPrepPaused((p) => !p);
   };
 
   const handleSkipPrep = () => {
@@ -274,8 +280,15 @@ export function RepSectionRunner({
       </button>
     );
   } else if (isPrep) {
-    // No primary button during prep — skip lives in zone G.
-    primary = null;
+    primary = (
+      <button
+        type="button"
+        onClick={handlePrepPauseResume}
+        className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
+      >
+        {prepPaused ? "Resume" : "Pause"}
+      </button>
+    );
   } else {
     // running / paused — no eyebrow/subtext (reserved for empty in scaffold)
     if (phase === "running") {
@@ -347,72 +360,60 @@ export function RepSectionRunner({
         >
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
-          {isPrep ? (
+          {isActiveOrPrep ? (
             <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
-              {/* B: Interval label */}
-              <p className="text-3xl font-bold shrink-0">Get ready…</p>
-              {/* C: blank reserved */}
-              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-              {/* spacer to push timer toward middle/bottom like active layout */}
-              <div className="flex-1 min-h-0" />
-              {/* D: Timer */}
-              <div className="flex justify-center shrink-0">
-                <p className="text-7xl font-bold tabular-nums" aria-live="polite">
-                  {formatDuration(prepRemaining)}
-                </p>
-              </div>
-              {/* E: Status */}
-              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-              {/* F: blank reserved */}
-              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-              {/* G: Skip prep */}
-              <div className="flex justify-center shrink-0">
-                <button
-                  type="button"
-                  onClick={handleSkipPrep}
-                  className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-                  aria-label="Skip prep countdown"
-                >
-                  Skip Interval ›
-                </button>
-              </div>
-            </div>
-          ) : isActive ? (
-            <div className="flex flex-1 flex-col gap-4 min-h-0 text-center">
-              {/* B: static label + scrollable list (+ rounds label for stopwatch) */}
+              {/* B: above-list label + scrollable list */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
-                <p className="text-sm opacity-80 shrink-0">
-                  {isAmrap ? "Time remaining" : "Elapsed time"}
-                </p>
-                <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
-                {!isAmrap && (
+                {isPrep ? (
+                  <p className="text-3xl font-bold shrink-0">Get ready…</p>
+                ) : !isAmrap ? (
                   <p className="text-sm opacity-80 shrink-0">
                     {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
                   </p>
+                ) : (
+                  <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
                 )}
+                <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
               </div>
-              {/* C: blank reserved */}
-              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* C: eyebrow above timer */}
+              <p className="text-sm opacity-80 shrink-0">
+                {isPrep ? "Get ready…" : isAmrap ? "Time remaining" : "Elapsed time"}
+              </p>
               {/* D: Timer */}
               <div className="flex justify-center shrink-0">
                 <p className="text-7xl font-bold tabular-nums" aria-live="polite">
-                  {liveTimerLabel}
+                  {isPrep ? formatDuration(prepRemaining) : liveTimerLabel}
                 </p>
               </div>
               {/* E: Status */}
-              <p className="text-sm opacity-80 shrink-0">{phase === "paused" ? "Paused" : "\u00A0"}</p>
+              <p className="text-sm opacity-80 shrink-0">
+                {isPrep ? (prepPaused ? "Paused" : "\u00A0") : phase === "paused" ? "Paused" : "\u00A0"}
+              </p>
               {/* F: blank reserved */}
               <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-              {/* G: Skip */}
+              {/* G: Skip — hidden for stopwatch during active, visible for prep + amrap active */}
               <div className="flex justify-center shrink-0">
-                <button
-                  type="button"
-                  onClick={handleEnd}
-                  className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-                  aria-label="Skip to end of section"
-                >
-                  Skip Interval ›
-                </button>
+                {isPrep ? (
+                  <button
+                    type="button"
+                    onClick={handleSkipPrep}
+                    className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+                    aria-label="Skip prep countdown"
+                  >
+                    Skip Interval ›
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEnd}
+                    className={`rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100 ${!isAmrap ? "invisible" : ""}`}
+                    aria-label="Skip to end of section"
+                    aria-hidden={!isAmrap}
+                    tabIndex={!isAmrap ? -1 : undefined}
+                  >
+                    Skip Interval ›
+                  </button>
+                )}
               </div>
             </div>
           ) : (

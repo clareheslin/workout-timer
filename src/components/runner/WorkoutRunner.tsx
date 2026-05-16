@@ -249,12 +249,18 @@ function BetweenSectionsScreen({
       onBack: handleBack,
       backIcon: "x" as const,
       headerRight: (
-        <SectionNavigator
-          sectionIndex={sectionIndex}
-          totalSections={totalSections}
-          onPrev={() => onNavigateToSection(sectionIndex - 1)}
-          onNext={() => onNavigateToSection(sectionIndex + 1)}
-        />
+        <>
+          <SectionNavigator
+            sectionIndex={sectionIndex}
+            totalSections={totalSections}
+            onPrev={() => onNavigateToSection(sectionIndex - 1)}
+            onNext={() => onNavigateToSection(sectionIndex + 1)}
+          />
+          {/* Reserve space for mute toggle so navigator position stays fixed */}
+          <span aria-hidden="true" className="invisible">
+            <span className="inline-block h-5 w-5 p-1.5" />
+          </span>
+        </>
       ),
     }),
     [handleBack, sectionIndex, totalSections, onNavigateToSection],
