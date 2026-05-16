@@ -9,6 +9,7 @@ import { RunnerScaffold } from "./RunnerScaffold";
 
 interface Props {
   workout: Workout;
+  hasStarted: boolean;
   onBegin: () => void;
   onExit: () => void;
 }
@@ -24,8 +25,8 @@ const TYPE_LABEL: Record<string, string> = {
  *  Lists every section with its type, total time and exercise count, and shows
  *  workout-level coach notes. The back chevron always opens the standard
  *  Exit-workout confirmation dialog. */
-export function WorkoutPreview({ workout, onBegin, onExit }: Props) {
-  const { handleBack, sheet } = useExitConfirm(false, {
+export function WorkoutPreview({ workout, hasStarted, onBegin, onExit }: Props) {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
