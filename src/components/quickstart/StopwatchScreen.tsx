@@ -164,14 +164,9 @@ export function StopwatchScreen({ onBack }: Props) {
             {/* C */}
             <p className="text-sm opacity-80">{"\u00A0"}</p>
             {/* D */}
-            <div
-              className="flex h-72 w-72 items-center justify-center rounded-full border-4 border-current/30"
-              aria-live="polite"
-            >
-              <p className="text-7xl font-bold tabular-nums">
-                {format(elapsedMs)}
-              </p>
-            </div>
+            <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+              {format(elapsedMs)}
+            </p>
             {/* E */}
             <p className="text-sm opacity-80">{statusLabel}</p>
             {/* F */}
