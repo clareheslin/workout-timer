@@ -214,21 +214,6 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   );
 }
 
-  return (
-    <TimeSectionRunner
-      key={currentSection.id}
-      section={currentSection}
-      sectionIndex={sectionIndex}
-      totalSections={workout.sections.length}
-      workoutName={workout.name}
-      audio={audio}
-      onComplete={handleSectionComplete}
-      onExitWorkout={handleExitWorkout}
-      onNavigateToSection={goToSection}
-    />
-  );
-}
-
 interface BetweenSectionsScreenProps {
   workoutName: string;
   currentSectionName: string;
