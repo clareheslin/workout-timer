@@ -53,6 +53,7 @@ export function RepSectionRunner({
   const [elapsed, setElapsed] = useState(0);
   const [remaining, setRemaining] = useState(timeCap);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
+  const [prepPaused, setPrepPaused] = useState(false);
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
