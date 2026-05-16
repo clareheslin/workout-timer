@@ -168,13 +168,19 @@ export function TimeSectionRunner({
     const totalSecs = sectionTotalSeconds(section);
     const isCircuitSection = (section.type ?? "circuit") === "circuit";
     const sectionRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
-    const roundsPart =
-      isCircuitSection
-        ? ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`
-        : "";
+    let countPart = "";
+    if (isCircuitSection) {
+      countPart = ` · ${sectionRounds} ${sectionRounds === 1 ? "round" : "rounds"}`;
+    } else if ((section.type ?? "circuit") === "sets") {
+      const totalSets = section.items.reduce(
+        (sum, it) => sum + Math.max(1, Math.floor(it.exercise.rounds ?? 1)),
+        0,
+      );
+      countPart = ` · ${totalSets} total ${totalSets === 1 ? "set" : "sets"}`;
+    }
     subtext =
       `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}` +
-      roundsPart +
+      countPart +
       (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
