@@ -289,16 +289,18 @@ function BetweenSectionsScreen({
 
 function DoneScreen({
   workoutName,
+  hasStarted,
   onExit,
   onExitWorkout,
 }: {
   workoutName: string;
+  hasStarted: boolean;
   onExit: () => void;
   onExitWorkout: () => void;
 }) {
   // Even on the done screen, the back chevron must still confirm before
   // leaving — same as every other runner screen.
-  const { handleBack, sheet } = useExitConfirm(true, {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
