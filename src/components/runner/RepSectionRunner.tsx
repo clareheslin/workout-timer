@@ -191,7 +191,7 @@ export function RepSectionRunner({
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
-  const { handleBack, sheet } = useExitConfirm(phase !== "idle", {
+  const { handleBack, sheet } = useExitConfirm(hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
