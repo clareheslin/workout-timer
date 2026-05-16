@@ -151,6 +151,7 @@ export function TimeSectionRunner({
 
   const handleStart = () => {
     audio.unlock();
+    onStart();
     t.start();
   };
 
