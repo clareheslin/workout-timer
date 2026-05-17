@@ -204,46 +204,31 @@ export function AmrapScreen({ onBack }: Props) {
       startRunning(duration);
     };
     const isRunningOrPaused = phase === "running" || phase === "paused";
-    const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
-    // B is large bold for prep/done, small muted for running/paused
-    const labelB =
-      phase === "done"
-        ? { text: "Complete", large: true }
-        : isPrep
-          ? { text: "Get ready…", large: true }
-          : isRunningOrPaused
-            ? { text: "Time remaining", large: false }
-            : { text: "\u00A0", large: false };
+    const labelText =
+      phase === "done" ? "Complete" : isPrep ? "Get ready…" : "\u00A0";
+    const timerEyebrow = isRunningOrPaused ? "Time remaining" : "\u00A0";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* B */}
-        {labelB.large ? (
-          <p className="text-3xl font-bold">{labelB.text}</p>
-        ) : (
-          <p className="text-sm opacity-80">{labelB.text}</p>
-        )}
-        {/* C */}
+        {/* Z3 Label */}
+        <p className="text-3xl font-bold">{labelText}</p>
+        {/* Z3 Subtext (reserved) */}
         <p className="text-sm opacity-80">{"\u00A0"}</p>
-        {/* D */}
+        {/* Z3 Timer eyebrow */}
+        <p className="text-sm opacity-80">{timerEyebrow}</p>
+        {/* Z3 Timer */}
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {/* E */}
-        <p className="text-sm opacity-80">{statusLabel}</p>
-        {/* F */}
-        <p className="text-sm opacity-80">{"\u00A0"}</p>
-        {/* G — always reserved, button only during prep */}
-        <div className="min-h-[2rem] flex items-center">
-          {isPrep && (
-            <button
-              type="button"
-              onClick={onSkipPrep}
-              className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-            >
-              Skip Interval ›
-            </button>
-          )}
-        </div>
+        {/* Z3 Skip — prep only, not reserved otherwise */}
+        {isPrep && (
+          <button
+            type="button"
+            onClick={onSkipPrep}
+            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+          >
+            Skip Interval ›
+          </button>
+        )}
       </div>
     );
     if (phase === "running" || phase === "prep") {
