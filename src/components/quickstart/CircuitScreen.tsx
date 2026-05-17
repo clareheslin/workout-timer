@@ -441,28 +441,26 @@ export function CircuitScreen({ onBack }: Props) {
             : isRestStep
               ? "Rest"
               : "\u00A0";
-    const counterLabel =
+    const eyebrowLabel =
       phase === "running" || phase === "paused"
-        ? `Exercise ${current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount} of ${exerciseCount} · Round ${currentRound} of ${rounds}`
+        ? `Round ${currentRound} of ${rounds} · Exercise ${current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount} of ${exerciseCount}`
         : "\u00A0";
-    const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
+    const isDone = phase === "done";
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        {/* B */}
+        {/* Z3 Label */}
         <p className="text-3xl font-bold">{intervalLabel}</p>
-        {/* C */}
+        {/* Z3 Subtext (reserved) */}
         <p className="text-sm opacity-80">{"\u00A0"}</p>
-        {/* D */}
+        {/* Z3 Timer eyebrow */}
+        <p className="text-sm opacity-80">{eyebrowLabel}</p>
+        {/* Z3 Timer */}
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {/* E */}
-        <p className="text-sm opacity-80">{statusLabel}</p>
-        {/* F */}
-        <p className="text-sm opacity-80">{counterLabel}</p>
-        {/* G — always reserved */}
+        {/* Z3 Skip — reserved when done */}
         <div className="min-h-[2rem] flex items-center">
-          {showSkip && (
+          {showSkip ? (
             <button
               type="button"
               onClick={onSkip}
@@ -470,7 +468,11 @@ export function CircuitScreen({ onBack }: Props) {
             >
               Skip Interval ›
             </button>
-          )}
+          ) : isDone ? (
+            <span aria-hidden="true" className="invisible px-4 py-1.5 text-xs">
+              Skip Interval ›
+            </span>
+          ) : null}
         </div>
       </div>
     );
