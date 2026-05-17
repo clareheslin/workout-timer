@@ -429,12 +429,14 @@ export function CircuitScreen({ onBack }: Props) {
         }
       : handleSkip;
     // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (counter) / G (skip)
+    const isWorkStep =
+      (phase === "running" || phase === "paused") && current?.kind === "work";
     const intervalLabel =
       phase === "done"
         ? "Complete"
         : isPrep
           ? "Get ready…"
-          : isWorkActive
+          : isWorkStep
             ? "Work"
             : isRestStep
               ? "Rest"
