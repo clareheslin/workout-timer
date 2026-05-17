@@ -228,11 +228,11 @@ export function AmrapScreen({ onBack }: Props) {
         <p className="text-7xl font-bold tabular-nums" aria-live="polite">
           {formatMMSS(isPrep ? prepRemaining : remaining)}
         </p>
-        {/* Z3 Skip — prep only, not reserved otherwise */}
-        {isPrep && (
+        {/* Z3 Skip — prep + running */}
+        {showSkip && (
           <button
             type="button"
-            onClick={onSkipPrep}
+            onClick={onSkip}
             className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
           >
             Skip Interval ›
