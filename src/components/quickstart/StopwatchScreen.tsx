@@ -144,10 +144,9 @@ export function StopwatchScreen({ onBack }: Props) {
     primaryHint = "Tap to resume · Hold to reset";
   }
 
-  // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (nbsp). No G.
   const isActive = phase === "running" || phase === "paused";
-  const labelB = isActive ? "Elapsed time" : "\u00A0";
-  const statusLabel = phase === "paused" ? "Paused" : "\u00A0";
+  const labelText = "\u00A0"; // No "Complete" state in stopwatch; reserved
+  const timerEyebrow = isActive ? "Elapsed time" : "\u00A0";
 
   return (
     <>
@@ -159,18 +158,17 @@ export function StopwatchScreen({ onBack }: Props) {
           primaryHint={primaryHint}
         >
           <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            {/* B */}
-            <p className="text-sm opacity-80">{labelB}</p>
-            {/* C */}
+            {/* Z3 Label (reserved) */}
+            <p className="text-3xl font-bold">{labelText}</p>
+            {/* Z3 Subtext (reserved) */}
             <p className="text-sm opacity-80">{"\u00A0"}</p>
-            {/* D */}
+            {/* Z3 Timer eyebrow */}
+            <p className="text-sm opacity-80">{timerEyebrow}</p>
+            {/* Z3 Timer */}
             <p className="text-7xl font-bold tabular-nums" aria-live="polite">
               {format(elapsedMs)}
             </p>
-            {/* E */}
-            <p className="text-sm opacity-80">{statusLabel}</p>
-            {/* F */}
-            <p className="text-sm opacity-80">{"\u00A0"}</p>
+            {/* No Z3 Skip — not present, not reserved */}
           </div>
         </RunnerScaffold>
       </div>
