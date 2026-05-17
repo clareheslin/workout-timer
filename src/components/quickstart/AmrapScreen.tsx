@@ -203,10 +203,19 @@ export function AmrapScreen({ onBack }: Props) {
       setPhase("running");
       startRunning(duration);
     };
+    const onSkipRunning = () => {
+      wc.stop();
+      audio.playSectionEndBeep();
+      lastBeepRef.current = null;
+      setRemaining(0);
+      setPhase("done");
+    };
     const isRunningOrPaused = phase === "running" || phase === "paused";
     const labelText =
       phase === "done" ? "Complete" : isPrep ? "Get ready…" : "\u00A0";
     const timerEyebrow = isRunningOrPaused ? "Time remaining" : "\u00A0";
+    const showSkip = isPrep || phase === "running";
+    const onSkip = isPrep ? onSkipPrep : onSkipRunning;
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
         {/* Z3 Label */}
