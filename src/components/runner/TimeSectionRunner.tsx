@@ -274,28 +274,29 @@ export function TimeSectionRunner({
       ? `Exercise ${exerciseNum} of ${exerciseCount} · ${roundLabel} ${t.currentRound} of ${t.totalRounds}`
       : "\u00A0";
     content = (
-      <div className="flex flex-1 flex-col items-center justify-between gap-4 text-center">
-        {/* B: Interval label */}
-        <p className="text-3xl font-bold">{intervalLabel}</p>
-        {/* C: Up next */}
-        <p className="text-sm opacity-80">{upNextText}</p>
-        {/* D: Timer */}
-        <p className="text-7xl font-bold tabular-nums" aria-live="polite">
+      <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
+        {/* Z3 Label */}
+        <p className="text-3xl font-bold shrink-0">{intervalLabel}</p>
+        {/* Z3 Subtext */}
+        <p className="text-sm opacity-80 shrink-0">{upNextText}</p>
+        <div className="flex-1" />
+        {/* Z3 Timer eyebrow */}
+        <p className="text-sm opacity-80 shrink-0">{meta}</p>
+        {/* Z3 Timer */}
+        <p className="text-7xl font-bold tabular-nums shrink-0" aria-live="polite">
           {formatDuration(t.timeRemaining)}
         </p>
-        {/* E: Status */}
-        <p className="text-sm opacity-80">{t.phase === "paused" ? "Paused" : "\u00A0"}</p>
-        {/* F: Counter */}
-        <p className="text-sm opacity-80">{meta}</p>
-        {/* G: Skip */}
-        <button
-          type="button"
-          onClick={t.skipInterval}
-          className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
-          aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
-        >
-          Skip Interval ›
-        </button>
+        {/* Z3 Skip */}
+        <div className="flex justify-center shrink-0">
+          <button
+            type="button"
+            onClick={t.skipInterval}
+            className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
+            aria-label={t.nextItem ? `Skip to ${t.nextItem.name}` : "Skip to end of section"}
+          >
+            Skip Interval ›
+          </button>
+        </div>
       </div>
     );
     if (t.phase === "running") {

@@ -361,39 +361,33 @@ export function RepSectionRunner({
           {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActiveOrPrep ? (
-            <div className="flex flex-1 flex-col gap-6 min-h-0 text-center">
-              {/* B: above-list label (fixed-height slot) + scrollable list */}
+            <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
+              {/* Z3 Label + scrollable exercise list */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
-                <div className="h-9 shrink-0 flex items-center justify-center">
-                  {isPrep ? (
-                    <p className="text-3xl font-bold">Get ready…</p>
-                  ) : !isAmrap ? (
-                    <p className="text-sm opacity-80">
-                      {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
-                    </p>
-                  ) : (
-                    <p className="text-sm opacity-80">{"\u00A0"}</p>
-                  )}
-                </div>
+                {isPrep ? (
+                  <p className="text-3xl font-bold shrink-0">Get ready…</p>
+                ) : isAmrap ? null : (
+                  <p className="text-sm opacity-80 shrink-0">
+                    {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
+                  </p>
+                )}
                 <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
               </div>
-              {/* C: eyebrow above timer */}
-              <p className="text-sm opacity-80 shrink-0">
-                {isPrep ? "Get ready…" : isAmrap ? "Time remaining" : "Elapsed time"}
-              </p>
-              {/* D: Timer */}
-              <div className="flex justify-center shrink-0">
-                <p className="text-7xl font-bold tabular-nums" aria-live="polite">
-                  {isPrep ? formatDuration(prepRemaining) : liveTimerLabel}
-                </p>
-              </div>
-              {/* E: Status */}
-              <p className="text-sm opacity-80 shrink-0">
-                {isPrep ? (prepPaused ? "Paused" : "\u00A0") : phase === "paused" ? "Paused" : "\u00A0"}
-              </p>
-              {/* F: blank reserved */}
+              {/* Z3 Subtext (reserved) */}
               <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
-              {/* G: Skip — hidden for stopwatch during active, visible for prep + amrap active */}
+              {/* Z3 Timer eyebrow */}
+              <p className="text-sm opacity-80 shrink-0">
+                {isPrep
+                  ? "\u00A0"
+                  : isAmrap
+                    ? "Time remaining"
+                    : "Elapsed time"}
+              </p>
+              {/* Z3 Timer */}
+              <p className="text-7xl font-bold tabular-nums shrink-0" aria-live="polite">
+                {isPrep ? formatDuration(prepRemaining) : liveTimerLabel}
+              </p>
+              {/* Z3 Skip — hidden for stopwatch during running/paused */}
               <div className="flex justify-center shrink-0">
                 {isPrep ? (
                   <button
@@ -404,18 +398,16 @@ export function RepSectionRunner({
                   >
                     Skip Interval ›
                   </button>
-                ) : (
+                ) : isAmrap ? (
                   <button
                     type="button"
                     onClick={handleEnd}
-                    className={`rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100 ${!isAmrap ? "invisible" : ""}`}
+                    className="rounded-full border border-current/30 px-4 py-1.5 text-xs font-medium opacity-80 hover:opacity-100"
                     aria-label="Skip to end of section"
-                    aria-hidden={!isAmrap}
-                    tabIndex={!isAmrap ? -1 : undefined}
                   >
                     Skip Interval ›
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (
