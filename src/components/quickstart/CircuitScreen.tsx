@@ -428,8 +428,6 @@ export function CircuitScreen({ onBack }: Props) {
           startStep(0);
         }
       : handleSkip;
-    const exerciseIdx =
-      current && current.exerciseIndex > 0 ? current.exerciseIndex : exerciseCount;
     // Zone 3 layout: B (label) / C (nbsp) / D (timer) / E (status) / F (counter) / G (skip)
     const intervalLabel =
       phase === "done"
