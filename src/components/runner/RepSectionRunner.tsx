@@ -364,17 +364,15 @@ export function RepSectionRunner({
             <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
               {/* Z3 Label + scrollable exercise list */}
               <div className="flex flex-1 flex-col min-h-0 gap-2">
-                {isPrep ? (
-                  <p className="text-3xl font-bold shrink-0">Get ready…</p>
-                ) : isAmrap ? null : (
+                {isPrep ? null : isAmrap ? null : (
                   <p className="text-sm opacity-80 shrink-0">
                     {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
                   </p>
                 )}
                 <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
               </div>
-              {/* Z3 Subtext (reserved) */}
-              <p className="text-sm opacity-80 shrink-0">{"\u00A0"}</p>
+              {/* Z3 Subtext */}
+              <p className="text-sm opacity-80 shrink-0">{isPrep ? "Get ready…" : "\u00A0"}</p>
               {/* Z3 Timer eyebrow */}
               <p className="text-sm opacity-80 shrink-0">
                 {isPrep
