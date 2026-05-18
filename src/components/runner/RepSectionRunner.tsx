@@ -362,32 +362,33 @@ export function RepSectionRunner({
 
           {isActiveOrPrep ? (
             <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
-              {/* Z3 Label + scrollable exercise list */}
-              <div className="flex flex-1 flex-col min-h-0 gap-2">
-                {isPrep ? null : isAmrap ? null : (
-                  <p className="text-sm opacity-80 shrink-0">
-                    {targetRounds} {targetRounds === 1 ? "round" : "rounds"}
-                  </p>
-                )}
-                <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
-              </div>
+              {/* Z3 Exercise list — scrollable */}
+              <ScrollArea className="flex-1 min-h-0">{renderExerciseList(false)}</ScrollArea>
+              {/* Z3 Label */}
+              <p className="text-3xl font-bold shrink-0">
+                {isPrep ? "Get ready…" : "\u00A0"}
+              </p>
               {/* Z3 Subtext */}
-              <p className="text-sm opacity-80 shrink-0">{isPrep ? "Get ready…" : "\u00A0"}</p>
-              {/* Z3 Timer eyebrow */}
               <p className="text-sm opacity-80 shrink-0">
                 {isPrep
                   ? "\u00A0"
                   : isAmrap
-                    ? "Time remaining"
-                    : "Elapsed time"}
+                    ? "\u00A0"
+                    : `${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`}
               </p>
+              {/* Z3 Timer eyebrow — not reserved when absent */}
+              {isPrep ? null : (
+                <p className="text-sm opacity-80 shrink-0">
+                  {isAmrap ? "Time remaining" : "Elapsed time"}
+                </p>
+              )}
               {/* Z3 Timer */}
               <p className="text-7xl font-bold tabular-nums shrink-0" aria-live="polite">
                 {isPrep ? formatDuration(prepRemaining) : liveTimerLabel}
               </p>
-              {/* Z3 Skip — hidden for stopwatch during running/paused */}
-              <div className="flex justify-center shrink-0">
-                {isPrep ? (
+              {/* Z3 Skip — shown for prep and Time Cap runner; hidden (no reserved space) for Stopwatch runner */}
+              {isPrep ? (
+                <div className="flex justify-center shrink-0">
                   <button
                     type="button"
                     onClick={handleSkipPrep}
@@ -396,7 +397,9 @@ export function RepSectionRunner({
                   >
                     Skip Interval ›
                   </button>
-                ) : isAmrap ? (
+                </div>
+              ) : isAmrap ? (
+                <div className="flex justify-center shrink-0">
                   <button
                     type="button"
                     onClick={handleEnd}
@@ -405,8 +408,8 @@ export function RepSectionRunner({
                   >
                     Skip Interval ›
                   </button>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </div>
           ) : (
             renderExerciseList(isIdle)
