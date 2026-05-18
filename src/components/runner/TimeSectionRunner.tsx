@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
   section: Section;
