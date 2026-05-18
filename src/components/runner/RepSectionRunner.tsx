@@ -56,6 +56,8 @@ export function RepSectionRunner({
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const [prepPaused, setPrepPaused] = useState(false);
 
+  useWakeLock(phase === "running" || phase === "paused" || phase === "prep");
+
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
   const lastCountdownKey = useRef<number | null>(null);
