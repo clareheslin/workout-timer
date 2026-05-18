@@ -61,6 +61,7 @@ export function TimeSectionRunner({
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: false });
+  useWakeLock(t.phase === "running" || t.phase === "paused");
   const completedRef = useRef(false);
 
   useEffect(() => {
