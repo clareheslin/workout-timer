@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
   section: Section;
@@ -60,6 +61,7 @@ export function TimeSectionRunner({
   );
 
   const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: false });
+  useWakeLock(t.phase === "running" || t.phase === "paused");
   const completedRef = useRef(false);
 
   useEffect(() => {

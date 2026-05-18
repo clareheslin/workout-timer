@@ -10,6 +10,7 @@ import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
   section: Section;
@@ -54,6 +55,8 @@ export function RepSectionRunner({
   const [remaining, setRemaining] = useState(timeCap);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const [prepPaused, setPrepPaused] = useState(false);
+
+  useWakeLock(phase === "running" || phase === "paused" || phase === "prep");
 
   const tickRef = useRef<number | null>(null);
   const completedRef = useRef(false);
