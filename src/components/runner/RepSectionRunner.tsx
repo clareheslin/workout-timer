@@ -370,11 +370,9 @@ export function RepSectionRunner({
               </p>
               {/* Z3 Subtext */}
               <p className="text-sm opacity-80 shrink-0">
-                {isPrep
+                {isAmrap
                   ? "\u00A0"
-                  : isAmrap
-                    ? "\u00A0"
-                    : `${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`}
+                  : `${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`}
               </p>
               {/* Z3 Timer eyebrow — not reserved when absent */}
               {isPrep ? null : (
