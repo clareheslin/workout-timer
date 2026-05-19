@@ -26,7 +26,7 @@ interface Props {
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
-type Phase = "idle" | "prep" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done" | "input";
 
 const PREP_SECONDS = 10;
 
