@@ -192,9 +192,20 @@ export function RepSectionRunner({
     audio.unlock();
     onStart();
     completedRef.current = false;
+    if (isRepsMode) {
+      setPhase("running");
+      return;
+    }
     setPrepRemaining(PREP_SECONDS);
     setPrepPaused(false);
     setPhase("prep");
+  };
+
+  const handleRepsComplete = (counts: Record<string, number>) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    audio.playSectionEndBeep();
+    onComplete(buildLog(0, counts));
   };
 
   const handlePrepPauseResume = () => {
