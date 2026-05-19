@@ -27,6 +27,17 @@ function migrateLegacyLog(log: unknown): WorkoutLog {
       delete sec.blockType;
       // Defensive default — render code assumes items is iterable.
       if (!Array.isArray(sec.items)) sec.items = [];
+      // Migrate legacy WorkoutLogRepItem.reps -> repsLower
+      if (Array.isArray(sec.repItems)) {
+        sec.repItems = (sec.repItems as unknown[]).map((ri) => {
+          const item = { ...(ri as Record<string, unknown>) };
+          if (item.reps !== undefined) {
+            if (item.repsLower === undefined) item.repsLower = item.reps;
+            delete item.reps;
+          }
+          return item;
+        });
+      }
       return sec;
     });
   }
