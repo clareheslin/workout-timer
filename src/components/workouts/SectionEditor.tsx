@@ -97,8 +97,10 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     return derived;
   });
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
+  const [timingMode, setTimingMode] = useState<"timer" | "reps">(initial.timingMode ?? "timer");
 
   const isRepBased = type === "forTime" || type === "amrap";
+  const usesRepItems = isRepBased || ((type === "circuit" || type === "sets") && timingMode === "reps");
 
   const initialTotalRoundsSnapshot = useMemo(() => {
     const seed = initial.totalRounds;
