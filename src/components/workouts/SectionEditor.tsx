@@ -393,7 +393,33 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
             <span className="text-xs font-medium text-muted-foreground">Timer</span>
             <Switch
               checked={timingMode === "timer"}
-              onCheckedChange={(checked) => setTimingMode(checked ? "timer" : "reps")}
+              onCheckedChange={(checked) => {
+                const nextMode = checked ? "timer" : "reps";
+                if (nextMode === "reps" && repItems.length === 0 && items.length > 0) {
+                  setRepItems(
+                    items.map((it) => ({
+                      id: it.exercise.id,
+                      name: it.exercise.name,
+                    })),
+                  );
+                } else if (nextMode === "timer" && items.length === 0 && repItems.length > 0) {
+                  setItems(
+                    repItems.map((re) => ({
+                      exercise: {
+                        id: re.id,
+                        name: re.name,
+                        durationSeconds: 30,
+                        rounds: 1,
+                      },
+                      rest: {
+                        id: createId("rest"),
+                        durationSeconds: 10,
+                      },
+                    })),
+                  );
+                }
+                setTimingMode(nextMode);
+              }}
               aria-label="Timer mode"
             />
           </div>
