@@ -66,8 +66,8 @@ function makeNewRangeRepItem(itemIndex: number): RepExercise {
 }
 
 const SECTION_TYPES: ReadonlyArray<{ value: SectionType; label: string }> = [
-  { value: "circuit", label: "Circuit" },
   { value: "sets", label: "Sets" },
+  { value: "circuit", label: "Circuit" },
   { value: "forTime", label: "Stopwatch" },
   { value: "amrap", label: "Time Cap" },
 ];
