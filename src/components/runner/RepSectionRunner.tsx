@@ -396,6 +396,24 @@ export function RepSectionRunner({
     );
   }
 
+  if (phase === "input" && isAmrap) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={(section.repExercises ?? []).map((ex) => ({
+            id: ex.id,
+            label: ex.name || "Exercise",
+            max: undefined,
+          }))}
+          confirmLabel="Confirm"
+          onConfirm={handleAmrapInputConfirm}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+
 
   const renderExerciseList = (idleStyle: boolean) => (
     <ul
