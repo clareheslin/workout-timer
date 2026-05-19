@@ -53,7 +53,7 @@ function sectionTypeLabel(section: WorkoutLogSection): string {
     case "forTime":
       return "Stopwatch";
     case "amrap":
-      return "Time Cap";
+      return `Time Cap · cap ${formatItemDuration(section.durationSeconds ?? 0)}`;
     case "sets":
       return `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`;
     case "circuit":
