@@ -54,6 +54,8 @@ export interface Section {
   mode?: SectionMode;
   /** Defaults to "circuit" when missing. */
   type?: SectionType;
+  /** Circuit/Sets only — "timer" (default) or "reps". */
+  timingMode?: "timer" | "reps";
   /** Used by forTime and amrap sections. */
   repExercises?: RepExercise[];
   /** Time cap in seconds. AMRAP only. */
