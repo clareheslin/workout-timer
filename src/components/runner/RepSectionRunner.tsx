@@ -90,7 +90,7 @@ export function RepSectionRunner({
       sectionType: isAmrap ? "amrap" : "forTime",
       repItems: repExercises.map((ex) => ({
         exerciseName: ex.name || "Exercise",
-        reps: Math.max(1, Math.floor(ex.reps ?? 1)),
+        repsLower: ex.repsLower,
       })),
       durationSeconds: Math.max(0, Math.floor(durationSeconds)),
     }),
