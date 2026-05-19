@@ -245,7 +245,7 @@ export function RepSectionRunner({
   };
 
   const handleEnd = () => {
-    const duration = isAmrap ? timeCap - remainingRef.current : elapsedRef.current;
+    const duration = isAmrap ? timeCap : elapsedRef.current;
     finalize(duration);
   };
 

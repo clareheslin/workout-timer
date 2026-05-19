@@ -96,15 +96,29 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
               {repItems.map((it, i) => {
                 const repsLabel =
                   it.repsLower !== undefined
-                    ? `${it.repsLower}`
-                    : "—";
+                    ? it.repsUpper !== undefined
+                      ? `${it.repsLower}–${it.repsUpper}`
+                      : `${it.repsLower}`
+                    : undefined;
+                const setsLabel =
+                  it.setsCompleted !== undefined
+                    ? `${it.setsCompleted} ${it.setsCompleted === 1 ? "set" : "sets"}`
+                    : undefined;
+                const rightLabel =
+                  setsLabel && repsLabel
+                    ? `${setsLabel} · ×${repsLabel}`
+                    : setsLabel
+                      ? setsLabel
+                      : repsLabel
+                        ? `×${repsLabel}`
+                        : "—";
                 return (
                   <li
                     key={`${it.exerciseName}-${i}`}
                     className="flex items-center justify-between gap-2 text-xs"
                   >
                     <span className="truncate font-semibold">{it.exerciseName}</span>
-                    <span className="shrink-0 text-muted-foreground">×{repsLabel}</span>
+                    <span className="shrink-0 text-muted-foreground">{rightLabel}</span>
                   </li>
                 );
               })}
