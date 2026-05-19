@@ -86,18 +86,35 @@ export function RepSectionRunner({
   }, [remaining]);
 
   const buildLog = useCallback(
-    (durationSeconds: number): WorkoutLogSection => ({
-      sectionName: section.name || `Section ${sectionIndex + 1}`,
-      rounds: 0,
-      items: [],
-      sectionType: isAmrap ? "amrap" : "forTime",
-      repItems: repExercises.map((ex) => ({
-        exerciseName: ex.name || "Exercise",
-        repsLower: ex.repsLower,
-      })),
-      durationSeconds: Math.max(0, Math.floor(durationSeconds)),
-    }),
-    [section.name, sectionIndex, isAmrap, repExercises],
+    (durationSeconds: number, counts?: Record<string, number>): WorkoutLogSection => {
+      if (isRepsMode) {
+        return {
+          sectionName: section.name || `Section ${sectionIndex + 1}`,
+          rounds: 0,
+          items: [],
+          sectionType: section.type ?? "circuit",
+          repItems: repExercises.map((ex) => ({
+            exerciseName: ex.name || "Exercise",
+            repsLower: ex.repsLower,
+            repsUpper: ex.repsUpper,
+            setsCompleted: counts?.[ex.id] ?? 0,
+          })),
+          durationSeconds: 0,
+        };
+      }
+      return {
+        sectionName: section.name || `Section ${sectionIndex + 1}`,
+        rounds: 0,
+        items: [],
+        sectionType: isAmrap ? "amrap" : "forTime",
+        repItems: repExercises.map((ex) => ({
+          exerciseName: ex.name || "Exercise",
+          repsLower: ex.repsLower,
+        })),
+        durationSeconds: Math.max(0, Math.floor(durationSeconds)),
+      };
+    },
+    [section.name, section.type, sectionIndex, isAmrap, isRepsMode, repExercises],
   );
 
   const finalize = useCallback(
