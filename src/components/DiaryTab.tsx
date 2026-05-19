@@ -182,7 +182,7 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
               <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
               {log.incomplete && <PartialBadge />}
             </div>
-            <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
+            <p className="text-xs text-muted-foreground">{formatLogDate(log.startedAt)}</p>
             <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
           </div>
         </button>
@@ -198,7 +198,7 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
             <p className="truncate text-base font-semibold">{log.workoutName || "Untitled"}</p>
             {log.incomplete && <PartialBadge />}
           </div>
-          <p className="text-xs text-muted-foreground">{formatLogDate(log.completedAt)}</p>
+          <p className="text-xs text-muted-foreground">{formatLogDate(log.startedAt)}</p>
           <p className="mt-1 text-sm">{formatMinSec(log.totalDurationSeconds)}</p>
         </div>
       </div>
