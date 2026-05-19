@@ -126,27 +126,32 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         targetRounds: initial.targetRounds ?? 1,
         totalRounds: initialTotalRoundsSnapshot,
         notes: initial.notes ?? "",
+        timingMode: initial.timingMode ?? "timer",
       }),
     [initial, initialTotalRoundsSnapshot],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes }) !==
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes, timingMode }) !==
     initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
-    : items.length > 0;
+    : usesRepItems
+      ? repItems.length > 0
+      : items.length > 0;
 
   const handleAdd = () => {
     if (isRepBased) {
       setRepItems((prev) => [...prev, makeNewRepItem(prev.length)]);
+    } else if (usesRepItems) {
+      setRepItems((prev) => [...prev, makeNewRangeRepItem(prev.length)]);
     } else {
       setItems((prev) => [...prev, makeNewItem(prev.length)]);
     }
   };
 
   const handleDelete = (id: string) => {
-    if (isRepBased) {
+    if (usesRepItems) {
       setRepItems((prev) => prev.filter((it) => it.id !== id));
     } else {
       setItems((prev) => prev.filter((it) => it.exercise.id !== id));
