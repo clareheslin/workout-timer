@@ -48,59 +48,83 @@ function formatItemDuration(seconds: number): string {
   return r === 0 ? `${m}m` : `${m}m ${r}s`;
 }
 
+function sectionTypeLabel(section: WorkoutLogSection): string {
+  switch (section.sectionType) {
+    case "forTime":
+      return "Stopwatch";
+    case "amrap":
+      return "Time Cap";
+    case "sets":
+      return `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`;
+    case "circuit":
+    default:
+      return `Circuit · ${section.rounds} ${section.rounds === 1 ? "round" : "rounds"}`;
+  }
+}
+
 function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
   const isRep = section.sectionType === "forTime" || section.sectionType === "amrap";
   const repItems = section.repItems ?? [];
   const items = section.items ?? [];
 
+  let summary: string | null = null;
+  if (isRep) {
+    if (section.durationSeconds && section.durationSeconds > 0) {
+      summary = `Time: ${formatMinSec(section.durationSeconds)}`;
+    } else {
+      const count = repItems.length;
+      summary = `${count} ${count === 1 ? "exercise" : "exercises"}`;
+    }
+  } else {
+    const total = items.reduce((s, it) => s + it.exerciseDuration + it.restDuration, 0);
+    summary = `Time: ${formatMinSec(total)}`;
+  }
+
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{section.sectionName}</p>
-        <p className="text-xs text-muted-foreground">
-          {section.sectionType === "amrap"
-            ? `Time Cap · cap ${formatItemDuration(section.durationSeconds ?? 0)}`
-            : section.sectionType === "forTime"
-              ? `Stopwatch · ${formatItemDuration(section.durationSeconds ?? 0)}`
-              : section.sectionType === "sets"
-                ? `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`
-                : `Circuit · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`}
-        </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">{section.sectionName}</p>
+        <p className="text-xs text-muted-foreground">{sectionTypeLabel(section)}</p>
       </div>
-      {isRep ? (
-        repItems.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No exercises.</p>
+      {summary && <p className="mt-0.5 text-xs text-muted-foreground">{summary}</p>}
+      <div className="mt-2">
+        {isRep ? (
+          repItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No exercises recorded.</p>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {repItems.map((it, i) => (
+                <li
+                  key={`${it.exerciseName}-${i}`}
+                  className="flex items-center justify-between gap-2 text-xs"
+                >
+                  <span className="truncate font-semibold">{it.exerciseName}</span>
+                  {it.reps > 0 && (
+                    <span className="shrink-0 text-muted-foreground">×{it.reps}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )
+        ) : items.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No exercises recorded.</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {repItems.map((it, i) => (
+            {items.map((it, i) => (
               <li
                 key={`${it.exerciseName}-${i}`}
                 className="flex items-center justify-between gap-2 text-xs"
               >
-                <span className="truncate">{it.exerciseName}</span>
-                <span className="shrink-0 text-muted-foreground">{it.reps} reps</span>
+                <span className="truncate font-semibold">{it.exerciseName}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {formatItemDuration(it.exerciseDuration)}
+                  {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
+                </span>
               </li>
             ))}
           </ul>
-        )
-      ) : items.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No exercises played.</p>
-      ) : (
-        <ul className="flex flex-col gap-1.5">
-          {items.map((it, i) => (
-            <li
-              key={`${it.exerciseName}-${i}`}
-              className="flex items-center justify-between gap-2 text-xs"
-            >
-              <span className="truncate">{it.exerciseName}</span>
-              <span className="shrink-0 text-muted-foreground">
-                {formatItemDuration(it.exerciseDuration)}
-                {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+        )}
+      </div>
     </div>
   );
 }
