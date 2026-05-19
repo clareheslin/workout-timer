@@ -52,11 +52,17 @@ function needsMigration(logs: WorkoutLog[]): boolean {
     const sections = (l.sectionBreakdown ?? []) as unknown[];
     return sections.some((s) => {
       const sec = s as Record<string, unknown>;
-      return (
+      if (
         sec.blockName !== undefined ||
         sec.blockType !== undefined ||
         !Array.isArray(sec.items)
-      );
+      ) return true;
+      if (Array.isArray(sec.repItems)) {
+        if ((sec.repItems as unknown[]).some((ri) => (ri as Record<string, unknown>).reps !== undefined)) {
+          return true;
+        }
+      }
+      return false;
     });
   });
 }
