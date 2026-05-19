@@ -78,25 +78,27 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
   const repItems = section.repItems ?? [];
   const items = section.items ?? [];
 
-  let summary: string | null = null;
+  let headerDuration: string | null = null;
   if (isRep) {
-    if (isRepsMode) {
-      summary = null;
-    } else if (section.durationSeconds && section.durationSeconds > 0) {
-      summary = `Time: ${formatMinSec(section.durationSeconds)}`;
-    } else {
-      const count = repItems.length;
-      summary = `${count} ${count === 1 ? "exercise" : "exercises"}`;
+    if (!isRepsMode && section.durationSeconds && section.durationSeconds > 0) {
+      headerDuration =
+        section.sectionType === "amrap"
+          ? formatItemDuration(section.durationSeconds)
+          : formatMinSec(section.durationSeconds);
     }
   } else {
     const total = items.reduce((s, it) => s + it.exerciseDuration + it.restDuration, 0);
-    summary = `Time: ${formatMinSec(total)}`;
+    if (total > 0) headerDuration = formatMinSec(total);
   }
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-      <p className="text-sm font-semibold">{section.sectionName}</p>
-      {summary && <p className="mt-0.5 text-xs text-muted-foreground">{summary}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">{section.sectionName}</p>
+        {headerDuration && (
+          <p className="text-xs text-muted-foreground">{headerDuration}</p>
+        )}
+      </div>
       <div className="mt-2">
         {isRep ? (
           repItems.length === 0 ? (
