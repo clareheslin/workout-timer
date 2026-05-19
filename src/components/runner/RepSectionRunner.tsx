@@ -271,7 +271,7 @@ export function RepSectionRunner({
           ? "rest"
           : "default";
 
-  const isActiveOrPaused = phase === "running" || phase === "paused";
+  const isActiveOrPaused = phase === "running" || phase === "paused" || phase === "input";
   const { node: navNode, sheet: navSheet } = useSectionNav({
     sectionIndex,
     totalSections,
