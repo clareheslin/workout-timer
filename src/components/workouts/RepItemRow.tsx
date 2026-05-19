@@ -5,7 +5,7 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: RepExercise;
-  onChange: (patch: Partial<Pick<RepExercise, "name" | "reps">>) => void;
+  onChange: (patch: Partial<Pick<RepExercise, "name" | "repsLower">>) => void;
   onDelete: () => void;
 }
 
