@@ -426,7 +426,7 @@ export function RepSectionRunner({
   return (
     <>
       <div
-        className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
+        className={isIdle || isRepsPreview ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
       >
         <RunnerScaffold
           eyebrow={isActiveOrPrep ? undefined : eyebrow}
@@ -435,7 +435,7 @@ export function RepSectionRunner({
           primary={primary}
           primaryHint={primaryHint}
         >
-          {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
+          {(isIdle || isRepsPreview) && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActiveOrPrep ? (
             <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
@@ -487,7 +487,7 @@ export function RepSectionRunner({
               ) : null}
             </div>
           ) : (
-            renderExerciseList(isIdle)
+            renderExerciseList(isIdle || isRepsPreview)
           )}
         </RunnerScaffold>
       </div>
