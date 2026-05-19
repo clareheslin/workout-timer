@@ -242,8 +242,9 @@ export function RepSectionRunner({
     },
   });
 
-  const tone: PageHeaderTone =
-    phase === "running"
+  const tone: PageHeaderTone = isRepsMode
+    ? "default"
+    : phase === "running"
       ? "exercise"
       : phase === "paused"
         ? "paused"
