@@ -129,7 +129,7 @@ export function RepSectionRunner({
   );
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" || isRepsMode) {
       if (tickRef.current !== null) {
         window.clearInterval(tickRef.current);
         tickRef.current = null;
