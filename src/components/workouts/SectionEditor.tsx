@@ -54,6 +54,16 @@ function makeNewRepItem(itemIndex: number): RepExercise {
   };
 }
 
+function makeNewRangeRepItem(itemIndex: number): RepExercise {
+  return {
+    id: createId("rex"),
+    name: `Exercise ${itemIndex + 1}`,
+    repsLower: 10,
+    sets: 1,
+    restSeconds: 60,
+  };
+}
+
 const SECTION_TYPES: ReadonlyArray<{ value: SectionType; label: string }> = [
   { value: "circuit", label: "Circuit" },
   { value: "sets", label: "Sets" },
