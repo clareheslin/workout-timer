@@ -57,6 +57,7 @@ export function RepSectionRunner({
   const [remaining, setRemaining] = useState(timeCap);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const [prepPaused, setPrepPaused] = useState(false);
+  const [showCompleteInput, setShowCompleteInput] = useState(false);
 
   useWakeLock(phase === "running" || phase === "paused" || phase === "prep");
 
