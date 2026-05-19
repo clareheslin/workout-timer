@@ -26,7 +26,7 @@ interface Props {
   onNavigateToSection: (target: number, opts?: { skipped?: boolean }) => void;
 }
 
-type Phase = "idle" | "prep" | "running" | "paused" | "done";
+type Phase = "idle" | "prep" | "running" | "paused" | "done" | "input";
 
 const PREP_SECONDS = 10;
 
@@ -162,8 +162,8 @@ export function RepSectionRunner({
         audio.playCountdownBeep();
       }
     }
-    if (remaining === 0) {
-      finalize(timeCap);
+    if (remaining === 0 && !completedRef.current) {
+      setPhase("input");
     }
   }, [isAmrap, phase, remaining, audio, finalize, timeCap]);
 
@@ -206,6 +206,25 @@ export function RepSectionRunner({
     completedRef.current = true;
     audio.playSectionEndBeep();
     onComplete(buildLog(0, counts));
+  };
+
+  const handleAmrapInputConfirm = (counts: Record<string, number>) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    audio.playSectionEndBeep();
+    onComplete({
+      sectionName: section.name || `Section ${sectionIndex + 1}`,
+      rounds: 0,
+      items: [],
+      sectionType: "amrap",
+      repItems: (section.repExercises ?? []).map((ex) => ({
+        exerciseName: ex.name || "Exercise",
+        repsLower: ex.repsLower,
+        repsUpper: ex.repsUpper,
+        setsCompleted: counts[ex.id] ?? 0,
+      })),
+      durationSeconds: timeCap,
+    });
   };
 
   const handlePrepPauseResume = () => {
@@ -252,7 +271,7 @@ export function RepSectionRunner({
           ? "rest"
           : "default";
 
-  const isActiveOrPaused = phase === "running" || phase === "paused";
+  const isActiveOrPaused = phase === "running" || phase === "paused" || phase === "input";
   const { node: navNode, sheet: navSheet } = useSectionNav({
     sectionIndex,
     totalSections,
@@ -376,6 +395,27 @@ export function RepSectionRunner({
       </>
     );
   }
+
+  if (phase === "input" && isAmrap) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={(section.repExercises ?? []).map((ex) => ({
+            id: ex.id,
+            label: ex.name || "Exercise",
+            max: undefined,
+          }))}
+          confirmLabel="Confirm"
+          onConfirm={handleAmrapInputConfirm}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
+
+
 
 
   const renderExerciseList = (idleStyle: boolean) => (
