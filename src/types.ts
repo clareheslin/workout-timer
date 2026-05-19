@@ -87,7 +87,7 @@ export interface WorkoutLogItem {
 /** Rep-based log item used for forTime / amrap sections. */
 export interface WorkoutLogRepItem {
   exerciseName: string;
-  reps: number;
+  repsLower?: number;
 }
 
 export interface WorkoutLogSection {
