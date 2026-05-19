@@ -227,7 +227,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     );
   };
 
-  const handleRepUpdate = (id: string, patch: Partial<Pick<RepExercise, "name" | "reps">>) => {
+  const handleRepUpdate = (id: string, patch: Partial<Pick<RepExercise, "name" | "repsLower">>) => {
     setRepItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
