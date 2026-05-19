@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { SectionCompleteInput } from "./SectionCompleteInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
