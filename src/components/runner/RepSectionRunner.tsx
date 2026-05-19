@@ -45,6 +45,7 @@ export function RepSectionRunner({
   onNavigateToSection,
 }: Props) {
   const isAmrap = (section.type ?? "circuit") === "amrap";
+  const isRepsMode = section.timingMode === "reps";
   const timeCap = Math.max(1, section.timeCap ?? 3600);
   const repExercises = useMemo(
     () => section.repExercises ?? [],
