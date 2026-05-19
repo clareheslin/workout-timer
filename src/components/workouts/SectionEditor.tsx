@@ -587,7 +587,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
           </button>
         </div>
 
-        {isRepBased ? (
+        {usesRepItems ? (
           repItems.length === 0 ? (
             <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               No exercises yet. Add your first exercise.
@@ -603,14 +603,23 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="flex flex-col gap-2">
-                  {repItems.map((it) => (
-                    <RepItemRow
-                      key={it.id}
-                      item={it}
-                      onChange={(patch) => handleRepUpdate(it.id, patch)}
-                      onDelete={() => handleDelete(it.id)}
-                    />
-                  ))}
+                  {repItems.map((it) =>
+                    isRepBased ? (
+                      <RepItemRow
+                        key={it.id}
+                        item={it}
+                        onChange={(patch) => handleRepUpdate(it.id, patch)}
+                        onDelete={() => handleDelete(it.id)}
+                      />
+                    ) : (
+                      <RepRangeItemRow
+                        key={it.id}
+                        item={it}
+                        onChange={(patch) => handleRepUpdate(it.id, patch)}
+                        onDelete={() => handleDelete(it.id)}
+                      />
+                    ),
+                  )}
                 </ul>
               </SortableContext>
             </DndContext>
