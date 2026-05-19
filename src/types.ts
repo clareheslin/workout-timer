@@ -26,7 +26,14 @@ export interface SectionItem {
 export interface RepExercise {
   id: string;
   name: string;
-  reps: number | undefined;
+  /** Lower bound of rep range, or specific target. Blank = failure/AMRAP. */
+  repsLower?: number;
+  /** Upper bound of rep range. Blank = specific target (when lower set). */
+  repsUpper?: number;
+  /** Number of sets. Defaults to 1 when not set. */
+  sets?: number;
+  /** Rest guide in seconds between sets. */
+  restSeconds?: number;
 }
 
 /** How rounds are ordered within a section.
