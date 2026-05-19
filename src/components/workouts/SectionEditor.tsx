@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import type { Section, SectionItem, SectionMode, SectionType, RepExercise } from "@/types";
 import { createId } from "@/lib/id";
+import { Switch } from "@/components/ui/switch";
 import { SectionItemRow } from "./SectionItemRow";
 import { RepItemRow } from "./RepItemRow";
 import { RepRangeItemRow } from "./RepRangeItemRow";
