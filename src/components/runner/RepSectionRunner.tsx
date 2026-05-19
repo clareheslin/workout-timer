@@ -162,8 +162,8 @@ export function RepSectionRunner({
         audio.playCountdownBeep();
       }
     }
-    if (remaining === 0) {
-      finalize(timeCap);
+    if (remaining === 0 && !completedRef.current) {
+      setPhase("input");
     }
   }, [isAmrap, phase, remaining, audio, finalize, timeCap]);
 
