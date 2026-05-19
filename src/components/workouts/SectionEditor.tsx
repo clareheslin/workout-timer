@@ -49,7 +49,7 @@ function makeNewRepItem(itemIndex: number): RepExercise {
   return {
     id: createId("rex"),
     name: `Exercise ${itemIndex + 1}`,
-    reps: 10,
+    repsLower: 10,
   };
 }
 
