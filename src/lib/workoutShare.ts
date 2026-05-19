@@ -34,9 +34,11 @@ function isObj(v: unknown): v is Record<string, unknown> {
 
 function isValidRepExercise(v: unknown): v is RepExercise {
   if (!isObj(v)) return false;
-  return (
-    typeof v.id === "string" && typeof v.name === "string" && typeof v.reps === "number"
-  );
+  if (typeof v.id !== "string" || typeof v.name !== "string") return false;
+  if (v.repsLower !== undefined && typeof v.repsLower !== "number") return false;
+  if (v.repsUpper !== undefined && typeof v.repsUpper !== "number") return false;
+  if (v.reps !== undefined && typeof v.reps !== "number") return false;
+  return true;
 }
 
 function isValidSectionItem(v: unknown): v is SectionItem {
