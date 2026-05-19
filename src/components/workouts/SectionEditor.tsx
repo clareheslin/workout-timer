@@ -19,6 +19,7 @@ import type { Section, SectionItem, SectionMode, SectionType, RepExercise } from
 import { createId } from "@/lib/id";
 import { SectionItemRow } from "./SectionItemRow";
 import { RepItemRow } from "./RepItemRow";
+import { RepRangeItemRow } from "./RepRangeItemRow";
 
 interface Props {
   initial: Section;
