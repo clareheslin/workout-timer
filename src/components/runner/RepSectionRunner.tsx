@@ -340,11 +340,24 @@ export function RepSectionRunner({
               : ex.repsLower !== undefined
                 ? `${ex.repsLower}`
                 : "—";
+          const sets = Math.max(1, Math.floor(ex.sets ?? 1));
+          const rest = Math.max(0, Math.floor(ex.restSeconds ?? 0));
+          const metaParts = [
+            sets > 1 ? `×${sets} sets` : null,
+            rest > 0 ? `rest ${rest}s` : null,
+          ].filter(Boolean);
           return (
             <li key={ex.id} className="flex items-start justify-between gap-3 px-1 py-3">
-              <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
-                {ex.name}
-              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className={`break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
+                  {ex.name}
+                </span>
+                {metaParts.length > 0 && (
+                  <span className={`text-xs tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
+                    {metaParts.join(" · ")}
+                  </span>
+                )}
+              </div>
               <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
                 ×{repsLabel}
               </span>
