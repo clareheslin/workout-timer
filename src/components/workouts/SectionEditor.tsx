@@ -386,6 +386,39 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </p>
       </div>
 
+      {(type === "circuit" || type === "sets") && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Timing</span>
+          <div
+            role="radiogroup"
+            aria-label="Timing mode"
+            className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
+          >
+            {(["timer", "reps"] as const).map((m) => {
+              const active = timingMode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setTimingMode(m)}
+                  className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {m === "timer" ? "Timer" : "Reps"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
+
 
       {type === "forTime" && (
         <div className="flex flex-col gap-2">
