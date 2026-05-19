@@ -378,43 +378,30 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </div>
         <p className="text-xs text-muted-foreground">
           {type === "circuit"
-            ? "Cycle through every exercise, then repeat for each round."
+            ? "Cycle through the exercises in sequence, then repeat. Supports timed intervals or rep targets. Use for circuits, ladders, supersets, and giant sets."
             : type === "sets"
-              ? "Finish all sets of one exercise before moving to the next."
+              ? "Complete all sets of each exercise before moving to the next. Supports timed intervals or rep targets. Use for straight sets."
               : type === "forTime"
-                ? "Complete the work and stop the timer when done."
-                : "Complete the exercise list as many times as possible in the time."}
+                ? "Work through the exercises at your own pace and stop the timer when done. Use for time-based workouts without a cap."
+                : "Cycle through the exercises as many times as possible before the time runs out. Use for AMRAPs."}
         </p>
       </div>
 
       {(type === "circuit" || type === "sets") && (
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Timing</span>
-          <div
-            role="radiogroup"
-            aria-label="Timing mode"
-            className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
-          >
-            {(["timer", "reps"] as const).map((m) => {
-              const active = timingMode === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setTimingMode(m)}
-                  className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  {m === "timer" ? "Timer" : "Reps"}
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Timer</span>
+            <Switch
+              checked={timingMode === "timer"}
+              onCheckedChange={(checked) => setTimingMode(checked ? "timer" : "reps")}
+              aria-label="Timer mode"
+            />
           </div>
+          <p className="text-xs text-muted-foreground">
+            {timingMode === "timer"
+              ? "Timed work and rest intervals per exercise."
+              : "Rep targets with no timer. Work at your own pace."}
+          </p>
         </div>
       )}
 
