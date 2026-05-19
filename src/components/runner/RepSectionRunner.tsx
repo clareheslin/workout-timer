@@ -208,6 +208,25 @@ export function RepSectionRunner({
     onComplete(buildLog(0, counts));
   };
 
+  const handleAmrapInputConfirm = (counts: Record<string, number>) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    audio.playSectionEndBeep();
+    onComplete({
+      sectionName: section.name || `Section ${sectionIndex + 1}`,
+      rounds: 0,
+      items: [],
+      sectionType: "amrap",
+      repItems: (section.repExercises ?? []).map((ex) => ({
+        exerciseName: ex.name || "Exercise",
+        repsLower: ex.repsLower,
+        repsUpper: ex.repsUpper,
+        setsCompleted: counts[ex.id] ?? 0,
+      })),
+      durationSeconds: timeCap,
+    });
+  };
+
   const handlePrepPauseResume = () => {
     setPrepPaused((p) => !p);
   };
