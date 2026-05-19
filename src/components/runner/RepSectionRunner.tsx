@@ -333,18 +333,24 @@ export function RepSectionRunner({
       {repExercises.length === 0 ? (
         <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
       ) : (
-        repExercises.map((ex) => (
-          <li key={ex.id} className="flex items-start justify-between gap-3 px-1 py-3">
-            <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
-              {ex.name}
-            </span>
-            {ex.reps !== undefined && ex.reps > 0 && (
-              <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
-                ×{ex.reps}
+        repExercises.map((ex) => {
+          const repsLabel =
+            ex.repsLower !== undefined && ex.repsUpper !== undefined
+              ? `${ex.repsLower}–${ex.repsUpper}`
+              : ex.repsLower !== undefined
+                ? `${ex.repsLower}`
+                : "—";
+          return (
+            <li key={ex.id} className="flex items-start justify-between gap-3 px-1 py-3">
+              <span className={`min-w-0 flex-1 break-words text-base ${idleStyle ? "font-bold" : "font-semibold"}`}>
+                {ex.name}
               </span>
-            )}
-          </li>
-        ))
+              <span className={`shrink-0 text-sm tabular-nums ${idleStyle ? "opacity-70" : "opacity-80"}`}>
+                ×{repsLabel}
+              </span>
+            </li>
+          );
+        })
       )}
     </ul>
   );
