@@ -161,7 +161,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    if (isRepBased) {
+    if (usesRepItems) {
       setRepItems((prev) => {
         const oldIdx = prev.findIndex((it) => it.id === active.id);
         const newIdx = prev.findIndex((it) => it.id === over.id);
