@@ -95,10 +95,7 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold">{section.sectionName}</p>
-        <p className="text-xs text-muted-foreground">{sectionTypeLabel(section)}</p>
-      </div>
+      <p className="text-sm font-semibold">{section.sectionName}</p>
       {summary && <p className="mt-0.5 text-xs text-muted-foreground">{summary}</p>}
       <div className="mt-2">
         {isRep ? (
