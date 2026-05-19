@@ -49,27 +49,40 @@ function formatItemDuration(seconds: number): string {
 }
 
 function sectionTypeLabel(section: WorkoutLogSection): string {
+  const isRepsMode =
+    (section.sectionType === "circuit" || section.sectionType === "sets") &&
+    (section.repItems ?? []).length > 0 &&
+    section.rounds === 0;
   switch (section.sectionType) {
     case "forTime":
       return "Stopwatch";
     case "amrap":
       return `Time Cap · ${formatItemDuration(section.durationSeconds ?? 0)}`;
     case "sets":
-      return `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`;
+      return isRepsMode ? "Sets" : `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`;
     case "circuit":
     default:
-      return `Circuit · ${section.rounds} ${section.rounds === 1 ? "round" : "rounds"}`;
+      return isRepsMode ? "Circuit" : `Circuit · ${section.rounds} ${section.rounds === 1 ? "round" : "rounds"}`;
   }
 }
 
 function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
-  const isRep = section.sectionType === "forTime" || section.sectionType === "amrap";
+  const isRep =
+    section.sectionType === "forTime" ||
+    section.sectionType === "amrap" ||
+    ((section.sectionType === "circuit" || section.sectionType === "sets") &&
+      (section.repItems ?? []).length > 0);
+  const isRepsMode =
+    (section.sectionType === "circuit" || section.sectionType === "sets") &&
+    (section.repItems ?? []).length > 0;
   const repItems = section.repItems ?? [];
   const items = section.items ?? [];
 
   let summary: string | null = null;
   if (isRep) {
-    if (section.durationSeconds && section.durationSeconds > 0) {
+    if (isRepsMode) {
+      summary = null;
+    } else if (section.durationSeconds && section.durationSeconds > 0) {
       summary = `Time: ${formatMinSec(section.durationSeconds)}`;
     } else {
       const count = repItems.length;
