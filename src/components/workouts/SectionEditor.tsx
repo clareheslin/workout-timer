@@ -19,6 +19,7 @@ import type { Section, SectionItem, SectionMode, SectionType, RepExercise } from
 import { createId } from "@/lib/id";
 import { SectionItemRow } from "./SectionItemRow";
 import { RepItemRow } from "./RepItemRow";
+import { RepRangeItemRow } from "./RepRangeItemRow";
 
 interface Props {
   initial: Section;
@@ -50,6 +51,16 @@ function makeNewRepItem(itemIndex: number): RepExercise {
     id: createId("rex"),
     name: `Exercise ${itemIndex + 1}`,
     repsLower: 10,
+  };
+}
+
+function makeNewRangeRepItem(itemIndex: number): RepExercise {
+  return {
+    id: createId("rex"),
+    name: `Exercise ${itemIndex + 1}`,
+    repsLower: 10,
+    sets: 1,
+    restSeconds: 60,
   };
 }
 
@@ -86,8 +97,10 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     return derived;
   });
   const [notes, setNotes] = useState<string>(initial.notes ?? "");
+  const [timingMode, setTimingMode] = useState<"timer" | "reps">(initial.timingMode ?? "timer");
 
   const isRepBased = type === "forTime" || type === "amrap";
+  const usesRepItems = isRepBased || ((type === "circuit" || type === "sets") && timingMode === "reps");
 
   const initialTotalRoundsSnapshot = useMemo(() => {
     const seed = initial.totalRounds;
@@ -113,27 +126,32 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         targetRounds: initial.targetRounds ?? 1,
         totalRounds: initialTotalRoundsSnapshot,
         notes: initial.notes ?? "",
+        timingMode: initial.timingMode ?? "timer",
       }),
     [initial, initialTotalRoundsSnapshot],
   );
   const isDirty =
-    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes }) !==
+    JSON.stringify({ name, items, repItems, mode, type, timeCap, forTimeMaxCap, targetRounds, totalRounds, notes, timingMode }) !==
     initialSnapshot;
 
   const canDone = isRepBased
     ? repItems.length > 0 && (type !== "amrap" || timeCap > 0)
-    : items.length > 0;
+    : usesRepItems
+      ? repItems.length > 0
+      : items.length > 0;
 
   const handleAdd = () => {
     if (isRepBased) {
       setRepItems((prev) => [...prev, makeNewRepItem(prev.length)]);
+    } else if (usesRepItems) {
+      setRepItems((prev) => [...prev, makeNewRangeRepItem(prev.length)]);
     } else {
       setItems((prev) => [...prev, makeNewItem(prev.length)]);
     }
   };
 
   const handleDelete = (id: string) => {
-    if (isRepBased) {
+    if (usesRepItems) {
       setRepItems((prev) => prev.filter((it) => it.id !== id));
     } else {
       setItems((prev) => prev.filter((it) => it.exercise.id !== id));
@@ -143,7 +161,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    if (isRepBased) {
+    if (usesRepItems) {
       setRepItems((prev) => {
         const oldIdx = prev.findIndex((it) => it.id === active.id);
         const newIdx = prev.findIndex((it) => it.id === over.id);
@@ -227,7 +245,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
     );
   };
 
-  const handleRepUpdate = (id: string, patch: Partial<Pick<RepExercise, "name" | "repsLower">>) => {
+  const handleRepUpdate = (id: string, patch: Partial<RepExercise>) => {
     setRepItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
@@ -260,6 +278,20 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         mode,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
+    } else if (timingMode === "reps") {
+      onDone({
+        ...initial,
+        name: name.trim() || defaultName,
+        items: [],
+        mode,
+        type,
+        timingMode: "reps",
+        repExercises: repItems,
+        timeCap: undefined,
+        targetRounds: undefined,
+        totalRounds: type === "circuit" ? Math.max(1, Math.floor(totalRounds)) : undefined,
+        notes: trimmedNotes ? trimmedNotes : undefined,
+      });
     } else {
       onDone({
         ...initial,
@@ -267,6 +299,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         items,
         mode,
         type,
+        timingMode: "timer",
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
@@ -352,6 +385,39 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                 : "Complete the exercise list as many times as possible in the time."}
         </p>
       </div>
+
+      {(type === "circuit" || type === "sets") && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Timing</span>
+          <div
+            role="radiogroup"
+            aria-label="Timing mode"
+            className="grid grid-cols-2 gap-2 rounded-md border border-input bg-background p-1"
+          >
+            {(["timer", "reps"] as const).map((m) => {
+              const active = timingMode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setTimingMode(m)}
+                  className={`min-h-11 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {m === "timer" ? "Timer" : "Reps"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
 
 
       {type === "forTime" && (
@@ -521,7 +587,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
           </button>
         </div>
 
-        {isRepBased ? (
+        {usesRepItems ? (
           repItems.length === 0 ? (
             <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               No exercises yet. Add your first exercise.
@@ -537,14 +603,23 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="flex flex-col gap-2">
-                  {repItems.map((it) => (
-                    <RepItemRow
-                      key={it.id}
-                      item={it}
-                      onChange={(patch) => handleRepUpdate(it.id, patch)}
-                      onDelete={() => handleDelete(it.id)}
-                    />
-                  ))}
+                  {repItems.map((it) =>
+                    isRepBased ? (
+                      <RepItemRow
+                        key={it.id}
+                        item={it}
+                        onChange={(patch) => handleRepUpdate(it.id, patch)}
+                        onDelete={() => handleDelete(it.id)}
+                      />
+                    ) : (
+                      <RepRangeItemRow
+                        key={it.id}
+                        item={it}
+                        onChange={(patch) => handleRepUpdate(it.id, patch)}
+                        onDelete={() => handleDelete(it.id)}
+                      />
+                    ),
+                  )}
                 </ul>
               </SortableContext>
             </DndContext>
