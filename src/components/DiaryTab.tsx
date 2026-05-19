@@ -93,17 +93,21 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
             <p className="text-xs text-muted-foreground">No exercises recorded.</p>
           ) : (
             <ul className="flex flex-col gap-1.5">
-              {repItems.map((it, i) => (
-                <li
-                  key={`${it.exerciseName}-${i}`}
-                  className="flex items-center justify-between gap-2 text-xs"
-                >
-                  <span className="truncate font-semibold">{it.exerciseName}</span>
-                  {it.reps > 0 && (
-                    <span className="shrink-0 text-muted-foreground">×{it.reps}</span>
-                  )}
-                </li>
-              ))}
+              {repItems.map((it, i) => {
+                const repsLabel =
+                  it.repsLower !== undefined
+                    ? `${it.repsLower}`
+                    : "—";
+                return (
+                  <li
+                    key={`${it.exerciseName}-${i}`}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="truncate font-semibold">{it.exerciseName}</span>
+                    <span className="shrink-0 text-muted-foreground">×{repsLabel}</span>
+                  </li>
+                );
+              })}
             </ul>
           )
         ) : items.length === 0 ? (

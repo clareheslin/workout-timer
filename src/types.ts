@@ -26,7 +26,14 @@ export interface SectionItem {
 export interface RepExercise {
   id: string;
   name: string;
-  reps: number | undefined;
+  /** Lower bound of rep range, or specific target. Blank = failure/AMRAP. */
+  repsLower?: number;
+  /** Upper bound of rep range. Blank = specific target (when lower set). */
+  repsUpper?: number;
+  /** Number of sets. Defaults to 1 when not set. */
+  sets?: number;
+  /** Rest guide in seconds between sets. */
+  restSeconds?: number;
 }
 
 /** How rounds are ordered within a section.
@@ -47,6 +54,8 @@ export interface Section {
   mode?: SectionMode;
   /** Defaults to "circuit" when missing. */
   type?: SectionType;
+  /** Circuit/Sets only — "timer" (default) or "reps". */
+  timingMode?: "timer" | "reps";
   /** Used by forTime and amrap sections. */
   repExercises?: RepExercise[];
   /** Time cap in seconds. AMRAP only. */
@@ -78,7 +87,7 @@ export interface WorkoutLogItem {
 /** Rep-based log item used for forTime / amrap sections. */
 export interface WorkoutLogRepItem {
   exerciseName: string;
-  reps: number;
+  repsLower?: number;
 }
 
 export interface WorkoutLogSection {

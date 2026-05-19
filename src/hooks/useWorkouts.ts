@@ -39,6 +39,17 @@ function migrateLegacyWorkout(w: unknown): Workout {
       }
       return item;
     });
+    // Migrate legacy RepExercise.reps -> repsLower
+    if (Array.isArray(sec.repExercises)) {
+      sec.repExercises = (sec.repExercises as unknown[]).map((re) => {
+        const ex = { ...(re as Record<string, unknown>) };
+        if (ex.reps !== undefined) {
+          if (ex.repsLower === undefined) ex.repsLower = ex.reps;
+          delete ex.reps;
+        }
+        return ex;
+      });
+    }
     // Derive section.totalRounds for CIRCUIT sections that lack it.
     const secType = sec.type ?? "circuit";
     if (secType === "circuit" && sec.totalRounds === undefined) {
@@ -50,6 +61,10 @@ function migrateLegacyWorkout(w: unknown): Workout {
         if (Number.isFinite(r) && r > maxRounds) maxRounds = Math.floor(r);
       }
       sec.totalRounds = Math.max(1, maxRounds);
+    }
+    // Default timingMode for circuit/sets sections.
+    if ((secType === "circuit" || secType === "sets") && sec.timingMode === undefined) {
+      sec.timingMode = "timer";
     }
     return sec;
   });
@@ -67,6 +82,12 @@ function needsMigration(workouts: Workout[]): boolean {
       if (!Array.isArray(sec.items)) return true;
       const secType = sec.type ?? "circuit";
       if (secType === "circuit" && sec.totalRounds === undefined) return true;
+      if ((secType === "circuit" || secType === "sets") && sec.timingMode === undefined) return true;
+      if (Array.isArray(sec.repExercises)) {
+        if ((sec.repExercises as unknown[]).some((re) => (re as Record<string, unknown>).reps !== undefined)) {
+          return true;
+        }
+      }
       return false;
     });
   });

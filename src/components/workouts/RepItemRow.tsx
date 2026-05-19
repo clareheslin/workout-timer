@@ -5,7 +5,7 @@ import { NameTextarea } from "./NameTextarea";
 
 interface Props {
   item: RepExercise;
-  onChange: (patch: Partial<Pick<RepExercise, "name" | "reps">>) => void;
+  onChange: (patch: Partial<Pick<RepExercise, "name" | "repsLower">>) => void;
   onDelete: () => void;
 }
 
@@ -63,16 +63,16 @@ export function RepItemRow({ item, onChange, onDelete }: Props) {
               type="number"
               inputMode="numeric"
               min={0}
-              value={item.reps ?? ""}
+              value={item.repsLower ?? ""}
               placeholder="—"
               onChange={(e) => {
                 const raw = e.target.value;
                 if (raw === "") {
-                  onChange({ reps: undefined });
+                  onChange({ repsLower: undefined });
                   return;
                 }
                 const n = Number(raw);
-                onChange({ reps: Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined });
+                onChange({ repsLower: Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined });
               }}
               aria-label="Reps"
               onFocus={(e) => e.target.select()}
