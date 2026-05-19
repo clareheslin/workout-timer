@@ -413,6 +413,9 @@ export function RepSectionRunner({
         {navSheet}
       </>
     );
+  }
+
+
 
 
   const renderExerciseList = (idleStyle: boolean) => (
