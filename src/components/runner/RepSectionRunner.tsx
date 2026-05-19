@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { SectionCompleteInput } from "./SectionCompleteInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
@@ -44,6 +45,7 @@ export function RepSectionRunner({
   onNavigateToSection,
 }: Props) {
   const isAmrap = (section.type ?? "circuit") === "amrap";
+  const isRepsMode = section.timingMode === "reps";
   const timeCap = Math.max(1, section.timeCap ?? 3600);
   const repExercises = useMemo(
     () => section.repExercises ?? [],
@@ -55,6 +57,7 @@ export function RepSectionRunner({
   const [remaining, setRemaining] = useState(timeCap);
   const [prepRemaining, setPrepRemaining] = useState(PREP_SECONDS);
   const [prepPaused, setPrepPaused] = useState(false);
+  const [showCompleteInput, setShowCompleteInput] = useState(false);
 
   useWakeLock(phase === "running" || phase === "paused" || phase === "prep");
 
@@ -83,18 +86,35 @@ export function RepSectionRunner({
   }, [remaining]);
 
   const buildLog = useCallback(
-    (durationSeconds: number): WorkoutLogSection => ({
-      sectionName: section.name || `Section ${sectionIndex + 1}`,
-      rounds: 0,
-      items: [],
-      sectionType: isAmrap ? "amrap" : "forTime",
-      repItems: repExercises.map((ex) => ({
-        exerciseName: ex.name || "Exercise",
-        repsLower: ex.repsLower,
-      })),
-      durationSeconds: Math.max(0, Math.floor(durationSeconds)),
-    }),
-    [section.name, sectionIndex, isAmrap, repExercises],
+    (durationSeconds: number, counts?: Record<string, number>): WorkoutLogSection => {
+      if (isRepsMode) {
+        return {
+          sectionName: section.name || `Section ${sectionIndex + 1}`,
+          rounds: 0,
+          items: [],
+          sectionType: section.type ?? "circuit",
+          repItems: repExercises.map((ex) => ({
+            exerciseName: ex.name || "Exercise",
+            repsLower: ex.repsLower,
+            repsUpper: ex.repsUpper,
+            setsCompleted: counts?.[ex.id] ?? 0,
+          })),
+          durationSeconds: 0,
+        };
+      }
+      return {
+        sectionName: section.name || `Section ${sectionIndex + 1}`,
+        rounds: 0,
+        items: [],
+        sectionType: isAmrap ? "amrap" : "forTime",
+        repItems: repExercises.map((ex) => ({
+          exerciseName: ex.name || "Exercise",
+          repsLower: ex.repsLower,
+        })),
+        durationSeconds: Math.max(0, Math.floor(durationSeconds)),
+      };
+    },
+    [section.name, section.type, sectionIndex, isAmrap, isRepsMode, repExercises],
   );
 
   const finalize = useCallback(
@@ -109,7 +129,7 @@ export function RepSectionRunner({
   );
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" || isRepsMode) {
       if (tickRef.current !== null) {
         window.clearInterval(tickRef.current);
         tickRef.current = null;
@@ -172,9 +192,20 @@ export function RepSectionRunner({
     audio.unlock();
     onStart();
     completedRef.current = false;
+    if (isRepsMode) {
+      setPhase("running");
+      return;
+    }
     setPrepRemaining(PREP_SECONDS);
     setPrepPaused(false);
     setPhase("prep");
+  };
+
+  const handleRepsComplete = (counts: Record<string, number>) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    audio.playSectionEndBeep();
+    onComplete(buildLog(0, counts));
   };
 
   const handlePrepPauseResume = () => {
@@ -211,8 +242,9 @@ export function RepSectionRunner({
     },
   });
 
-  const tone: PageHeaderTone =
-    phase === "running"
+  const tone: PageHeaderTone = isRepsMode
+    ? "default"
+    : phase === "running"
       ? "exercise"
       : phase === "paused"
         ? "paused"
@@ -262,13 +294,17 @@ export function RepSectionRunner({
   const isIdle = phase === "idle";
   const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
-  const isActiveOrPrep = isActive || isPrep;
+  // Reps-mode never enters prep/active-timer screens; treat running as preview.
+  const isRepsPreview = isRepsMode && (isIdle || isActive);
+  const isActiveOrPrep = (isActive || isPrep) && !isRepsPreview;
 
-  if (phase === "idle") {
+  if (isIdle || isRepsPreview) {
     eyebrow = "Section Preview";
     const exerciseCount = repExercises.length;
     const exLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
-    if (isAmrap) {
+    if (isRepsMode) {
+      subtext = exLabel;
+    } else if (isAmrap) {
       subtext = `${exLabel} · cap ${formatDuration(timeCap)}`;
     } else {
       subtext = `${exLabel} · ${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`;
@@ -276,10 +312,10 @@ export function RepSectionRunner({
     primary = (
       <button
         type="button"
-        onClick={handleStart}
+        onClick={isRepsMode && isActive ? () => setShowCompleteInput(true) : handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        Start Section
+        {isRepsMode && isActive ? "Complete" : "Start Section"}
       </button>
     );
   } else if (isPrep) {
@@ -321,6 +357,26 @@ export function RepSectionRunner({
       primaryHint = "Tap to resume · Hold to finish section";
     }
   }
+
+  if (showCompleteInput) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={repExercises.map((ex) => ({
+            id: ex.id,
+            label: ex.name || "Exercise",
+            max: Math.max(1, Math.floor(ex.sets ?? 1)),
+          }))}
+          confirmLabel="Confirm"
+          onConfirm={handleRepsComplete}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
+
 
   const renderExerciseList = (idleStyle: boolean) => (
     <ul
@@ -371,7 +427,7 @@ export function RepSectionRunner({
   return (
     <>
       <div
-        className={isIdle ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
+        className={isIdle || isRepsPreview ? "flex min-h-full flex-1 flex-col bg-white text-black" : "flex min-h-full flex-1 flex-col"}
       >
         <RunnerScaffold
           eyebrow={isActiveOrPrep ? undefined : eyebrow}
@@ -380,7 +436,7 @@ export function RepSectionRunner({
           primary={primary}
           primaryHint={primaryHint}
         >
-          {isIdle && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
+          {(isIdle || isRepsPreview) && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
 
           {isActiveOrPrep ? (
             <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
@@ -432,7 +488,7 @@ export function RepSectionRunner({
               ) : null}
             </div>
           ) : (
-            renderExerciseList(isIdle)
+            renderExerciseList(isIdle || isRepsPreview)
           )}
         </RunnerScaffold>
       </div>

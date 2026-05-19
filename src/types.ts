@@ -84,10 +84,13 @@ export interface WorkoutLogItem {
   restDuration: number;
 }
 
-/** Rep-based log item used for forTime / amrap sections. */
+/** Rep-based log item used for forTime / amrap / reps-mode sections. */
 export interface WorkoutLogRepItem {
   exerciseName: string;
   repsLower?: number;
+  repsUpper?: number;
+  /** Reps-mode (circuit/sets with timingMode === "reps"): sets the user marked complete. */
+  setsCompleted?: number;
 }
 
 export interface WorkoutLogSection {
