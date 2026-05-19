@@ -550,7 +550,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         </div>
       )}
 
-      {type === "circuit" && (
+      {type === "circuit" && timingMode !== "reps" && (
         <div className="flex flex-col gap-2">
           <label htmlFor="section-total-rounds" className="text-xs font-medium text-muted-foreground">
             Rounds
