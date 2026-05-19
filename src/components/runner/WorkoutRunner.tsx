@@ -177,7 +177,11 @@ export function WorkoutRunner({ workout, onExit }: Props) {
   }
 
   const sectionTypeKey = currentSection.type ?? "circuit";
-  const isRepSection = sectionTypeKey === "forTime" || sectionTypeKey === "amrap";
+  const isRepSection =
+    sectionTypeKey === "forTime" ||
+    sectionTypeKey === "amrap" ||
+    ((sectionTypeKey === "circuit" || sectionTypeKey === "sets") &&
+      currentSection.timingMode === "reps");
 
   if (isRepSection) {
     return (
