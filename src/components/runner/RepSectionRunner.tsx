@@ -293,13 +293,17 @@ export function RepSectionRunner({
   const isIdle = phase === "idle";
   const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
-  const isActiveOrPrep = isActive || isPrep;
+  // Reps-mode never enters prep/active-timer screens; treat running as preview.
+  const isRepsPreview = isRepsMode && (isIdle || isActive);
+  const isActiveOrPrep = (isActive || isPrep) && !isRepsPreview;
 
-  if (phase === "idle") {
+  if (isIdle || isRepsPreview) {
     eyebrow = "Section Preview";
     const exerciseCount = repExercises.length;
     const exLabel = `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`;
-    if (isAmrap) {
+    if (isRepsMode) {
+      subtext = exLabel;
+    } else if (isAmrap) {
       subtext = `${exLabel} · cap ${formatDuration(timeCap)}`;
     } else {
       subtext = `${exLabel} · ${targetRounds} ${targetRounds === 1 ? "round" : "rounds"}`;
@@ -307,10 +311,10 @@ export function RepSectionRunner({
     primary = (
       <button
         type="button"
-        onClick={handleStart}
+        onClick={isRepsMode && isActive ? () => setShowCompleteInput(true) : handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        Start Section
+        {isRepsMode && isActive ? "Complete" : "Start Section"}
       </button>
     );
   } else if (isPrep) {
@@ -352,6 +356,26 @@ export function RepSectionRunner({
       primaryHint = "Tap to resume · Hold to finish section";
     }
   }
+
+  if (showCompleteInput) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={repExercises.map((ex) => ({
+            id: ex.id,
+            label: ex.name || "Exercise",
+            max: Math.max(1, Math.floor(ex.sets ?? 1)),
+          }))}
+          confirmLabel="Confirm"
+          onConfirm={handleRepsComplete}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
+
 
   const renderExerciseList = (idleStyle: boolean) => (
     <ul
