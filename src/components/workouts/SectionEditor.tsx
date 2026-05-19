@@ -278,6 +278,20 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         mode,
         notes: trimmedNotes ? trimmedNotes : undefined,
       });
+    } else if (timingMode === "reps") {
+      onDone({
+        ...initial,
+        name: name.trim() || defaultName,
+        items: [],
+        mode,
+        type,
+        timingMode: "reps",
+        repExercises: repItems,
+        timeCap: undefined,
+        targetRounds: undefined,
+        totalRounds: type === "circuit" ? Math.max(1, Math.floor(totalRounds)) : undefined,
+        notes: trimmedNotes ? trimmedNotes : undefined,
+      });
     } else {
       onDone({
         ...initial,
@@ -285,6 +299,7 @@ export function SectionEditor({ initial, positionIndex, onCancel, onDone }: Prop
         items,
         mode,
         type,
+        timingMode: "timer",
         // Clear rep-only fields when reverting to time-based
         repExercises: [],
         timeCap: undefined,
