@@ -82,6 +82,12 @@ function needsMigration(workouts: Workout[]): boolean {
       if (!Array.isArray(sec.items)) return true;
       const secType = sec.type ?? "circuit";
       if (secType === "circuit" && sec.totalRounds === undefined) return true;
+      if ((secType === "circuit" || secType === "sets") && sec.timingMode === undefined) return true;
+      if (Array.isArray(sec.repExercises)) {
+        if ((sec.repExercises as unknown[]).some((re) => (re as Record<string, unknown>).reps !== undefined)) {
+          return true;
+        }
+      }
       return false;
     });
   });
