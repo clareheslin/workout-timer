@@ -334,6 +334,27 @@ export function TimeSectionRunner({
 
   const isIdle = t.phase === "idle";
 
+  if (showInput) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={[]}
+          showNotes
+          confirmLabel="Confirm"
+          onConfirm={(_, notes) => {
+            const log = pendingLogRef.current;
+            if (!log) return;
+            const trimmed = notes.trim() ? notes : undefined;
+            onComplete({ ...log, userNotes: trimmed });
+          }}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
+
   return (
     <>
       <div className={isIdle ? "flex min-h-full flex-1 flex-col bg-background text-foreground" : "flex min-h-full flex-1 flex-col"}>
