@@ -204,17 +204,18 @@ export function RepSectionRunner({
     setPhase("prep");
   };
 
-  const handleRepsComplete = (counts: Record<string, number>) => {
+  const handleRepsComplete = (counts: Record<string, number>, notes: string) => {
     if (completedRef.current) return;
     completedRef.current = true;
     audio.playSectionEndBeep();
-    onComplete(buildLog(0, counts));
+    onComplete(buildLog(0, counts, notes));
   };
 
-  const handleAmrapInputConfirm = (counts: Record<string, number>) => {
+  const handleAmrapInputConfirm = (counts: Record<string, number>, notes: string) => {
     if (completedRef.current) return;
     completedRef.current = true;
     audio.playSectionEndBeep();
+    const trimmedNotes = notes.trim() ? notes : undefined;
     onComplete({
       sectionName: section.name || `Section ${sectionIndex + 1}`,
       rounds: 0,
@@ -227,6 +228,7 @@ export function RepSectionRunner({
         setsCompleted: counts[ex.id] ?? 0,
       })),
       durationSeconds: timeCap,
+      userNotes: trimmedNotes,
     });
   };
 
