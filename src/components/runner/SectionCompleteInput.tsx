@@ -92,16 +92,18 @@ export function SectionCompleteInput({
         }
       >
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleMarkAllComplete}
-              disabled={allAtMax}
-              className="rounded-full border border-current/30 px-4 py-2 text-sm font-medium opacity-80 hover:opacity-100 disabled:opacity-30"
-            >
-              Mark all complete
-            </button>
-          </div>
+          {items.length > 0 && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleMarkAllComplete}
+                disabled={allAtMax}
+                className="rounded-full border border-current/30 px-4 py-2 text-sm font-medium opacity-80 hover:opacity-100 disabled:opacity-30"
+              >
+                Mark all complete
+              </button>
+            </div>
+          )}
 
           <ul className="flex flex-col divide-y divide-black/15 border-y border-black/15">
             {items.map((item) => {
