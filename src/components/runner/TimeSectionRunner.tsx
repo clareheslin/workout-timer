@@ -64,6 +64,8 @@ export function TimeSectionRunner({
   const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: false });
   useWakeLock(t.phase === "running" || t.phase === "paused");
   const completedRef = useRef(false);
+  const pendingLogRef = useRef<WorkoutLogSection | null>(null);
+  const [showInput, setShowInput] = useState(false);
 
   useEffect(() => {
     if (t.phase === "running" || t.phase === "paused") {
@@ -89,8 +91,9 @@ export function TimeSectionRunner({
       items: sb?.items ?? [],
       sectionType: section.type ?? "circuit",
     };
-    onComplete(log);
-  }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
+    pendingLogRef.current = log;
+    setShowInput(true);
+  }, [t.phase, t.getRunSummary, section.type, section.name, sectionIndex]);
 
   const isActive = t.phase === "running" || t.phase === "paused";
   const isWorkInterval =
