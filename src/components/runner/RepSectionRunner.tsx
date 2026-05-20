@@ -432,6 +432,21 @@ export function RepSectionRunner({
     );
   }
 
+  if (phase === "input" && !isAmrap) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={[]}
+          showNotes
+          confirmLabel="Confirm"
+          onConfirm={handleStopwatchInputConfirm}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+
 
 
 
