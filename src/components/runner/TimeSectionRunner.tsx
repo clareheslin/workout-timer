@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSectionNav } from "./SectionNavigator";
 import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { SectionCompleteInput } from "./SectionCompleteInput";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
