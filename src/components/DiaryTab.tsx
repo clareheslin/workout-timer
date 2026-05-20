@@ -155,6 +155,11 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
           </ul>
         )}
       </div>
+      {section.userNotes && section.userNotes.trim() && (
+        <p className="mt-2 whitespace-pre-wrap text-xs italic text-muted-foreground">
+          {section.userNotes}
+        </p>
+      )}
     </div>
   );
 }

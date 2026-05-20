@@ -8,13 +8,15 @@ interface SectionCompleteInputProps {
     label: string;
     max?: number;
   }[];
+  showNotes?: boolean;
   confirmLabel?: string;
-  onConfirm: (counts: Record<string, number>) => void;
+  onConfirm: (counts: Record<string, number>, notes: string) => void;
 }
 
 export function SectionCompleteInput({
   title,
   items,
+  showNotes = true,
   confirmLabel = "Confirm",
   onConfirm,
 }: SectionCompleteInputProps) {
@@ -25,10 +27,7 @@ export function SectionCompleteInput({
     }
     return initial;
   });
-
-  const setValue = useCallback((id: string, value: number) => {
-    setCounts((prev) => ({ ...prev, [id]: value }));
-  }, []);
+  const [notes, setNotes] = useState("");
 
   const handleDecrement = useCallback(
     (id: string) => {
@@ -73,8 +72,8 @@ export function SectionCompleteInput({
   }, [items]);
 
   const handleConfirm = useCallback(() => {
-    onConfirm(counts);
-  }, [counts, onConfirm]);
+    onConfirm(counts, notes);
+  }, [counts, notes, onConfirm]);
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[--background]">
@@ -144,6 +143,25 @@ export function SectionCompleteInput({
               );
             })}
           </ul>
+
+          {showNotes && (
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="section-notes"
+                className="text-sm font-medium opacity-80"
+              >
+                Section notes
+              </label>
+              <textarea
+                id="section-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="How did it go? Record loads, RPE, or anything useful for next time."
+                rows={4}
+                className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-sm leading-snug outline-none focus:ring-2 focus:ring-current/30"
+              />
+            </div>
+          )}
         </div>
       </RunnerScaffold>
     </div>

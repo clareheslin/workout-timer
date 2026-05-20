@@ -103,6 +103,8 @@ export interface WorkoutLogSection {
   repItems?: WorkoutLogRepItem[];
   /** forTime: elapsed seconds when Stop was tapped. amrap: time cap in seconds. */
   durationSeconds?: number;
+  /** User's post-section notes, recorded after the section ends. */
+  userNotes?: string;
 }
 
 export interface WorkoutLog {
