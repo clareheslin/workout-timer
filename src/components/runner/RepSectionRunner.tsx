@@ -86,7 +86,8 @@ export function RepSectionRunner({
   }, [remaining]);
 
   const buildLog = useCallback(
-    (durationSeconds: number, counts?: Record<string, number>): WorkoutLogSection => {
+    (durationSeconds: number, counts?: Record<string, number>, notes?: string): WorkoutLogSection => {
+      const trimmedNotes = notes?.trim() ? notes : undefined;
       if (isRepsMode) {
         return {
           sectionName: section.name || `Section ${sectionIndex + 1}`,
@@ -100,6 +101,7 @@ export function RepSectionRunner({
             setsCompleted: counts?.[ex.id] ?? 0,
           })),
           durationSeconds: 0,
+          userNotes: trimmedNotes,
         };
       }
       return {
@@ -112,6 +114,7 @@ export function RepSectionRunner({
           repsLower: ex.repsLower,
         })),
         durationSeconds: Math.max(0, Math.floor(durationSeconds)),
+        userNotes: trimmedNotes,
       };
     },
     [section.name, section.type, sectionIndex, isAmrap, isRepsMode, repExercises],
