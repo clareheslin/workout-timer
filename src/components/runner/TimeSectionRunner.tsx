@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSectionNav } from "./SectionNavigator";
 import type { Section, Workout, WorkoutLogSection } from "@/types";
 import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutTimer";
@@ -9,6 +9,7 @@ import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
+import { SectionCompleteInput } from "./SectionCompleteInput";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
@@ -63,6 +64,8 @@ export function TimeSectionRunner({
   const t = useWorkoutTimer(subWorkout, callbacks, { holdOnFinalInterval: false });
   useWakeLock(t.phase === "running" || t.phase === "paused");
   const completedRef = useRef(false);
+  const pendingLogRef = useRef<WorkoutLogSection | null>(null);
+  const [showInput, setShowInput] = useState(false);
 
   useEffect(() => {
     if (t.phase === "running" || t.phase === "paused") {
@@ -88,8 +91,9 @@ export function TimeSectionRunner({
       items: sb?.items ?? [],
       sectionType: section.type ?? "circuit",
     };
-    onComplete(log);
-  }, [t.phase, t.getRunSummary, onComplete, section.type, section.name, sectionIndex]);
+    pendingLogRef.current = log;
+    setShowInput(true);
+  }, [t.phase, t.getRunSummary, section.type, section.name, sectionIndex]);
 
   const isActive = t.phase === "running" || t.phase === "paused";
   const isWorkInterval =
@@ -329,6 +333,27 @@ export function TimeSectionRunner({
   }
 
   const isIdle = t.phase === "idle";
+
+  if (showInput) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={[]}
+          showNotes
+          confirmLabel="Confirm"
+          onConfirm={(_, notes) => {
+            const log = pendingLogRef.current;
+            if (!log) return;
+            const trimmed = notes.trim() ? notes : undefined;
+            onComplete({ ...log, userNotes: trimmed });
+          }}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
 
   return (
     <>

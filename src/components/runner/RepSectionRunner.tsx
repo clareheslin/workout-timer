@@ -66,6 +66,7 @@ export function RepSectionRunner({
   const lastCountdownKey = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const remainingRef = useRef(timeCap);
+  const stopwatchDurationRef = useRef(0);
 
   useEffect(() => {
     if (phase === "running" || phase === "paused" || phase === "prep") {
@@ -250,8 +251,19 @@ export function RepSectionRunner({
   };
 
   const handleEnd = () => {
-    const duration = isAmrap ? timeCap : elapsedRef.current;
-    finalize(duration);
+    if (isAmrap) {
+      finalize(timeCap);
+      return;
+    }
+    stopwatchDurationRef.current = elapsedRef.current;
+    setPhase("input");
+  };
+
+  const handleStopwatchInputConfirm = (_counts: Record<string, number>, notes: string) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    audio.playSectionEndBeep();
+    onComplete(buildLog(stopwatchDurationRef.current, {}, notes));
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
@@ -419,6 +431,23 @@ export function RepSectionRunner({
       </>
     );
   }
+
+  if (phase === "input" && !isAmrap) {
+    return (
+      <>
+        <SectionCompleteInput
+          title={sectionTitle}
+          items={[]}
+          showNotes
+          confirmLabel="Confirm"
+          onConfirm={handleStopwatchInputConfirm}
+        />
+        {sheet}
+        {navSheet}
+      </>
+    );
+  }
+
 
 
 
