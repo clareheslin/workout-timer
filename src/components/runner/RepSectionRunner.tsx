@@ -66,6 +66,7 @@ export function RepSectionRunner({
   const lastCountdownKey = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const remainingRef = useRef(timeCap);
+  const stopwatchDurationRef = useRef(0);
 
   useEffect(() => {
     if (phase === "running" || phase === "paused" || phase === "prep") {
