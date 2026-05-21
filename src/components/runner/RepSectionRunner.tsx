@@ -103,6 +103,7 @@ export function RepSectionRunner({
           })),
           durationSeconds: 0,
           userNotes: trimmedNotes,
+          sectionId: section.id,
         };
       }
       return {
@@ -116,9 +117,10 @@ export function RepSectionRunner({
         })),
         durationSeconds: Math.max(0, Math.floor(durationSeconds)),
         userNotes: trimmedNotes,
+        sectionId: section.id,
       };
     },
-    [section.name, section.type, sectionIndex, isAmrap, isRepsMode, repExercises],
+    [section.name, section.type, sectionIndex, isAmrap, isRepsMode, repExercises, section.id],
   );
 
   const finalize = useCallback(
@@ -230,6 +232,7 @@ export function RepSectionRunner({
       })),
       durationSeconds: timeCap,
       userNotes: trimmedNotes,
+      sectionId: section.id,
     });
   };
 

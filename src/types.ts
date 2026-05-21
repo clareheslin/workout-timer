@@ -109,6 +109,8 @@ export interface WorkoutLogSection {
   durationSeconds?: number;
   /** User's post-section notes, recorded after the section ends. */
   userNotes?: string;
+  /** ID of the section this log entry belongs to, for cross-session matching. */
+  sectionId?: string;
 }
 
 export interface WorkoutLog {

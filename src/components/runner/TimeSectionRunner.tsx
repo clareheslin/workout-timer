@@ -90,6 +90,7 @@ export function TimeSectionRunner({
       rounds: sb?.rounds ?? 0,
       items: sb?.items ?? [],
       sectionType: section.type ?? "circuit",
+      sectionId: section.id,
     };
     pendingLogRef.current = log;
     setShowInput(true);
