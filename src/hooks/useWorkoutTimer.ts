@@ -12,6 +12,8 @@ export interface RunSummaryItem {
   exerciseName: string;
   exerciseDuration: number;
   restDuration: number;
+  roundsCompleted?: number;
+  roundsPlanned?: number;
 }
 
 export interface RunSummarySection {
