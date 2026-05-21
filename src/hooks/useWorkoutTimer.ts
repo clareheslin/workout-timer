@@ -604,19 +604,31 @@ export function useWorkoutTimer(
       // Total sets played in this section (one per completed exercise interval).
       const setsPlayed = played.filter((p) => p.kind === "exercise").length;
 
-      // Build the items list from the workout definition, but only for items
-      // that actually played at least once (any round, exercise side).
-      const playedItemIdxs = new Set(
-        played.filter((p) => p.kind === "exercise").map((p) => p.itemIndex),
-      );
-      const items: RunSummaryItem[] = section.items
-        .map((it, idx) => ({ it, idx }))
-        .filter(({ idx }) => playedItemIdxs.has(idx))
-        .map(({ it, idx }) => ({
+      const mode = section.mode ?? "circuit";
+      const sectionTotalRounds = Math.max(1, Math.floor(section.totalRounds ?? 1));
+
+      const items: RunSummaryItem[] = section.items.map((it, idx) => {
+        const completedRounds = played.filter(
+          (p) => p.kind === "exercise" && p.itemIndex === idx,
+        ).length;
+
+        let plannedRounds: number;
+        if (mode === "sets") {
+          plannedRounds = Math.max(1, Math.floor(it.exercise.rounds ?? 1));
+        } else {
+          const from = Math.max(1, Math.floor(it.exercise.roundFrom ?? 1));
+          const to = Math.max(from, Math.floor(it.exercise.roundTo ?? sectionTotalRounds));
+          plannedRounds = to - from + 1;
+        }
+
+        return {
           exerciseName: it.exercise.name || `Exercise ${idx + 1}`,
           exerciseDuration: Math.max(0, it.exercise.durationSeconds),
           restDuration: Math.max(0, it.rest.durationSeconds),
-        }));
+          roundsCompleted: completedRounds,
+          roundsPlanned: plannedRounds,
+        };
+      });
 
       return {
         sectionName: section.name || `Section ${i + 1}`,
