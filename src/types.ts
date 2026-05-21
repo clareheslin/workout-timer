@@ -82,6 +82,10 @@ export interface WorkoutLogItem {
   exerciseName: string;
   exerciseDuration: number;
   restDuration: number;
+  /** How many rounds of this exercise actually completed naturally. */
+  roundsCompleted?: number;
+  /** How many rounds of this exercise were planned. */
+  roundsPlanned?: number;
 }
 
 /** Rep-based log item used for forTime / amrap / reps-mode sections. */
