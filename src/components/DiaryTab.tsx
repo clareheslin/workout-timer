@@ -140,18 +140,32 @@ function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
           <p className="text-xs text-muted-foreground">No exercises recorded.</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {items.map((it, i) => (
-              <li
-                key={`${it.exerciseName}-${i}`}
-                className="flex items-center justify-between gap-2 text-xs"
-              >
-                <span className="truncate font-semibold">{it.exerciseName}</span>
-                <span className="shrink-0 text-muted-foreground">
-                  {formatItemDuration(it.exerciseDuration)}
-                  {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
-                </span>
-              </li>
-            ))}
+            {items.map((it, i) => {
+              const hasRounds =
+                it.roundsCompleted !== undefined && it.roundsPlanned !== undefined;
+              const incomplete =
+                hasRounds && (it.roundsCompleted as number) < (it.roundsPlanned as number);
+              return (
+                <li
+                  key={`${it.exerciseName}-${i}`}
+                  className="flex items-center justify-between gap-2 text-xs"
+                >
+                  <span className="truncate font-semibold">{it.exerciseName}</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {formatItemDuration(it.exerciseDuration)}
+                    {it.restDuration > 0 && <> · rest {formatItemDuration(it.restDuration)}</>}
+                    {hasRounds && (
+                      <>
+                        {" · "}
+                        <span className={incomplete ? "font-semibold text-foreground/80" : undefined}>
+                          {it.roundsCompleted}/{it.roundsPlanned}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
