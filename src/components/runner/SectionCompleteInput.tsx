@@ -157,11 +157,23 @@ export function SectionCompleteInput({
               <textarea
                 id="section-notes"
                 value={notes}
+                maxLength={500}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="How did it go? Record loads, RPE, or anything useful for next time."
                 rows={4}
                 className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-sm leading-snug outline-none focus:ring-2 focus:ring-current/30"
               />
+              <p
+                className={`text-right text-xs tabular-nums ${
+                  notes.length >= 500
+                    ? "text-red-500"
+                    : notes.length >= 400
+                      ? "text-amber-500"
+                      : "opacity-60"
+                }`}
+              >
+                {notes.length}/500
+              </p>
             </div>
           )}
         </div>
