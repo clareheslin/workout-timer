@@ -568,7 +568,14 @@ export function RepSectionRunner({
               ) : null}
             </div>
           ) : (
-            renderExerciseList(isIdle || isRepsPreview)
+            <>
+              {renderExerciseList(isIdle || isRepsPreview)}
+              <SectionHistory
+                sectionId={section.id}
+                logs={diary.logs}
+                getSectionHistory={diary.getSectionHistory}
+              />
+            </>
           )}
         </RunnerScaffold>
       </div>
