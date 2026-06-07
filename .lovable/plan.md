@@ -1,19 +1,20 @@
-## PS4 — Fix hint visibility and confirm notes placeholder
+## PS5 — Prevent iOS auto-zoom on notes textarea
 
-Three files, surgical changes only.
+Single-file, single-class change.
 
-### 1. `src/components/runner/SectionCompleteInput.tsx`
-- Notes textarea placeholder (line 169) is already `"How did it go? Record loads, RPE, or anything useful for next time."` — no change needed (will verify and leave as-is).
-- Update hint render condition (line 97) from `{hint && (` to `{hint && items.length > 0 && (` so the hint only appears when there are stepper items.
+### File: `src/components/runner/SectionCompleteInput.tsx`
 
-### 2. `src/components/runner/TimeSectionRunner.tsx`
-- Remove the `hint="..."` prop from the single `<SectionCompleteInput>` call.
+On the notes `<textarea>` element (line 172), change `text-sm` → `text-base` in the className.
 
-### 3. `src/components/runner/RepSectionRunner.tsx`
-Update hint text on all three render sites:
-- Reps-mode (`showCompleteInput` branch): `hint="Adjust the sets completed for each exercise."`
-- AMRAP (`phase === "input" && isAmrap`): `hint="Adjust the rounds completed for each exercise."`
-- Stopwatch (`phase === "input" && !isAmrap`): `hint="Adjust the rounds completed for each exercise."`
+**From:**
+```
+className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-sm leading-snug outline-none focus:ring-2 focus:ring-current/30"
+```
+
+**To:**
+```
+className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-base leading-snug outline-none focus:ring-2 focus:ring-current/30"
+```
 
 ### Untouched
-`src/types.ts`, `WorkoutRunner.tsx`, `DiaryTab.tsx`, `AppShell.tsx`, hooks, and everything else. No logic, stepper, or counter changes. No new tokens or colours.
+All other classes, props, placeholder, character counter, label, logic, and every other file in the project.
