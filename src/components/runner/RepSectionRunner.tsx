@@ -411,7 +411,7 @@ export function RepSectionRunner({
             max: Math.max(1, Math.floor(ex.sets ?? 1)),
           }))}
           confirmLabel="Confirm"
-          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
+          hint="Adjust the sets completed for each exercise."
           onConfirm={handleRepsComplete}
         />
         {sheet}
