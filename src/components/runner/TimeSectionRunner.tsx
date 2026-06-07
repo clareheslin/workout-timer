@@ -42,6 +42,7 @@ export function TimeSectionRunner({
   onExitWorkout,
   onNavigateToSection,
 }: Props) {
+  const diary = useWorkoutDiary();
   const subWorkout = useMemo<Workout>(
     () => ({
       id: `sub_${section.id}`,
