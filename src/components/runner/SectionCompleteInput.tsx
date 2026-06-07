@@ -10,6 +10,7 @@ interface SectionCompleteInputProps {
   }[];
   showNotes?: boolean;
   confirmLabel?: string;
+  hint?: string;
   onConfirm: (counts: Record<string, number>, notes: string) => void;
 }
 
@@ -18,6 +19,7 @@ export function SectionCompleteInput({
   items,
   showNotes = true,
   confirmLabel = "Confirm",
+  hint,
   onConfirm,
 }: SectionCompleteInputProps) {
   const [counts, setCounts] = useState<Record<string, number>>(() => {
@@ -92,6 +94,11 @@ export function SectionCompleteInput({
         }
       >
         <div className="flex flex-col gap-4">
+          {hint && (
+            <p className="text-sm text-muted-foreground text-center px-2 pb-2">
+              {hint}
+            </p>
+          )}
           {items.length > 0 && (
             <div className="flex justify-end">
               <button

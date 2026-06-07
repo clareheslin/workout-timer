@@ -411,6 +411,7 @@ export function RepSectionRunner({
             max: Math.max(1, Math.floor(ex.sets ?? 1)),
           }))}
           confirmLabel="Confirm"
+          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
           onConfirm={handleRepsComplete}
         />
         {sheet}
@@ -430,6 +431,7 @@ export function RepSectionRunner({
             max: undefined,
           }))}
           confirmLabel="Confirm"
+          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
           onConfirm={handleAmrapInputConfirm}
         />
         {sheet}
@@ -446,6 +448,7 @@ export function RepSectionRunner({
           items={[]}
           showNotes
           confirmLabel="Confirm"
+          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
           onConfirm={handleStopwatchInputConfirm}
         />
         {sheet}
