@@ -10,8 +10,10 @@ import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
 import { RunnerScaffold } from "./RunnerScaffold";
 import { SectionCompleteInput } from "./SectionCompleteInput";
+import { SectionHistory } from "./SectionHistory";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 
 interface Props {
   section: Section;
