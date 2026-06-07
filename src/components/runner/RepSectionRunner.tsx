@@ -448,7 +448,7 @@ export function RepSectionRunner({
           items={[]}
           showNotes
           confirmLabel="Confirm"
-          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
+          hint="Adjust the rounds completed for each exercise."
           onConfirm={handleStopwatchInputConfirm}
         />
         {sheet}
