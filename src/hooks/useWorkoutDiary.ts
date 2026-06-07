@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "./useLocalStorage";
-import type { WorkoutLog } from "@/types";
+import type { WorkoutLog, WorkoutLogSection } from "@/types";
 
 /** Normalise a single log entry that may use legacy block* field names. */
 function migrateLegacyLog(log: unknown): WorkoutLog {
