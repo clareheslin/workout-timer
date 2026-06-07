@@ -351,7 +351,7 @@ export function TimeSectionRunner({
           items={[]}
           showNotes
           confirmLabel="Confirm"
-          hint="Adjust the sets completed for each exercise, then add any notes to help you next time — loads, reps, how it felt, or any modifications."
+          
           onConfirm={(_, notes) => {
             const log = pendingLogRef.current;
             if (!log) return;
