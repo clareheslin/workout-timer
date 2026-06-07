@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "./useLocalStorage";
-import type { WorkoutLog } from "@/types";
+import type { WorkoutLog, WorkoutLogSection } from "@/types";
 
 /** Normalise a single log entry that may use legacy block* field names. */
 function migrateLegacyLog(log: unknown): WorkoutLog {
@@ -92,8 +92,23 @@ export function useWorkoutDiary() {
 
   const clearDiary = useCallback(() => setLogs([]), [setLogs]);
 
+  const getSectionHistory = useCallback(
+    (sectionId: string, limit: number): Array<{ date: string; logSection: WorkoutLogSection }> => {
+      const out: Array<{ date: string; logSection: WorkoutLogSection }> = [];
+      for (const log of logs) {
+        const match = log.sectionBreakdown?.find((s) => s.sectionId === sectionId);
+        if (match) {
+          out.push({ date: log.startedAt, logSection: match });
+          if (out.length >= limit) break;
+        }
+      }
+      return out;
+    },
+    [logs],
+  );
+
   return useMemo(
-    () => ({ logs, setLogs, addLog, deleteLog, clearDiary }),
-    [logs, setLogs, addLog, deleteLog, clearDiary],
+    () => ({ logs, setLogs, addLog, deleteLog, clearDiary, getSectionHistory }),
+    [logs, setLogs, addLog, deleteLog, clearDiary, getSectionHistory],
   );
 }
