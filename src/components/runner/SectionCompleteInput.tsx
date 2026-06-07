@@ -94,7 +94,7 @@ export function SectionCompleteInput({
         }
       >
         <div className="flex flex-col gap-4">
-          {hint && (
+          {hint && items.length > 0 && (
             <p className="text-sm text-muted-foreground text-center px-2 pb-2">
               {hint}
             </p>

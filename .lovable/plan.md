@@ -1,47 +1,19 @@
-## PS2 — Previous sessions panel on section Ready screen
+## PS4 — Fix hint visibility and confirm notes placeholder
 
-### Files to change
-1. `src/hooks/useWorkoutDiary.ts` — add `getSectionHistory`
-2. `src/components/runner/SectionHistory.tsx` — new component
-3. `src/components/runner/TimeSectionRunner.tsx` — render panel on idle
-4. `src/components/runner/RepSectionRunner.tsx` — render panel on idle
+Three files, surgical changes only.
 
-### Files left unchanged
-`src/types.ts`, `WorkoutRunner.tsx`, `DiaryTab.tsx`, `AppShell.tsx`, and all timer/audio/diary write logic.
+### 1. `src/components/runner/SectionCompleteInput.tsx`
+- Notes textarea placeholder (line 169) is already `"How did it go? Record loads, RPE, or anything useful for next time."` — no change needed (will verify and leave as-is).
+- Update hint render condition (line 97) from `{hint && (` to `{hint && items.length > 0 && (` so the hint only appears when there are stepper items.
 
-### Step 1 — useWorkoutDiary
-Add a stable `getSectionHistory(sectionId, limit)` via `useCallback([logs])`. Iterate `logs` (already newest-first), find the first `WorkoutLogSection` in each `log.sectionBreakdown` where `sectionId` matches, push `{ date: log.startedAt, logSection }`, stop at `limit`. Include in the `useMemo` returned object alongside existing `logs`, `setLogs`, `addLog`, `deleteLog`, `clearDiary` — nothing removed.
+### 2. `src/components/runner/TimeSectionRunner.tsx`
+- Remove the `hint="..."` prop from the single `<SectionCompleteInput>` call.
 
-### Step 2 — SectionHistory.tsx
-New self-contained component, no side effects.
+### 3. `src/components/runner/RepSectionRunner.tsx`
+Update hint text on all three render sites:
+- Reps-mode (`showCompleteInput` branch): `hint="Adjust the sets completed for each exercise."`
+- AMRAP (`phase === "input" && isAmrap`): `hint="Adjust the rounds completed for each exercise."`
+- Stopwatch (`phase === "input" && !isAmrap`): `hint="Adjust the rounds completed for each exercise."`
 
-Props: `{ sectionId: string; logs: WorkoutLog[]; getSectionHistory: (id, limit) => Array<{date, logSection}> }`. `WorkoutLog` and `WorkoutLogSection` imported from `@/types`.
-
-Behaviour:
-- Call `getSectionHistory(sectionId, 6)`.
-- Empty → single muted line: "No previous sessions recorded."
-- Otherwise → collapsible panel, default collapsed, local `useState` (resets on mount).
-- Toggle row: "Previous sessions (n)" + `ChevronDown` from lucide-react, rotates 180° when open. Small, muted, tappable button.
-- Expanded list — one row per entry:
-  - Left: date formatted "Ddd D Mmm" (e.g. "Mon 2 Jun") from ISO string using `toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })`.
-  - Right: summary by `logSection.sectionType`:
-    - `circuit` / `sets` / undefined → `${rounds} rounds`
-    - `forTime` → `m:ss` from `durationSeconds`, or `—`
-    - `amrap` → `${rounds} rounds`
-  - If `logSection.userNotes` non-empty → second line, `truncate`, smaller muted style.
-- Tokens only: `text-foreground`, `text-muted-foreground`, `border-border`, `bg-muted/30`. No hardcoded colours. Tailwind utilities already used elsewhere.
-
-### Step 3 — TimeSectionRunner.tsx
-- Add `const diary = useWorkoutDiary();` at top of component.
-- In the idle-phase content block, after the exercise `<ul>`, render `<SectionHistory sectionId={section.id} logs={diary.logs} getSectionHistory={diary.getSectionHistory} />`.
-- No other changes.
-
-### Step 4 — RepSectionRunner.tsx
-- Add `const diary = useWorkoutDiary();` at top.
-- In the idle/preview branch (`isIdle || isRepsPreview`), after the existing exercise list / coach notes content, render the same `<SectionHistory ... />`.
-- The panel is inside the idle branch so the running/paused/prep/input phases are untouched. No other changes.
-
-### Verification checklist (confirmed before coding)
-- Idle blocks identified in both runners.
-- `useWorkoutDiary` currently returns `{ logs, setLogs, addLog, deleteLog, clearDiary }`; `getSectionHistory` added without removing any existing entry.
-- `WorkoutLog` and `WorkoutLogSection` imported from `@/types` in `SectionHistory.tsx`.
+### Untouched
+`src/types.ts`, `WorkoutRunner.tsx`, `DiaryTab.tsx`, `AppShell.tsx`, hooks, and everything else. No logic, stepper, or counter changes. No new tokens or colours.
