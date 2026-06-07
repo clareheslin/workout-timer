@@ -253,6 +253,11 @@ export function TimeSectionRunner({
             });
           })()}
         </ul>
+        <SectionHistory
+          sectionId={section.id}
+          logs={diary.logs}
+          getSectionHistory={diary.getSectionHistory}
+        />
       </>
     );
     primary = (
