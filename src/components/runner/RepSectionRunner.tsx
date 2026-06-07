@@ -53,6 +53,7 @@ export function RepSectionRunner({
     () => section.repExercises ?? [],
     [section.repExercises],
   );
+  const diary = useWorkoutDiary();
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsed, setElapsed] = useState(0);
