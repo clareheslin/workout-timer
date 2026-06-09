@@ -1,20 +1,59 @@
-## PS5 — Prevent iOS auto-zoom on notes textarea
+## PS — Pack export/import in `src/lib/workoutShare.ts`
 
-Single-file, single-class change.
+Logic-only change. No other files touched. No existing exports modified or removed.
 
-### File: `src/components/runner/SectionCompleteInput.tsx`
+### Files touched
+- `src/lib/workoutShare.ts` — additions only.
 
-On the notes `<textarea>` element (line 172), change `text-sm` → `text-base` in the className.
+### Files left unchanged
+Every other file in the project.
 
-**From:**
-```
-className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-sm leading-snug outline-none focus:ring-2 focus:ring-current/30"
-```
+### Additions (appended to the end of the file)
 
-**To:**
-```
-className="w-full resize-y rounded-md border border-current/20 bg-transparent px-3 py-2 text-base leading-snug outline-none focus:ring-2 focus:ring-current/30"
-```
+1. **Constants**
+   ```ts
+   export const PACK_FILE_FORMAT = "fem.pack";
+   export const PACK_FILE_VERSION = 1;
+   ```
 
-### Untouched
-All other classes, props, placeholder, character counter, label, logic, and every other file in the project.
+2. **Interface**
+   ```ts
+   export interface WorkoutPackEnvelope {
+     format: typeof PACK_FILE_FORMAT;
+     version: number;
+     exportedAt: string;
+     workouts: Array<{ name: string; sections: Section[] }>;
+   }
+   ```
+
+3. **`serializePack(workouts: Workout[]): string`**
+   Builds a `WorkoutPackEnvelope` with `format`, `version`, `exportedAt = new Date().toISOString()`, and `workouts` mapped to `{ name, sections }` only (strips `id`, `createdAt`, `updatedAt`). Returns `JSON.stringify(envelope, null, 2)` — same formatting as `serializeWorkout`.
+
+4. **`isValidPackShape(obj: unknown): obj is WorkoutPackEnvelope`**
+   Mirrors `isValidWorkoutShape`:
+   - `isObj(obj)`
+   - `obj.format === PACK_FILE_FORMAT`
+   - `typeof obj.version === "number"` and `obj.version <= PACK_FILE_VERSION`
+   - `Array.isArray(obj.workouts)`
+   - Every entry: `isObj(w)`, `typeof w.name === "string"`, `Array.isArray(w.sections)`, `w.sections.every(isValidSection)` — reusing the existing `isValidSection` (not duplicated).
+
+5. **`parsePackFile(text: string): WorkoutPackEnvelope`**
+   `JSON.parse` inside try/catch → throws `"Not valid JSON"`. Then `isValidPackShape` → throws `"Not a valid FEM pack file"`. Returns the parsed envelope.
+
+6. **`regeneratePackIds(envelope: WorkoutPackEnvelope): Workout[]`**
+   For each entry, build a temporary `WorkoutFileEnvelope`:
+   ```ts
+   {
+     format: WORKOUT_FILE_FORMAT,
+     version: WORKOUT_FILE_VERSION,
+     exportedAt: envelope.exportedAt,
+     workout: { name: w.name, sections: w.sections },
+   }
+   ```
+   then call the existing `regenerateIds(tempEnvelope)`. Returns the resulting `Workout[]`. This guarantees identical id/timestamp behaviour to the single-workout path (same `createId` calls, same `now` semantics per workout).
+
+### Verification
+- No existing exports modified or removed (only appends).
+- `isValidSection` reused inside `isValidPackShape`.
+- `regeneratePackIds` delegates entirely to `regenerateIds` — identical id/timestamp behaviour.
+- All types resolve; no new imports needed (`Section`, `Workout`, `createId` already imported; `isObj`/`isValidSection` already in module scope).
