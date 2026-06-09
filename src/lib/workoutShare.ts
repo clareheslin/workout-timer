@@ -127,3 +127,64 @@ export function regenerateIds(
     updatedAt: now,
   };
 }
+
+export const PACK_FILE_FORMAT = "fem.pack";
+export const PACK_FILE_VERSION = 1;
+
+export interface WorkoutPackEnvelope {
+  format: typeof PACK_FILE_FORMAT;
+  version: number;
+  exportedAt: string;
+  workouts: Array<{ name: string; sections: Section[] }>;
+}
+
+/** Build a JSON string for sharing multiple workouts as a pack. */
+export function serializePack(workouts: Workout[]): string {
+  const envelope: WorkoutPackEnvelope = {
+    format: PACK_FILE_FORMAT,
+    version: PACK_FILE_VERSION,
+    exportedAt: new Date().toISOString(),
+    workouts: workouts.map((w) => ({ name: w.name, sections: w.sections })),
+  };
+  return JSON.stringify(envelope, null, 2);
+}
+
+export function isValidPackShape(obj: unknown): obj is WorkoutPackEnvelope {
+  if (!isObj(obj)) return false;
+  if (obj.format !== PACK_FILE_FORMAT) return false;
+  if (typeof obj.version !== "number" || obj.version > PACK_FILE_VERSION) return false;
+  if (!Array.isArray(obj.workouts)) return false;
+  for (const w of obj.workouts) {
+    if (!isObj(w)) return false;
+    if (typeof w.name !== "string") return false;
+    if (!Array.isArray(w.sections)) return false;
+    if (!w.sections.every(isValidSection)) return false;
+  }
+  return true;
+}
+
+/** Parse and validate a pack file. Throws on invalid input. */
+export function parsePackFile(text: string): WorkoutPackEnvelope {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Not valid JSON");
+  }
+  if (!isValidPackShape(parsed)) {
+    throw new Error("Not a valid FEM pack file");
+  }
+  return parsed;
+}
+
+/** Regenerate IDs and timestamps for every workout in an imported pack. */
+export function regeneratePackIds(envelope: WorkoutPackEnvelope): Workout[] {
+  return envelope.workouts.map((w) =>
+    regenerateIds({
+      format: WORKOUT_FILE_FORMAT,
+      version: WORKOUT_FILE_VERSION,
+      exportedAt: envelope.exportedAt,
+      workout: { name: w.name, sections: w.sections },
+    }),
+  );
+}
