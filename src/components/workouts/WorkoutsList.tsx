@@ -15,6 +15,8 @@ interface Props {
   onBulkDelete: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
   onImport: (workout: Workout) => void;
+  onImportPack?: (workout: Workout) => void;
+  onExportPack: (ids: string[]) => void;
 }
 
 async function shareWorkout(workout: Workout): Promise<void> {
@@ -241,6 +243,8 @@ export function WorkoutsList({
   onBulkDelete,
   onDuplicate,
   onImport,
+  onImportPack,
+  onExportPack,
 }: Props) {
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -330,7 +334,11 @@ export function WorkoutsList({
                   Select
                 </button>
               )}
-              <ImportWorkoutButton onImport={onImport} />
+              <ImportWorkoutButton
+                onImport={onImport}
+                onImportPack={onImportPack ?? onImport}
+                existingWorkouts={workouts}
+              />
               {sorted.length > 0 && (
                 <button
                   type="button"
@@ -355,20 +363,34 @@ export function WorkoutsList({
             {allSelected ? "Deselect all" : "Select all"}
           </button>
           <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
-          <button
-            type="button"
-            disabled={selectedIds.size === 0}
-            onClick={handleBulkDelete}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
-              confirmingBulk
-                ? "bg-destructive text-destructive-foreground"
-                : "border border-border hover:bg-accent"
-            }`}
-          >
-            {confirmingBulk
-              ? `Delete ${selectedIds.size}? Tap to confirm`
-              : `Delete${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={selectedIds.size === 0}
+              onClick={handleBulkDelete}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
+                confirmingBulk
+                  ? "bg-destructive text-destructive-foreground"
+                  : "border border-border hover:bg-accent"
+              }`}
+            >
+              {confirmingBulk
+                ? `Delete ${selectedIds.size}? Tap to confirm`
+                : `Delete${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
+            </button>
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  onExportPack(Array.from(selectedIds));
+                  exitSelecting();
+                }}
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+              >
+                Export Pack
+              </button>
+            )}
+          </div>
         </div>
       )}
 
