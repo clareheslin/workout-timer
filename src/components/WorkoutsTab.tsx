@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Workout } from "@/types";
 import { useWorkouts } from "@/hooks/useWorkouts";
 import { showToast } from "@/lib/toast";
+import { serializePack } from "@/lib/workoutShare";
 import { WorkoutsList } from "./workouts/WorkoutsList";
 import { WorkoutEditor } from "./workouts/WorkoutEditor";
 
@@ -53,6 +54,30 @@ export function WorkoutsTab({ onPlay }: Props) {
       }}
       onImport={(workout) => {
         addWorkout(workout);
+      }}
+      onImportPack={(workout) => {
+        const existing = workouts.find((w) => w.name === workout.name);
+        if (existing) {
+          updateWorkout({ ...workout, id: existing.id, createdAt: existing.createdAt });
+        } else {
+          addWorkout(workout);
+        }
+      }}
+      onExportPack={(ids) => {
+        const idSet = new Set(ids);
+        const selected = workouts.filter((w) => idSet.has(w.id));
+        if (selected.length === 0) return;
+        const json = serializePack(selected);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "workout-pack.fem.pack.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${selected.length} workouts`);
       }}
     />
   );
