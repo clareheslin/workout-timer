@@ -105,6 +105,26 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 );
               }
               const isCircuit = (section.type ?? "circuit") !== "sets";
+              const timingMode = section.timingMode ?? "timer";
+              if (timingMode === "reps") {
+                const reps = section.repExercises ?? [];
+                const totalSets = reps.reduce((sum, re) => sum + (re.sets ?? 1), 0);
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    <span className="whitespace-nowrap">
+                      {isCircuit ? "Circuit" : "Sets"}
+                    </span>
+                    {" · "}
+                    <span className="whitespace-nowrap">
+                      {reps.length} {reps.length === 1 ? "exercise" : "exercises"}
+                    </span>
+                    {" · "}
+                    <span className="whitespace-nowrap">
+                      {totalSets} {totalSets === 1 ? "set" : "sets"}
+                    </span>
+                  </p>
+                );
+              }
               const totalSeconds = sectionTotalSeconds(section);
               const hasTimer = totalSeconds > 0;
               const totalSets = sectionTotalSets(section);
