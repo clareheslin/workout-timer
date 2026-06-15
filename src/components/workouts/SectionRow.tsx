@@ -104,7 +104,7 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                   </p>
                 );
               }
-              const isCircuit = (section.mode ?? "circuit") !== "sets";
+              const isCircuit = (section.type ?? "circuit") !== "sets";
               const totalSeconds = sectionTotalSeconds(section);
               const hasTimer = totalSeconds > 0;
               const totalSets = sectionTotalSets(section);
