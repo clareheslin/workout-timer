@@ -105,11 +105,14 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                 );
               }
               const isCircuit = (section.mode ?? "circuit") !== "sets";
-              const countLabel = isCircuit
+              const totalSeconds = sectionTotalSeconds(section);
+              const hasTimer = totalSeconds > 0;
+              const totalSets = sectionTotalSets(section);
+              const countLabel = isCircuit && hasTimer
                 ? `${Math.max(1, Math.floor(section.totalRounds ?? 1))} ${
                     Math.max(1, Math.floor(section.totalRounds ?? 1)) === 1 ? "round" : "rounds"
                   }`
-                : `${sectionTotalSets(section)} total ${sectionTotalSets(section) === 1 ? "set" : "sets"}`;
+                : `${totalSets} ${totalSets === 1 ? "set" : "sets"}`;
               return (
                 <p className="text-xs text-muted-foreground">
                   <span className="whitespace-nowrap">
@@ -121,12 +124,17 @@ export function SectionRow({ section, onEdit, onDelete }: Props) {
                   </span>
                   {" · "}
                   <span className="whitespace-nowrap">{countLabel}</span>
-                  {" · "}
-                  <span className="whitespace-nowrap">
-                    {formatDuration(sectionTotalSeconds(section))}
-                  </span>
+                  {hasTimer && (
+                    <>
+                      {" · "}
+                      <span className="whitespace-nowrap">
+                        {formatDuration(totalSeconds)}
+                      </span>
+                    </>
+                  )}
                 </p>
               );
+
             })()}
           </div>
         </div>
