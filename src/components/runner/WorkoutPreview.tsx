@@ -71,7 +71,8 @@ export function WorkoutPreview({ workout, hasStarted, onBegin, onExit }: Props) 
             ) : (
               workout.sections.map((s, i) => {
                 const t = sectionType(s);
-                const isRep = t === "forTime" || t === "amrap";
+                const isRepsMode = s.timingMode === "reps";
+                const isRep = t === "forTime" || t === "amrap" || isRepsMode;
                 const exerciseCount = isRep
                   ? (s.repExercises?.length ?? 0)
                   : s.items.length;
@@ -84,6 +85,12 @@ export function WorkoutPreview({ workout, hasStarted, onBegin, onExit }: Props) 
                   timeLabel = null;
                   const r = Math.max(1, Math.floor(s.targetRounds ?? 1));
                   roundsLabel = `${r} ${r === 1 ? "round" : "rounds"}`;
+                } else if (isRepsMode) {
+                  const totalSets = (s.repExercises ?? []).reduce(
+                    (sum, re) => sum + (re.sets ?? 1),
+                    0,
+                  );
+                  roundsLabel = `${totalSets} total ${totalSets === 1 ? "set" : "sets"}`;
                 } else if (t === "sets") {
                   const secs = sectionTotalSeconds(s);
                   timeLabel = secs > 0 ? formatDuration(secs) : null;
