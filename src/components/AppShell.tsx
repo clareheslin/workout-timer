@@ -193,20 +193,20 @@ export function AppShell() {
               <TabButton
                 label="Quick Start"
                 icon={<Zap className="h-5 w-5" />}
-                active={tab === "quickstart"}
-                onClick={() => setTab("quickstart")}
+                active={!showLanding && tab === "quickstart"}
+                onClick={() => selectTab("quickstart")}
               />
               <TabButton
                 label="Workouts"
                 icon={<Dumbbell className="h-5 w-5" />}
-                active={tab === "workouts"}
-                onClick={() => setTab("workouts")}
+                active={!showLanding && tab === "workouts"}
+                onClick={() => selectTab("workouts")}
               />
               <TabButton
                 label="Diary"
                 icon={<BookOpen className="h-5 w-5" />}
-                active={tab === "diary"}
-                onClick={() => setTab("diary")}
+                active={!showLanding && tab === "diary"}
+                onClick={() => selectTab("diary")}
               />
             </nav>
           )}
