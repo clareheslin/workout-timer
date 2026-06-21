@@ -201,13 +201,18 @@ export function RepSectionRunner({
     audio.unlock();
     onStart();
     completedRef.current = false;
-    if (isRepsMode) {
-      setPhase("running");
-      return;
-    }
     setPrepRemaining(PREP_SECONDS);
     setPrepPaused(false);
     setPhase("prep");
+  };
+
+  // Reps-mode skips the idle → running flip entirely: tapping the primary
+  // button takes the user straight to the completion input.
+  const handleRepsOpenComplete = () => {
+    audio.unlock();
+    onStart();
+    completedRef.current = false;
+    setShowCompleteInput(true);
   };
 
   const handleRepsComplete = (counts: Record<string, number>, notes: string) => {
