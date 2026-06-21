@@ -201,13 +201,18 @@ export function RepSectionRunner({
     audio.unlock();
     onStart();
     completedRef.current = false;
-    if (isRepsMode) {
-      setPhase("running");
-      return;
-    }
     setPrepRemaining(PREP_SECONDS);
     setPrepPaused(false);
     setPhase("prep");
+  };
+
+  // Reps-mode skips the idle → running flip entirely: tapping the primary
+  // button takes the user straight to the completion input.
+  const handleRepsOpenComplete = () => {
+    audio.unlock();
+    onStart();
+    completedRef.current = false;
+    setShowCompleteInput(true);
   };
 
   const handleRepsComplete = (counts: Record<string, number>, notes: string) => {
@@ -273,7 +278,12 @@ export function RepSectionRunner({
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
-  const { handleBack, sheet } = useExitConfirm(hasStarted, {
+  // Reps-mode: the completion input is uncontrolled and only emits state on
+  // Confirm (which finalizes the section), so from this component's view
+  // counts are always 0 and notes always "" before Confirm — the
+  // "notes non-empty OR any count non-zero" guard condition is effectively
+  // never true, so exiting reps-mode before Confirm is always unguarded.
+  const { handleBack, sheet } = useExitConfirm(isRepsMode ? false : hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
@@ -336,8 +346,8 @@ export function RepSectionRunner({
   const isIdle = phase === "idle";
   const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
-  // Reps-mode never enters prep/active-timer screens; treat running as preview.
-  const isRepsPreview = isRepsMode && (isIdle || isActive);
+  // Reps-mode has no idle → running distinction; always render the preview.
+  const isRepsPreview = isRepsMode;
   const isActiveOrPrep = (isActive || isPrep) && !isRepsPreview;
 
   if (isIdle || isRepsPreview) {
@@ -354,10 +364,10 @@ export function RepSectionRunner({
     primary = (
       <button
         type="button"
-        onClick={isRepsMode && isActive ? () => setShowCompleteInput(true) : handleStart}
+        onClick={isRepsMode ? handleRepsOpenComplete : handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        {isRepsMode && isActive ? "Complete" : "Start Section"}
+        {isRepsMode ? "Complete" : "Start Section"}
       </button>
     );
   } else if (isPrep) {
@@ -410,6 +420,7 @@ export function RepSectionRunner({
             label: ex.name || "Exercise",
             max: Math.max(1, Math.floor(ex.sets ?? 1)),
           }))}
+          showNotes={true}
           confirmLabel="Confirm"
           hint="Adjust the sets completed for each exercise."
           onConfirm={handleRepsComplete}
