@@ -278,7 +278,12 @@ export function RepSectionRunner({
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
-  const { handleBack, sheet } = useExitConfirm(hasStarted, {
+  // Reps-mode: the completion input is uncontrolled and only emits state on
+  // Confirm (which finalizes the section), so from this component's view
+  // counts are always 0 and notes always "" before Confirm — the
+  // "notes non-empty OR any count non-zero" guard condition is effectively
+  // never true, so exiting reps-mode before Confirm is always unguarded.
+  const { handleBack, sheet } = useExitConfirm(isRepsMode ? false : hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
