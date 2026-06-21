@@ -129,6 +129,7 @@ export function AppShell() {
       );
     }
     if (helpOpen) return <HelpScreen onBack={() => setHelpOpen(false)} />;
+    if (showLanding) return <LandingScreen />;
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
     return <DiaryTab />;
