@@ -64,6 +64,11 @@ function consumeInterruptedSnapshot(): InProgressSnapshot | null {
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
+  const selectTab = useCallback((next: Tab) => {
+    setTab(next);
+    setShowLanding(false);
+  }, []);
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
   const diary = useWorkoutDiary();
@@ -124,6 +129,7 @@ export function AppShell() {
       );
     }
     if (helpOpen) return <HelpScreen onBack={() => setHelpOpen(false)} />;
+    if (showLanding) return <LandingScreen />;
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
     return <DiaryTab />;
@@ -187,20 +193,20 @@ export function AppShell() {
               <TabButton
                 label="Quick Start"
                 icon={<Zap className="h-5 w-5" />}
-                active={tab === "quickstart"}
-                onClick={() => setTab("quickstart")}
+                active={!showLanding && tab === "quickstart"}
+                onClick={() => selectTab("quickstart")}
               />
               <TabButton
                 label="Workouts"
                 icon={<Dumbbell className="h-5 w-5" />}
-                active={tab === "workouts"}
-                onClick={() => setTab("workouts")}
+                active={!showLanding && tab === "workouts"}
+                onClick={() => selectTab("workouts")}
               />
               <TabButton
                 label="Diary"
                 icon={<BookOpen className="h-5 w-5" />}
-                active={tab === "diary"}
-                onClick={() => setTab("diary")}
+                active={!showLanding && tab === "diary"}
+                onClick={() => selectTab("diary")}
               />
             </nav>
           )}
@@ -295,5 +301,20 @@ function TabButton({ label, icon, active, onClick }: TabButtonProps) {
       {icon}
       {label}
     </button>
+  );
+}
+
+function LandingScreen() {
+  return (
+    <div className="flex flex-col gap-4 pt-4">
+      <h1 className="text-2xl font-semibold tracking-tight">FEM Workout App</h1>
+      <p className="text-base text-foreground">Your workout companion.</p>
+      <p className="text-base text-muted-foreground">
+        Choose where you'd like to start: Quick Start, Workouts, or Diary.
+      </p>
+      <p className="text-base text-muted-foreground">
+        New here? Tap the help icon to see how it all works.
+      </p>
+    </div>
   );
 }
