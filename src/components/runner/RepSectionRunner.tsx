@@ -420,6 +420,7 @@ export function RepSectionRunner({
             label: ex.name || "Exercise",
             max: Math.max(1, Math.floor(ex.sets ?? 1)),
           }))}
+          showNotes={true}
           confirmLabel="Confirm"
           hint="Adjust the sets completed for each exercise."
           onConfirm={handleRepsComplete}
