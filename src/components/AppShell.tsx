@@ -177,7 +177,7 @@ export function AppShell() {
               </button>
             </div>
           )}
-          <AppHeader tone={tone} />
+          <AppHeader tone={tone} onOpenHelp={() => setHelpOpen(true)} />
           <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
             {renderTab()}
           </main>
