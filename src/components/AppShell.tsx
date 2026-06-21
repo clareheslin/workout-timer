@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Dumbbell, BookOpen, Zap, ChevronLeft, X } from "lucide-react";
+import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle } from "lucide-react";
+import { HelpScreen } from "./HelpScreen";
 import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
@@ -62,6 +63,7 @@ function consumeInterruptedSnapshot(): InProgressSnapshot | null {
 
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
+  const [helpOpen, setHelpOpen] = useState(false);
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
   const diary = useWorkoutDiary();
@@ -121,6 +123,7 @@ export function AppShell() {
         />
       );
     }
+    if (helpOpen) return <HelpScreen onBack={() => setHelpOpen(false)} />;
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
     return <DiaryTab />;
@@ -174,7 +177,7 @@ export function AppShell() {
               </button>
             </div>
           )}
-          <AppHeader tone={tone} />
+          <AppHeader tone={tone} onOpenHelp={() => setHelpOpen(true)} />
           <main className={`flex flex-1 flex-col ${running ? "" : "px-6 pt-4"} ${hideNav ? "pb-6" : "pb-24"}`}>
             {renderTab()}
           </main>
@@ -208,13 +211,27 @@ export function AppShell() {
   );
 }
 
-function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" }) {
+function AppHeader({
+  tone,
+  onOpenHelp,
+}: {
+  tone: "default" | "exercise" | "rest" | "paused";
+  onOpenHelp: () => void;
+}) {
   const { title, onBack, headerRight, backIcon } = usePageHeaderState();
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
   const isPaused = tone === "paused";
   const logo = isExercise ? femLogoWhite : femLogo;
   const BackIcon = backIcon === "x" ? X : ChevronLeft;
+  const showHelp = !onBack;
+  const iconToneClass = isExercise
+    ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
+    : isRest
+      ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
+      : isPaused
+        ? "text-paused-foreground/80 hover:bg-paused-foreground/10 hover:text-paused-foreground"
+        : "text-muted-foreground hover:bg-accent hover:text-foreground";
   return (
     <header
       style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
@@ -234,15 +251,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
           type="button"
           onClick={onBack}
           aria-label={backIcon === "x" ? "Exit" : "Back"}
-          className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
-            isExercise
-              ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
-              : isRest
-                ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
-                : isPaused
-                  ? "text-paused-foreground/80 hover:bg-paused-foreground/10 hover:text-paused-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
+          className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${iconToneClass}`}
         >
           <BackIcon className="h-5 w-5" />
         </button>
@@ -250,7 +259,19 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
       {title && (
         <h1 className="truncate text-base font-semibold tracking-tight">{title}</h1>
       )}
-      {headerRight && <div className="ml-auto flex items-center gap-2">{headerRight}</div>}
+      {showHelp && (
+        <button
+          type="button"
+          onClick={onOpenHelp}
+          aria-label="Help"
+          className={`ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md ${iconToneClass}`}
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
+      )}
+      {headerRight && (
+        <div className={`${showHelp ? "" : "ml-auto"} flex items-center gap-2`}>{headerRight}</div>
+      )}
     </header>
   );
 }
