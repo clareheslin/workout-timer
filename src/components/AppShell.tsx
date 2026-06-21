@@ -303,3 +303,18 @@ function TabButton({ label, icon, active, onClick }: TabButtonProps) {
     </button>
   );
 }
+
+function LandingScreen() {
+  return (
+    <div className="flex flex-col gap-4 pt-4">
+      <h1 className="text-2xl font-semibold tracking-tight">FEM Workout App</h1>
+      <p className="text-base text-foreground">Your workout companion.</p>
+      <p className="text-base text-muted-foreground">
+        Choose where you'd like to start: Quick Start, Workouts, or Diary.
+      </p>
+      <p className="text-base text-muted-foreground">
+        New here? Tap the help icon to see how it all works.
+      </p>
+    </div>
+  );
+}
