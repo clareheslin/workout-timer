@@ -211,13 +211,27 @@ export function AppShell() {
   );
 }
 
-function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" }) {
+function AppHeader({
+  tone,
+  onOpenHelp,
+}: {
+  tone: "default" | "exercise" | "rest" | "paused";
+  onOpenHelp: () => void;
+}) {
   const { title, onBack, headerRight, backIcon } = usePageHeaderState();
   const isExercise = tone === "exercise";
   const isRest = tone === "rest";
   const isPaused = tone === "paused";
   const logo = isExercise ? femLogoWhite : femLogo;
   const BackIcon = backIcon === "x" ? X : ChevronLeft;
+  const showHelp = !onBack;
+  const iconToneClass = isExercise
+    ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
+    : isRest
+      ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
+      : isPaused
+        ? "text-paused-foreground/80 hover:bg-paused-foreground/10 hover:text-paused-foreground"
+        : "text-muted-foreground hover:bg-accent hover:text-foreground";
   return (
     <header
       style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
@@ -237,15 +251,7 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
           type="button"
           onClick={onBack}
           aria-label={backIcon === "x" ? "Exit" : "Back"}
-          className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${
-            isExercise
-              ? "text-exercise-foreground/80 hover:bg-exercise-foreground/10 hover:text-exercise-foreground"
-              : isRest
-                ? "text-rest-foreground/80 hover:bg-rest-foreground/10 hover:text-rest-foreground"
-                : isPaused
-                  ? "text-paused-foreground/80 hover:bg-paused-foreground/10 hover:text-paused-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
+          className={`-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md ${iconToneClass}`}
         >
           <BackIcon className="h-5 w-5" />
         </button>
@@ -253,7 +259,19 @@ function AppHeader({ tone }: { tone: "default" | "exercise" | "rest" | "paused" 
       {title && (
         <h1 className="truncate text-base font-semibold tracking-tight">{title}</h1>
       )}
-      {headerRight && <div className="ml-auto flex items-center gap-2">{headerRight}</div>}
+      {showHelp && (
+        <button
+          type="button"
+          onClick={onOpenHelp}
+          aria-label="Help"
+          className={`ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md ${iconToneClass}`}
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
+      )}
+      {headerRight && (
+        <div className={`${showHelp ? "" : "ml-auto"} flex items-center gap-2`}>{headerRight}</div>
+      )}
     </header>
   );
 }
