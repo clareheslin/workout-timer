@@ -346,8 +346,8 @@ export function RepSectionRunner({
   const isIdle = phase === "idle";
   const isPrep = phase === "prep";
   const isActive = phase === "running" || phase === "paused";
-  // Reps-mode never enters prep/active-timer screens; treat running as preview.
-  const isRepsPreview = isRepsMode && (isIdle || isActive);
+  // Reps-mode has no idle → running distinction; always render the preview.
+  const isRepsPreview = isRepsMode;
   const isActiveOrPrep = (isActive || isPrep) && !isRepsPreview;
 
   if (isIdle || isRepsPreview) {
@@ -364,10 +364,10 @@ export function RepSectionRunner({
     primary = (
       <button
         type="button"
-        onClick={isRepsMode && isActive ? () => setShowCompleteInput(true) : handleStart}
+        onClick={isRepsMode ? handleRepsOpenComplete : handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        {isRepsMode && isActive ? "Complete" : "Start Section"}
+        {isRepsMode ? "Complete" : "Start Section"}
       </button>
     );
   } else if (isPrep) {
