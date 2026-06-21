@@ -423,6 +423,7 @@ export function RepSectionRunner({
           showNotes={true}
           confirmLabel="Confirm"
           hint="Adjust the sets completed for each exercise."
+          onDirtyChange={setIsCompleteInputDirty}
           onConfirm={handleRepsComplete}
         />
         {sheet}
