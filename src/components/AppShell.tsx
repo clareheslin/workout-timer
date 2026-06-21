@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Dumbbell, BookOpen, Zap, ChevronLeft, X } from "lucide-react";
+import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle } from "lucide-react";
+import { HelpScreen } from "./HelpScreen";
 import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
