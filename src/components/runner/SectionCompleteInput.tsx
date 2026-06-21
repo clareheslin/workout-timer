@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { RunnerScaffold } from "./RunnerScaffold";
 
 interface SectionCompleteInputProps {
@@ -12,6 +12,11 @@ interface SectionCompleteInputProps {
   confirmLabel?: string;
   hint?: string;
   onConfirm: (counts: Record<string, number>, notes: string) => void;
+  /** Optional: notified whenever the form becomes dirty/clean. "Dirty"
+   *  means notes is non-empty OR any count is non-zero. Lets a parent
+   *  drive an exit-confirm guard without lifting state out of this
+   *  uncontrolled component. */
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function SectionCompleteInput({
