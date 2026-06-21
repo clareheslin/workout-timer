@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { RunnerScaffold } from "./RunnerScaffold";
 
 interface SectionCompleteInputProps {
@@ -12,6 +12,11 @@ interface SectionCompleteInputProps {
   confirmLabel?: string;
   hint?: string;
   onConfirm: (counts: Record<string, number>, notes: string) => void;
+  /** Optional: notified whenever the form becomes dirty/clean. "Dirty"
+   *  means notes is non-empty OR any count is non-zero. Lets a parent
+   *  drive an exit-confirm guard without lifting state out of this
+   *  uncontrolled component. */
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function SectionCompleteInput({
@@ -21,6 +26,7 @@ export function SectionCompleteInput({
   confirmLabel = "Confirm",
   hint,
   onConfirm,
+  onDirtyChange,
 }: SectionCompleteInputProps) {
   const [counts, setCounts] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
@@ -30,6 +36,23 @@ export function SectionCompleteInput({
     return initial;
   });
   const [notes, setNotes] = useState("");
+
+  const onDirtyChangeRef = useRef(onDirtyChange);
+  useEffect(() => {
+    onDirtyChangeRef.current = onDirtyChange;
+  }, [onDirtyChange]);
+
+  const isDirty = useMemo(() => {
+    if (notes !== "") return true;
+    for (const k in counts) {
+      if ((counts[k] ?? 0) !== 0) return true;
+    }
+    return false;
+  }, [counts, notes]);
+
+  useEffect(() => {
+    onDirtyChangeRef.current?.(isDirty);
+  }, [isDirty]);
 
   const handleDecrement = useCallback(
     (id: string) => {

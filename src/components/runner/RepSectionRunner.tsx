@@ -278,12 +278,12 @@ export function RepSectionRunner({
   };
 
   // Section preview has no progress yet, so exit directly; running/paused remains guarded.
-  // Reps-mode: the completion input is uncontrolled and only emits state on
-  // Confirm (which finalizes the section), so from this component's view
-  // counts are always 0 and notes always "" before Confirm — the
-  // "notes non-empty OR any count non-zero" guard condition is effectively
-  // never true, so exiting reps-mode before Confirm is always unguarded.
-  const { handleBack, sheet } = useExitConfirm(isRepsMode ? false : hasStarted, {
+  // Reps-mode: SectionCompleteInput is uncontrolled, but it reports a
+  // dirty flag (notes non-empty OR any count non-zero) via onDirtyChange.
+  // We guard exit only once the user has actually typed/bumped something,
+  // so a pristine form exits silently but unsaved input prompts a warning.
+  const [isCompleteInputDirty, setIsCompleteInputDirty] = useState(false);
+  const { handleBack, sheet } = useExitConfirm(isRepsMode ? isCompleteInputDirty : hasStarted, {
     title: "Exit workout?",
     description: "Progress will not be saved.",
     confirmLabel: "Exit",
@@ -423,6 +423,7 @@ export function RepSectionRunner({
           showNotes={true}
           confirmLabel="Confirm"
           hint="Adjust the sets completed for each exercise."
+          onDirtyChange={setIsCompleteInputDirty}
           onConfirm={handleRepsComplete}
         />
         {sheet}
