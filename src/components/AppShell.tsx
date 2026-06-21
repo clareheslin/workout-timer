@@ -63,6 +63,7 @@ function consumeInterruptedSnapshot(): InProgressSnapshot | null {
 
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
+  const [helpOpen, setHelpOpen] = useState(false);
   const [running, setRunning] = useState<Workout | null>(null);
   const [headerState, setHeaderState] = useState<PageHeaderState>({ title: "" });
   const diary = useWorkoutDiary();
