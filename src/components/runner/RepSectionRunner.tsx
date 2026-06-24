@@ -367,7 +367,7 @@ export function RepSectionRunner({
         onClick={isRepsMode ? handleRepsOpenComplete : handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        {isRepsMode ? "Complete" : "Start Section"}
+        {isRepsMode ? "Complete" : "Start Timer"}
       </button>
     );
   } else if (isPrep) {
@@ -531,7 +531,7 @@ export function RepSectionRunner({
           primary={primary}
           primaryHint={primaryHint}
         >
-          {(isIdle || isRepsPreview) && section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
+          {(isIdle || isRepsPreview) && section.notes && <CoachNotes notes={section.notes} label="Coach notes" />}
 
           {isActiveOrPrep ? (
             <div className="flex flex-1 flex-col min-h-0 gap-4 text-center">
