@@ -21,7 +21,7 @@ interface Props {
   sectionIndex: number;
   totalSections: number;
   workoutName: string;
-  workoutNotes?: string;
+  
   audio: UseWorkoutAudioResult;
   hasStarted: boolean;
   onStart: () => void;
@@ -41,7 +41,7 @@ export function RepSectionRunner({
   sectionIndex,
   totalSections,
   workoutName,
-  workoutNotes,
+  
   audio,
   hasStarted,
   onStart,
@@ -320,7 +320,7 @@ export function RepSectionRunner({
     },
   });
 
-  const showNotesPeek = phase === "paused" && !isRepsMode && !!workoutNotes?.trim();
+  const showNotesPeek = phase === "paused" && !isRepsMode && !!section.notes?.trim();
   const headerOpts = useMemo(
     () => ({
       onBack: handleBack,
@@ -329,12 +329,12 @@ export function RepSectionRunner({
       headerRight: (
         <>
           {navNode}
-          {showNotesPeek && <CoachNotesPeek notes={workoutNotes!} />}
+          {showNotesPeek && <CoachNotesPeek notes={section.notes!} />}
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, tone, navNode, audio, showNotesPeek, workoutNotes],
+    [handleBack, tone, navNode, audio, showNotesPeek, section.notes],
   );
   usePageHeader("", headerOpts);
 

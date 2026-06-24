@@ -1,63 +1,27 @@
-# Fix: workout-level `notes` dropped on export/import
+Pure data-source swap: change the paused-state coach-notes icon from reading workout-level notes (`workoutNotes`) to reading the current section's own notes (`section.notes`). No styling, dialog, or other logic changes.
 
-Scope: `src/lib/workoutShare.ts` only. No other files touched. No version bump (purely additive optional field). Validators left as-is (optional field).
+### 1. src/components/runner/TimeSectionRunner.tsx
+- Remove `workoutNotes?: string` from the `Props` interface.
+- Remove `workoutNotes` from the destructured props.
+- Change `showNotesPeek` gate from `!!workoutNotes?.trim()` to `!!section.notes?.trim()`.
+- Pass `section.notes!` into `<CoachNotesPeek />` instead of `workoutNotes!`.
+- Update `headerOpts` `useMemo` dependency array: remove `workoutNotes`, add `section.notes`.
 
-## Six touch points
+### 2. src/components/runner/RepSectionRunner.tsx
+- Remove `workoutNotes?: string` from the `Props` interface.
+- Remove `workoutNotes` from the destructured props.
+- Change `showNotesPeek` gate from `!!workoutNotes?.trim()` to `!!section.notes?.trim()` (keep the existing `!isRepsMode` guard unchanged).
+- Pass `section.notes!` into `<CoachNotesPeek />` instead of `workoutNotes!`.
+- Update `headerOpts` `useMemo` dependency array: remove `workoutNotes`, add `section.notes`.
 
-### 1. `WorkoutFileEnvelope.workout` — add `notes?: string`
+### 3. src/components/runner/WorkoutRunner.tsx
+- Remove `workoutNotes={workout.notes}` prop from the `<RepSectionRunner />` call site.
+- Remove `workoutNotes={workout.notes}` prop from the `<TimeSectionRunner />` call site.
 
-```ts
-workout: {
-  name: string;
-  sections: Section[];
-  notes?: string;
-};
-```
+### 4. src/components/runner/CoachNotesPeek.tsx
+- No changes required; it already accepts a generic `notes: string` prop.
 
-### 2. `serializeWorkout` — include `notes`
-
-```ts
-workout: {
-  name: workout.name,
-  sections: workout.sections,
-  notes: workout.notes,
-},
-```
-
-### 3. `regenerateIds` — forward `notes` onto returned `Workout`
-
-```ts
-return {
-  id: createId("workout"),
-  name,
-  sections,
-  createdAt: now,
-  updatedAt: now,
-  notes: envelope.workout.notes,
-};
-```
-
-### 4. `WorkoutPackEnvelope.workouts` item — add `notes?: string`
-
-```ts
-workouts: Array<{ name: string; sections: Section[]; notes?: string }>;
-```
-
-### 5. `serializePack` — include `notes` in the map
-
-```ts
-workouts: workouts.map((w) => ({ name: w.name, sections: w.sections, notes: w.notes })),
-```
-
-### 6. `regeneratePackIds` — include `notes` in the inline workout object
-
-```ts
-workout: { name: w.name, sections: w.sections, notes: w.notes },
-```
-
-## Left unchanged
-
-- `WORKOUT_FILE_VERSION` and `PACK_FILE_VERSION` stay at `1`.
-- `isValidWorkoutShape`, `isValidPackShape` — `notes` is optional, no extra check needed.
-- All other functions, imports, and logic in `workoutShare.ts`.
-- Every other file (types, editor, UI components, storage).
+### Constraints
+- Do not touch idle, running, muted, back-button, or section-navigator behaviour.
+- Do not change the dialog title, markdown rendering, or icon styling.
+- After edits, verify the `useMemo` dependency arrays in both runner files are complete.
