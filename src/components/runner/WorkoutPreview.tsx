@@ -62,7 +62,7 @@ export function WorkoutPreview({ workout, hasStarted, onBegin, onExit }: Props) 
           }
         >
           {workout.notes && (
-            <CoachNotes notes={workout.notes} label="Coach notes" defaultOpen />
+            <CoachNotes notes={workout.notes} label="Coach notes" />
           )}
 
           <ul className="flex flex-col divide-y divide-border border-y border-border">
