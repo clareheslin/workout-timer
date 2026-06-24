@@ -53,7 +53,7 @@ export function SectionHistory({
   if (entries.length === 0) {
     return (
       <p className="text-xs text-muted-foreground">
-        No previous sessions recorded.
+        No sessions logged yet.
       </p>
     );
   }

@@ -182,7 +182,7 @@ export function SectionCompleteInput({
                 htmlFor="section-notes"
                 className="text-sm font-medium opacity-80"
               >
-                Section notes
+                Your notes
               </label>
               <textarea
                 id="section-notes"

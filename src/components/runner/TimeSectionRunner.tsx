@@ -199,7 +199,7 @@ export function TimeSectionRunner({
       (totalSecs > 0 ? ` · ${formatDuration(totalSecs)}` : "");
     content = (
       <>
-        {section.notes && <CoachNotes notes={section.notes} label="Section notes" />}
+        {section.notes && <CoachNotes notes={section.notes} label="Coach notes" />}
         <ul className="flex flex-col divide-y divide-border border-y border-border">
           {section.items.length === 0 ? (
             <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
@@ -266,7 +266,7 @@ export function TimeSectionRunner({
         onClick={handleStart}
         className="rounded-full bg-foreground px-8 py-4 text-lg font-semibold text-background min-w-[200px]"
       >
-        Start Section
+        Start Timer
       </button>
     );
   } else if ((t.phase === "running" || t.phase === "paused") && t.currentInterval) {
