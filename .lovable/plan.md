@@ -1,59 +1,63 @@
-## PS — Pack export/import in `src/lib/workoutShare.ts`
+# Fix: workout-level `notes` dropped on export/import
 
-Logic-only change. No other files touched. No existing exports modified or removed.
+Scope: `src/lib/workoutShare.ts` only. No other files touched. No version bump (purely additive optional field). Validators left as-is (optional field).
 
-### Files touched
-- `src/lib/workoutShare.ts` — additions only.
+## Six touch points
 
-### Files left unchanged
-Every other file in the project.
+### 1. `WorkoutFileEnvelope.workout` — add `notes?: string`
 
-### Additions (appended to the end of the file)
+```ts
+workout: {
+  name: string;
+  sections: Section[];
+  notes?: string;
+};
+```
 
-1. **Constants**
-   ```ts
-   export const PACK_FILE_FORMAT = "fem.pack";
-   export const PACK_FILE_VERSION = 1;
-   ```
+### 2. `serializeWorkout` — include `notes`
 
-2. **Interface**
-   ```ts
-   export interface WorkoutPackEnvelope {
-     format: typeof PACK_FILE_FORMAT;
-     version: number;
-     exportedAt: string;
-     workouts: Array<{ name: string; sections: Section[] }>;
-   }
-   ```
+```ts
+workout: {
+  name: workout.name,
+  sections: workout.sections,
+  notes: workout.notes,
+},
+```
 
-3. **`serializePack(workouts: Workout[]): string`**
-   Builds a `WorkoutPackEnvelope` with `format`, `version`, `exportedAt = new Date().toISOString()`, and `workouts` mapped to `{ name, sections }` only (strips `id`, `createdAt`, `updatedAt`). Returns `JSON.stringify(envelope, null, 2)` — same formatting as `serializeWorkout`.
+### 3. `regenerateIds` — forward `notes` onto returned `Workout`
 
-4. **`isValidPackShape(obj: unknown): obj is WorkoutPackEnvelope`**
-   Mirrors `isValidWorkoutShape`:
-   - `isObj(obj)`
-   - `obj.format === PACK_FILE_FORMAT`
-   - `typeof obj.version === "number"` and `obj.version <= PACK_FILE_VERSION`
-   - `Array.isArray(obj.workouts)`
-   - Every entry: `isObj(w)`, `typeof w.name === "string"`, `Array.isArray(w.sections)`, `w.sections.every(isValidSection)` — reusing the existing `isValidSection` (not duplicated).
+```ts
+return {
+  id: createId("workout"),
+  name,
+  sections,
+  createdAt: now,
+  updatedAt: now,
+  notes: envelope.workout.notes,
+};
+```
 
-5. **`parsePackFile(text: string): WorkoutPackEnvelope`**
-   `JSON.parse` inside try/catch → throws `"Not valid JSON"`. Then `isValidPackShape` → throws `"Not a valid FEM pack file"`. Returns the parsed envelope.
+### 4. `WorkoutPackEnvelope.workouts` item — add `notes?: string`
 
-6. **`regeneratePackIds(envelope: WorkoutPackEnvelope): Workout[]`**
-   For each entry, build a temporary `WorkoutFileEnvelope`:
-   ```ts
-   {
-     format: WORKOUT_FILE_FORMAT,
-     version: WORKOUT_FILE_VERSION,
-     exportedAt: envelope.exportedAt,
-     workout: { name: w.name, sections: w.sections },
-   }
-   ```
-   then call the existing `regenerateIds(tempEnvelope)`. Returns the resulting `Workout[]`. This guarantees identical id/timestamp behaviour to the single-workout path (same `createId` calls, same `now` semantics per workout).
+```ts
+workouts: Array<{ name: string; sections: Section[]; notes?: string }>;
+```
 
-### Verification
-- No existing exports modified or removed (only appends).
-- `isValidSection` reused inside `isValidPackShape`.
-- `regeneratePackIds` delegates entirely to `regenerateIds` — identical id/timestamp behaviour.
-- All types resolve; no new imports needed (`Section`, `Workout`, `createId` already imported; `isObj`/`isValidSection` already in module scope).
+### 5. `serializePack` — include `notes` in the map
+
+```ts
+workouts: workouts.map((w) => ({ name: w.name, sections: w.sections, notes: w.notes })),
+```
+
+### 6. `regeneratePackIds` — include `notes` in the inline workout object
+
+```ts
+workout: { name: w.name, sections: w.sections, notes: w.notes },
+```
+
+## Left unchanged
+
+- `WORKOUT_FILE_VERSION` and `PACK_FILE_VERSION` stay at `1`.
+- `isValidWorkoutShape`, `isValidPackShape` — `notes` is optional, no extra check needed.
+- All other functions, imports, and logic in `workoutShare.ts`.
+- Every other file (types, editor, UI components, storage).

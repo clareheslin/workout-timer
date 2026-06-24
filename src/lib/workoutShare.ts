@@ -11,6 +11,7 @@ export interface WorkoutFileEnvelope {
   workout: {
     name: string;
     sections: Section[];
+    notes?: string;
   };
 }
 
@@ -23,6 +24,7 @@ export function serializeWorkout(workout: Workout): string {
     workout: {
       name: workout.name,
       sections: workout.sections,
+      notes: workout.notes,
     },
   };
   return JSON.stringify(envelope, null, 2);
@@ -125,6 +127,7 @@ export function regenerateIds(
     sections,
     createdAt: now,
     updatedAt: now,
+    notes: envelope.workout.notes,
   };
 }
 
@@ -135,7 +138,7 @@ export interface WorkoutPackEnvelope {
   format: typeof PACK_FILE_FORMAT;
   version: number;
   exportedAt: string;
-  workouts: Array<{ name: string; sections: Section[] }>;
+  workouts: Array<{ name: string; sections: Section[]; notes?: string }>;
 }
 
 /** Build a JSON string for sharing multiple workouts as a pack. */
@@ -144,7 +147,7 @@ export function serializePack(workouts: Workout[]): string {
     format: PACK_FILE_FORMAT,
     version: PACK_FILE_VERSION,
     exportedAt: new Date().toISOString(),
-    workouts: workouts.map((w) => ({ name: w.name, sections: w.sections })),
+    workouts: workouts.map((w) => ({ name: w.name, sections: w.sections, notes: w.notes })),
   };
   return JSON.stringify(envelope, null, 2);
 }
@@ -184,7 +187,7 @@ export function regeneratePackIds(envelope: WorkoutPackEnvelope): Workout[] {
       format: WORKOUT_FILE_FORMAT,
       version: WORKOUT_FILE_VERSION,
       exportedAt: envelope.exportedAt,
-      workout: { name: w.name, sections: w.sections },
+      workout: { name: w.name, sections: w.sections, notes: w.notes },
     }),
   );
 }
