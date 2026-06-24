@@ -191,6 +191,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
         sectionIndex={sectionIndex}
         totalSections={workout.sections.length}
         workoutName={workout.name}
+        workoutNotes={workout.notes}
         audio={audio}
         hasStarted={hasStarted}
         onStart={handleSectionStart}
@@ -208,6 +209,7 @@ export function WorkoutRunner({ workout, onExit }: Props) {
       sectionIndex={sectionIndex}
       totalSections={workout.sections.length}
       workoutName={workout.name}
+      workoutNotes={workout.notes}
       audio={audio}
       hasStarted={hasStarted}
       onStart={handleSectionStart}
