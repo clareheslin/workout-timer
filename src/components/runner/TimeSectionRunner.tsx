@@ -155,7 +155,9 @@ export function TimeSectionRunner({
       headerRight: (
         <>
           {navNode}
-          {showNotesPeek && <CoachNotesPeek notes={section.notes!} />}
+          <div className="h-8 w-8 flex items-center justify-center">
+            {showNotesPeek && <CoachNotesPeek notes={section.notes!} />}
+          </div>
           <MuteButton audio={audio} />
         </>
       ),
