@@ -5,6 +5,7 @@ import { useWorkoutTimer, type WorkoutTimerCallbacks } from "@/hooks/useWorkoutT
 import type { UseWorkoutAudioResult } from "@/hooks/useWorkoutAudio";
 import { sectionTotalSeconds, exerciseRounds, formatDuration } from "@/lib/duration";
 import { MuteButton } from "./MuteButton";
+import { CoachNotesPeek } from "./CoachNotesPeek";
 import { useExitConfirm } from "./useExitConfirm";
 import { CoachNotes } from "@/components/CoachNotes";
 import { usePageHeader, type PageHeaderTone } from "@/components/PageHeaderContext";
@@ -19,6 +20,7 @@ interface Props {
   sectionIndex: number;
   totalSections: number;
   workoutName: string;
+  workoutNotes?: string;
   audio: UseWorkoutAudioResult;
   hasStarted: boolean;
   onStart: () => void;
@@ -35,6 +37,7 @@ export function TimeSectionRunner({
   sectionIndex,
   totalSections,
   workoutName,
+  workoutNotes,
   audio,
   hasStarted,
   onStart,
@@ -143,6 +146,7 @@ export function TimeSectionRunner({
     },
   });
 
+  const showNotesPeek = t.phase === "paused" && !!workoutNotes?.trim();
   const headerOpts = useMemo(
     () => ({
       onBack: handleBack,
@@ -151,11 +155,12 @@ export function TimeSectionRunner({
       headerRight: (
         <>
           {navNode}
+          {showNotesPeek && <CoachNotesPeek notes={workoutNotes!} />}
           <MuteButton audio={audio} />
         </>
       ),
     }),
-    [handleBack, tone, navNode, audio],
+    [handleBack, tone, navNode, audio, showNotesPeek, workoutNotes],
   );
   usePageHeader("", headerOpts);
 
