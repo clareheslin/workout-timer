@@ -54,7 +54,7 @@ function buildCompletionLines(section: WorkoutLogSection): string[] {
     if (section.durationSeconds !== undefined) {
       lines.push(`- Completed in ${formatMSS(section.durationSeconds)}`);
     } else {
-      lines.push("- Completed (legacy entry, limited detail)");
+      lines.push("- (legacy entry, limited detail)");
     }
     return lines;
   }
