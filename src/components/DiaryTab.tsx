@@ -381,12 +381,32 @@ export function DiaryTab() {
                 </button>
                 <button
                   type="button"
+                  onClick={async () => {
+                    const selected = sorted.filter((l) => selectedIds.has(l.id));
+                    if (selected.length === 0) return;
+                    const md = exportNotesMarkdown(selected);
+                    const date = new Date().toISOString().slice(0, 10);
+                    await shareFile({
+                      content: md,
+                      filename: `session-notes-${date}.md`,
+                      mime: "text/markdown",
+                      title: "Session notes",
+                    });
+                  }}
+                  disabled={selectedCount === 0}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                  Export
+                </button>
+                <button
+                  type="button"
                   onClick={() => setBulkConfirmOpen(true)}
                   disabled={selectedCount === 0}
                   className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Delete selected
+                  Delete
                 </button>
               </div>
             </>
