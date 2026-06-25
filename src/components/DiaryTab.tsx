@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Download, Trash2 } from "lucide-react";
 import type { WorkoutLog, WorkoutLogSection } from "@/types";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
 import { usePageHeader } from "./PageHeaderContext";
+import { exportNotesMarkdown } from "@/lib/notesExport";
+import { shareFile } from "@/lib/shareFile";
 import {
   AlertDialog,
   AlertDialogAction,
