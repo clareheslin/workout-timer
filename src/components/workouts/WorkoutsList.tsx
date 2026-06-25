@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Workout } from "@/types";
 import { formatDuration, workoutTotalSeconds } from "@/lib/workout";
 import { serializeWorkout, slugifyFilename } from "@/lib/workoutShare";
-import { showToast } from "@/lib/toast";
+import { shareFile } from "@/lib/shareFile";
 import { usePageHeader } from "../PageHeaderContext";
 import { ImportWorkoutButton } from "./ImportWorkoutButton";
 
