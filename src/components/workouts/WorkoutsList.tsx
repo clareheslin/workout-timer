@@ -22,34 +22,12 @@ interface Props {
 async function shareWorkout(workout: Workout): Promise<void> {
   const json = serializeWorkout(workout);
   const filename = slugifyFilename(workout.name || "workout");
-  const file = new File([json], filename, { type: "application/json" });
-
-  const nav = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-    share?: (data: ShareData) => Promise<void>;
-  };
-  const shareData: ShareData = { files: [file], title: workout.name || "Workout" };
-
-  if (nav.share && nav.canShare?.(shareData)) {
-    try {
-      await nav.share(shareData);
-      return;
-    } catch (err) {
-      if ((err as DOMException)?.name === "AbortError") return;
-      // fall through to download fallback
-    }
-  }
-
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast(`Downloaded ${filename}`);
+  await shareFile({
+    content: json,
+    filename,
+    mime: "application/json",
+    title: workout.name || "Workout",
+  });
 }
 
 function workoutHasExercise(w: Workout): boolean {
