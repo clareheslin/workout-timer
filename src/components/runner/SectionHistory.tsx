@@ -48,7 +48,7 @@ export function SectionHistory({
   getSectionHistory,
 }: SectionHistoryProps) {
   const [open, setOpen] = useState(false);
-  const entries = getSectionHistory(sectionId, 6);
+  const entries = getSectionHistory(sectionId, 13);
 
   if (entries.length === 0) {
     return (
