@@ -492,12 +492,19 @@ export function RepSectionRunner({
         <li className="px-1 py-3 text-sm opacity-70">No exercises.</li>
       ) : (
         repExercises.map((ex) => {
-          const repsLabel =
-            ex.repsLower !== undefined && ex.repsUpper !== undefined
-              ? `${ex.repsLower}–${ex.repsUpper}`
-              : ex.repsLower !== undefined
+          let repsLabel: string;
+          if (ex.repsLower !== undefined && ex.repsUpper !== undefined) {
+            repsLabel =
+              ex.repsLower === ex.repsUpper
                 ? `${ex.repsLower}`
-                : "—";
+                : `${ex.repsLower}–${ex.repsUpper}`;
+          } else if (ex.repsLower !== undefined) {
+            repsLabel = `${ex.repsLower}`;
+          } else if (ex.repsUpper !== undefined) {
+            repsLabel = `${ex.repsUpper}`;
+          } else {
+            repsLabel = "—";
+          }
           const sets = Math.max(1, Math.floor(ex.sets ?? 1));
           const rest = Math.max(0, Math.floor(ex.restSeconds ?? 0));
           const metaParts = [
