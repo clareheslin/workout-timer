@@ -71,6 +71,7 @@ function FormCard({
   selected,
   onToggleSelect,
   onEdit,
+  onRun,
   onDelete,
   onDuplicate,
 }: {
@@ -79,6 +80,7 @@ function FormCard({
   selected: boolean;
   onToggleSelect: () => void;
   onEdit: () => void;
+  onRun: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
