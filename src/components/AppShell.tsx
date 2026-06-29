@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle } from "lucide-react";
+import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle, MoreHorizontal, FileText } from "lucide-react";
 import { HelpScreen } from "./HelpScreen";
 import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
+import { FormsTab } from "./FormsTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 import { QuickStartScreen } from "./quickstart/QuickStartScreen";
@@ -15,10 +16,12 @@ import {
   usePageHeaderState,
   type PageHeaderState,
 } from "./PageHeaderContext";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import femLogo from "@/assets/fem-logo.png";
 import femLogoWhite from "@/assets/fem-logo-white.png";
 
-type Tab = "workouts" | "quickstart" | "diary";
+type Tab = "workouts" | "quickstart" | "diary" | "forms";
+
 
 interface InProgressSnapshot {
   workoutId: string;
