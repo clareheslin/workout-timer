@@ -1,12 +1,17 @@
 import { useState } from "react";
-import type { FormTemplate } from "@/types";
+import type { FormSubmission, FormTemplate } from "@/types";
 import { useFormTemplates } from "@/hooks/useFormTemplates";
+import { useFormSubmissions } from "@/hooks/useFormSubmissions";
 import { showToast } from "@/lib/toast";
 import { serializeFormPack } from "@/lib/formShare";
 import { FormsList } from "./forms/FormsList";
 import { FormEditor } from "./forms/FormEditor";
+import { FormRunner } from "./forms/FormRunner";
 
-type View = { mode: "list" } | { mode: "edit"; template: FormTemplate | null };
+type View =
+  | { mode: "list" }
+  | { mode: "edit"; template: FormTemplate | null }
+  | { mode: "run"; template: FormTemplate; submission?: FormSubmission };
 
 export function FormsTab() {
   const {
