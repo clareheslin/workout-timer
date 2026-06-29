@@ -191,3 +191,24 @@ export interface FormTemplate {
   /** Optional coach notes (markdown) shown before the form starts. */
   notes?: string;
 }
+
+// ===== Form submissions =====
+
+/** A single answer keyed by questionId. Discriminated by `type` to match
+ *  the question kind it answers. */
+export type FormAnswer =
+  | { questionId: string; type: "text"; value: string }
+  | { questionId: string; type: "multipleChoice"; selectedOptionIds: string[] }
+  | { questionId: string; type: "numericScale"; value: number };
+
+/** A completed form submission stored in the diary/logs. Snapshots
+ *  `templateName` at submission time so it survives template renames or
+ *  deletion (mirrors WorkoutLog.workoutName). */
+export interface FormSubmission {
+  id: string;
+  templateId: string;
+  templateName: string;
+  answers: FormAnswer[];
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp — bumped on every edit
+}
