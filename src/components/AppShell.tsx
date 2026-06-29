@@ -137,7 +137,9 @@ export function AppShell() {
     if (showLanding) return <LandingScreen />;
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
+    if (tab === "forms") return <FormsTab />;
     return <DiaryTab />;
+
   };
 
   const tone = headerState.tone ?? "default";
