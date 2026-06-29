@@ -208,6 +208,7 @@ export function FormsList({
   templates,
   onNew,
   onEdit,
+  onRun,
   onDelete,
   onBulkDelete,
   onDuplicate,
