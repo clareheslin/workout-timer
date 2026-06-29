@@ -1,12 +1,17 @@
 import { useState } from "react";
-import type { FormTemplate } from "@/types";
+import type { FormSubmission, FormTemplate } from "@/types";
 import { useFormTemplates } from "@/hooks/useFormTemplates";
+import { useFormSubmissions } from "@/hooks/useFormSubmissions";
 import { showToast } from "@/lib/toast";
 import { serializeFormPack } from "@/lib/formShare";
 import { FormsList } from "./forms/FormsList";
 import { FormEditor } from "./forms/FormEditor";
+import { FormRunner } from "./forms/FormRunner";
 
-type View = { mode: "list" } | { mode: "edit"; template: FormTemplate | null };
+type View =
+  | { mode: "list" }
+  | { mode: "edit"; template: FormTemplate | null }
+  | { mode: "run"; template: FormTemplate; submission?: FormSubmission };
 
 export function FormsTab() {
   const {
@@ -17,6 +22,7 @@ export function FormsTab() {
     deleteFormTemplate,
     duplicateFormTemplate,
   } = useFormTemplates();
+  const { addSubmission, updateSubmission } = useFormSubmissions();
   const [view, setView] = useState<View>({ mode: "list" });
 
   if (view.mode === "edit") {
@@ -34,11 +40,32 @@ export function FormsTab() {
     );
   }
 
+  if (view.mode === "run") {
+    return (
+      <FormRunner
+        template={view.template}
+        initialSubmission={view.submission}
+        onExit={() => setView({ mode: "list" })}
+        onSubmit={(submission) => {
+          if (view.submission) {
+            updateSubmission(submission);
+            showToast("Submission updated");
+          } else {
+            addSubmission(submission);
+            showToast("Form submitted");
+          }
+          setView({ mode: "list" });
+        }}
+      />
+    );
+  }
+
   return (
     <FormsList
       templates={formTemplates}
       onNew={() => setView({ mode: "edit", template: null })}
       onEdit={(t) => setView({ mode: "edit", template: t })}
+      onRun={(t) => setView({ mode: "run", template: t })}
       onDelete={(id) => {
         const target = formTemplates.find((t) => t.id === id);
         deleteFormTemplate(id);

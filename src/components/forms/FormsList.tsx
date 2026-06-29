@@ -9,6 +9,7 @@ interface Props {
   templates: FormTemplate[];
   onNew: () => void;
   onEdit: (template: FormTemplate) => void;
+  onRun: (template: FormTemplate) => void;
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
@@ -70,6 +71,7 @@ function FormCard({
   selected,
   onToggleSelect,
   onEdit,
+  onRun,
   onDelete,
   onDuplicate,
 }: {
@@ -78,6 +80,7 @@ function FormCard({
   selected: boolean;
   onToggleSelect: () => void;
   onEdit: () => void;
+  onRun: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
@@ -154,6 +157,13 @@ function FormCard({
             >
               Edit
             </button>
+            <button
+              type="button"
+              onClick={onRun}
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Run
+            </button>
           </div>
         )}
       </div>
@@ -198,6 +208,7 @@ export function FormsList({
   templates,
   onNew,
   onEdit,
+  onRun,
   onDelete,
   onBulkDelete,
   onDuplicate,
@@ -364,6 +375,7 @@ export function FormsList({
               selected={selectedIds.has(t.id)}
               onToggleSelect={() => toggleSelect(t.id)}
               onEdit={() => onEdit(t)}
+              onRun={() => onRun(t)}
               onDelete={() => onDelete(t.id)}
               onDuplicate={() => onDuplicate(t.id)}
             />
