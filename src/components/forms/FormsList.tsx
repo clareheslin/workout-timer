@@ -375,6 +375,7 @@ export function FormsList({
               selected={selectedIds.has(t.id)}
               onToggleSelect={() => toggleSelect(t.id)}
               onEdit={() => onEdit(t)}
+              onRun={() => onRun(t)}
               onDelete={() => onDelete(t.id)}
               onDuplicate={() => onDuplicate(t.id)}
             />
