@@ -9,6 +9,7 @@ interface Props {
   templates: FormTemplate[];
   onNew: () => void;
   onEdit: (template: FormTemplate) => void;
+  onRun: (template: FormTemplate) => void;
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
