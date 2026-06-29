@@ -33,7 +33,8 @@ export function RepRangeItemRow({ item, onChange, onDelete }: Props) {
     opacity: isDragging ? 0.85 : undefined,
   };
 
-  const hasRange = item.repsUpper !== undefined;
+  const isMaxEffort = item.isMaxEffort === true;
+  const hasRange = !isMaxEffort && item.repsUpper !== undefined;
   const lowerLabel = hasRange ? "From" : "Reps";
 
   return (
