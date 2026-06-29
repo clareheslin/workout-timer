@@ -196,7 +196,7 @@ export function AppShell() {
           </main>
 
           {!hideNav && (
-            <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
+            <nav className="sticky bottom-0 grid grid-cols-4 border-t border-border bg-background text-foreground">
               <TabButton
                 label="Quick Start"
                 icon={<Zap className="h-5 w-5" />}
@@ -215,8 +215,35 @@ export function AppShell() {
                 active={!showLanding && tab === "diary"}
                 onClick={() => selectTab("diary")}
               />
+              <TabButton
+                label="More"
+                icon={<MoreHorizontal className="h-5 w-5" />}
+                active={!showLanding && tab === "forms"}
+                onClick={() => setMoreOpen(true)}
+              />
             </nav>
           )}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetContent side="bottom" className="rounded-t-xl">
+              <SheetHeader>
+                <SheetTitle>More</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    selectTab("forms");
+                  }}
+                  className="flex items-center gap-3 rounded-md px-3 py-3 text-left text-base font-medium hover:bg-accent"
+                >
+                  <FileText className="h-5 w-5" />
+                  Forms
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
         </div>
         <ToastViewport />
       </div>
