@@ -180,7 +180,7 @@ export function FormRunner({ template, initialSubmission, onExit, onSubmit }: Pr
 
         <h2 className="text-xl font-semibold">{section.name}</h2>
 
-        <ul className="flex flex-col gap-5">
+        <ul className="flex flex-col gap-8">
           {section.questions.map((q) => (
             <QuestionInput
               key={q.id}
