@@ -26,14 +26,16 @@ export interface SectionItem {
 export interface RepExercise {
   id: string;
   name: string;
-  /** Lower bound of rep range, or specific target. Blank = failure/AMRAP. */
+  /** Lower bound of rep range, or specific target when repsUpper is unset. Undefined simply means "not set"; it does NOT imply max effort (use isMaxEffort for that). */
   repsLower?: number;
-  /** Upper bound of rep range. Blank = specific target (when lower set). */
+  /** Upper bound of rep range. Undefined simply means "not set"; it does NOT imply max effort (use isMaxEffort for that). */
   repsUpper?: number;
   /** Number of sets. Defaults to 1 when not set. */
   sets?: number;
   /** Rest guide in seconds between sets. */
   restSeconds?: number;
+  /** True when this exercise has no fixed rep target; coach/client should perform as many reps as possible. When true, repsLower and repsUpper should both be undefined. */
+  isMaxEffort?: boolean;
 }
 
 /** How rounds are ordered within a section.
