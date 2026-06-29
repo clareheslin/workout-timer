@@ -67,7 +67,9 @@ function consumeInterruptedSnapshot(): InProgressSnapshot | null {
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
   const [helpOpen, setHelpOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
+
   const selectTab = useCallback((next: Tab) => {
     setTab(next);
     setShowLanding(false);
