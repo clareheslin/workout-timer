@@ -397,6 +397,11 @@ function NumericScaleInput({
   onChange: (value: number) => void;
 }) {
   const step = question.step && question.step > 0 ? question.step : 1;
+  const visualStart = (() => {
+    const mid = (question.min + question.max) / 2;
+    const steps = Math.round((mid - question.min) / step);
+    return question.min + steps * step;
+  })();
 
   return (
     <div className={`flex flex-col gap-3 rounded-md p-0.5 ${errorRing}`}>
@@ -409,7 +414,7 @@ function NumericScaleInput({
         min={question.min}
         max={question.max}
         step={step}
-        value={value !== undefined ? [value] : [question.min]}
+        value={value !== undefined ? [value] : [visualStart]}
         onValueChange={(v) => onChange(v[0])}
       />
       {(question.minLabel || question.maxLabel) && (
