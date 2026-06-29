@@ -493,7 +493,9 @@ export function RepSectionRunner({
       ) : (
         repExercises.map((ex) => {
           let repsLabel: string;
-          if (ex.repsLower !== undefined && ex.repsUpper !== undefined) {
+          if (ex.isMaxEffort) {
+            repsLabel = "Max";
+          } else if (ex.repsLower !== undefined && ex.repsUpper !== undefined) {
             repsLabel =
               ex.repsLower === ex.repsUpper
                 ? `${ex.repsLower}`
