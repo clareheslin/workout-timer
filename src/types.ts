@@ -126,3 +126,68 @@ export interface WorkoutLog {
   /** True if the workout was interrupted (crash) or had skipped sections. */
   incomplete?: boolean;
 }
+
+// ===== Forms / Questionnaires =====
+
+export type FormQuestionType = "text" | "multipleChoice" | "numericScale";
+
+interface FormQuestionBase {
+  id: string;
+  /** The question label shown to the respondent. */
+  prompt: string;
+  /** Optional helper / clarifying text shown beneath the prompt. */
+  helpText?: string;
+  /** Whether an answer is required to submit the form. */
+  required?: boolean;
+}
+
+export interface FormQuestionText extends FormQuestionBase {
+  type: "text";
+  /** Render as a single-line input (default) or multi-line textarea. */
+  multiline?: boolean;
+  /** Optional placeholder for the input. */
+  placeholder?: string;
+}
+
+export interface FormQuestionMultipleChoice extends FormQuestionBase {
+  type: "multipleChoice";
+  /** Selectable options. */
+  options: Array<{ id: string; label: string }>;
+  /** Allow selecting multiple options. Defaults to false (single-select). */
+  allowMultiple?: boolean;
+}
+
+export interface FormQuestionNumericScale extends FormQuestionBase {
+  type: "numericScale";
+  /** Lower bound of the scale (inclusive). */
+  min: number;
+  /** Upper bound of the scale (inclusive). */
+  max: number;
+  /** Step between values. Defaults to 1. */
+  step?: number;
+  /** Optional label shown beneath the min value (e.g. "Easy"). */
+  minLabel?: string;
+  /** Optional label shown beneath the max value (e.g. "Hard"). */
+  maxLabel?: string;
+}
+
+export type FormQuestion =
+  | FormQuestionText
+  | FormQuestionMultipleChoice
+  | FormQuestionNumericScale;
+
+export interface FormSection {
+  id: string;
+  name: string;
+  questions: FormQuestion[];
+}
+
+export interface FormTemplate {
+  id: string;
+  name: string;
+  sections: FormSection[];
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp — bumped on every save
+  /** Optional coach notes (markdown) shown before the form starts. */
+  notes?: string;
+}
