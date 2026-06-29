@@ -73,34 +73,55 @@ export function RepRangeItemRow({ item, onChange, onDelete }: Props) {
           <NameTextarea value={item.name} onChange={(name) => onChange({ name })} />
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <label className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span>{lowerLabel}</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={item.repsLower ?? ""}
-                placeholder="—"
-                onChange={(e) => onChange({ repsLower: parsePositiveInt(e.target.value) })}
-                aria-label={lowerLabel}
-                onFocus={(e) => e.target.select()}
-                className="w-14 rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
+            {!isMaxEffort && (
+              <>
+                <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>{lowerLabel}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={item.repsLower ?? ""}
+                    placeholder="—"
+                    onChange={(e) => onChange({ repsLower: parsePositiveInt(e.target.value) })}
+                    aria-label={lowerLabel}
+                    onFocus={(e) => e.target.select()}
+                    className="w-14 rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>To</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={item.repsUpper ?? ""}
+                    placeholder="—"
+                    onChange={(e) => onChange({ repsUpper: parsePositiveInt(e.target.value) })}
+                    aria-label="To"
+                    onFocus={(e) => e.target.select()}
+                    className="w-14 rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+              </>
+            )}
 
             <label className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span>To</span>
               <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={item.repsUpper ?? ""}
-                placeholder="—"
-                onChange={(e) => onChange({ repsUpper: parsePositiveInt(e.target.value) })}
-                aria-label="To"
-                onFocus={(e) => e.target.select()}
-                className="w-14 rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-ring"
+                type="checkbox"
+                checked={isMaxEffort}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    onChange({ isMaxEffort: true, repsLower: undefined, repsUpper: undefined });
+                  } else {
+                    onChange({ isMaxEffort: false });
+                  }
+                }}
+                aria-label="Max effort"
+                className="h-4 w-4 rounded border-input"
               />
+              <span>Max effort</span>
             </label>
 
             <label className="flex items-center gap-1 text-xs text-muted-foreground">
