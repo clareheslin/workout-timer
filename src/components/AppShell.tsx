@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle } from "lucide-react";
+import { Dumbbell, BookOpen, Zap, ChevronLeft, X, HelpCircle, MoreHorizontal, FileText } from "lucide-react";
 import { HelpScreen } from "./HelpScreen";
 import type { Workout, WorkoutLog, WorkoutLogSection } from "@/types";
 import { WorkoutsTab } from "./WorkoutsTab";
 import { DiaryTab } from "./DiaryTab";
+import { FormsTab } from "./FormsTab";
 import { ToastViewport } from "./ToastViewport";
 import { WorkoutRunner } from "./runner/WorkoutRunner";
 import { QuickStartScreen } from "./quickstart/QuickStartScreen";
@@ -15,10 +16,12 @@ import {
   usePageHeaderState,
   type PageHeaderState,
 } from "./PageHeaderContext";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import femLogo from "@/assets/fem-logo.png";
 import femLogoWhite from "@/assets/fem-logo-white.png";
 
-type Tab = "workouts" | "quickstart" | "diary";
+type Tab = "workouts" | "quickstart" | "diary" | "forms";
+
 
 interface InProgressSnapshot {
   workoutId: string;
@@ -64,7 +67,9 @@ function consumeInterruptedSnapshot(): InProgressSnapshot | null {
 export function AppShell() {
   const [tab, setTab] = useState<Tab>("quickstart");
   const [helpOpen, setHelpOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
+
   const selectTab = useCallback((next: Tab) => {
     setTab(next);
     setShowLanding(false);
@@ -132,7 +137,9 @@ export function AppShell() {
     if (showLanding) return <LandingScreen />;
     if (tab === "workouts") return <WorkoutsTab onPlay={(w) => setRunning(w)} />;
     if (tab === "quickstart") return <QuickStartScreen />;
+    if (tab === "forms") return <FormsTab />;
     return <DiaryTab />;
+
   };
 
   const tone = headerState.tone ?? "default";
@@ -189,7 +196,7 @@ export function AppShell() {
           </main>
 
           {!hideNav && (
-            <nav className="sticky bottom-0 grid grid-cols-3 border-t border-border bg-background text-foreground">
+            <nav className="sticky bottom-0 grid grid-cols-4 border-t border-border bg-background text-foreground">
               <TabButton
                 label="Quick Start"
                 icon={<Zap className="h-5 w-5" />}
@@ -208,8 +215,35 @@ export function AppShell() {
                 active={!showLanding && tab === "diary"}
                 onClick={() => selectTab("diary")}
               />
+              <TabButton
+                label="More"
+                icon={<MoreHorizontal className="h-5 w-5" />}
+                active={!showLanding && tab === "forms"}
+                onClick={() => setMoreOpen(true)}
+              />
             </nav>
           )}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetContent side="bottom" className="rounded-t-xl">
+              <SheetHeader>
+                <SheetTitle>More</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    selectTab("forms");
+                  }}
+                  className="flex items-center gap-3 rounded-md px-3 py-3 text-left text-base font-medium hover:bg-accent"
+                >
+                  <FileText className="h-5 w-5" />
+                  Forms
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
         </div>
         <ToastViewport />
       </div>
