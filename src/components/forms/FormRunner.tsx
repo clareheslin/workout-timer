@@ -8,6 +8,7 @@ import type {
 import { createId } from "@/lib/id";
 import { usePageHeader } from "../PageHeaderContext";
 import { useExitConfirm } from "../runner/useExitConfirm";
+import { Slider } from "@/components/ui/slider";
 
 interface Props {
   template: FormTemplate;
