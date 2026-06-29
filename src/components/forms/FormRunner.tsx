@@ -8,6 +8,7 @@ import type {
 import { createId } from "@/lib/id";
 import { usePageHeader } from "../PageHeaderContext";
 import { useExitConfirm } from "../runner/useExitConfirm";
+import { Slider } from "@/components/ui/slider";
 
 interface Props {
   template: FormTemplate;
@@ -396,30 +397,21 @@ function NumericScaleInput({
   onChange: (value: number) => void;
 }) {
   const step = question.step && question.step > 0 ? question.step : 1;
-  const values: number[] = [];
-  for (let v = question.min; v <= question.max; v += step) values.push(v);
 
   return (
-    <div className={`flex flex-col gap-2 rounded-md p-0.5 ${errorRing}`}>
-      <div className="flex flex-wrap gap-2">
-        {values.map((v) => {
-          const selected = value === v;
-          return (
-            <button
-              key={v}
-              type="button"
-              onClick={() => onChange(v)}
-              className={`min-w-[2.5rem] rounded-md border px-3 py-2 text-sm font-medium ${
-                selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:bg-accent"
-              }`}
-            >
-              {v}
-            </button>
-          );
-        })}
+    <div className={`flex flex-col gap-3 rounded-md p-0.5 ${errorRing}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold tabular-nums">
+          {value !== undefined ? value : "—"}
+        </span>
       </div>
+      <Slider
+        min={question.min}
+        max={question.max}
+        step={step}
+        value={value !== undefined ? [value] : [question.min]}
+        onValueChange={(v) => onChange(v[0])}
+      />
       {(question.minLabel || question.maxLabel) && (
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>{question.minLabel ?? ""}</span>
