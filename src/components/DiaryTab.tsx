@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Download, Trash2 } from "lucide-react";
-import type { WorkoutLog, WorkoutLogSection } from "@/types";
+import type {
+  FormSubmission,
+  FormTemplate,
+  WorkoutLog,
+  WorkoutLogSection,
+} from "@/types";
 import { useWorkoutDiary } from "@/hooks/useWorkoutDiary";
+import { useFormSubmissions } from "@/hooks/useFormSubmissions";
+import { useFormTemplates } from "@/hooks/useFormTemplates";
 import { usePageHeader } from "./PageHeaderContext";
 import { exportNotesMarkdown } from "@/lib/notesExport";
 import { shareFile } from "@/lib/shareFile";
+import { showToast } from "@/lib/toast";
+import { FormRunner } from "./forms/FormRunner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,24 +57,6 @@ function formatItemDuration(seconds: number): string {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return r === 0 ? `${m}m` : `${m}m ${r}s`;
-}
-
-function sectionTypeLabel(section: WorkoutLogSection): string {
-  const isRepsMode =
-    (section.sectionType === "circuit" || section.sectionType === "sets") &&
-    (section.repItems ?? []).length > 0 &&
-    section.rounds === 0;
-  switch (section.sectionType) {
-    case "forTime":
-      return "Stopwatch";
-    case "amrap":
-      return `Time Cap · ${formatItemDuration(section.durationSeconds ?? 0)}`;
-    case "sets":
-      return isRepsMode ? "Sets" : `Sets · ${section.rounds} ${section.rounds === 1 ? "set" : "sets"}`;
-    case "circuit":
-    default:
-      return isRepsMode ? "Circuit" : `Circuit · ${section.rounds} ${section.rounds === 1 ? "round" : "rounds"}`;
-  }
 }
 
 function SectionBreakdown({ section }: { section: WorkoutLogSection }) {
@@ -199,7 +190,6 @@ interface LogCardProps {
 function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect }: LogCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Collapse details when entering selection mode so the card layout stays predictable.
   useEffect(() => {
     if (selectionMode) setExpanded(false);
   }, [selectionMode]);
@@ -289,6 +279,114 @@ function LogCard({ log, onRequestDelete, selectionMode, selected, onToggleSelect
   );
 }
 
+interface SubmissionCardProps {
+  submission: FormSubmission;
+  template: FormTemplate | undefined;
+  onOpen: () => void;
+  onRequestDelete: () => void;
+  selectionMode: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+}
+
+function SubmissionCard({
+  submission,
+  template,
+  onOpen,
+  onRequestDelete,
+  selectionMode,
+  selected,
+  onToggleSelect,
+}: SubmissionCardProps) {
+  const answeredCount = submission.answers.length;
+  const totalCount = template
+    ? template.sections.reduce((n, s) => n + s.questions.length, 0)
+    : undefined;
+  const summary =
+    totalCount !== undefined
+      ? `${answeredCount} of ${totalCount} answered`
+      : `${answeredCount} ${answeredCount === 1 ? "answer" : "answers"}`;
+  const name = submission.templateName || "Untitled form";
+  const deleted = !template;
+
+  if (selectionMode) {
+    return (
+      <li>
+        <button
+          type="button"
+          onClick={onToggleSelect}
+          aria-pressed={selected}
+          aria-label={`${selected ? "Deselect" : "Select"} ${name}`}
+          className={`flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+            selected
+              ? "border-primary bg-primary/5"
+              : "border-border bg-card hover:bg-accent/40"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+              selected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background"
+            }`}
+          >
+            {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+          </span>
+          <div className="min-w-0 flex-1 text-card-foreground">
+            <p className="truncate text-base font-semibold">{name}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatLogDate(submission.updatedAt)}
+            </p>
+            <p className="mt-1 text-sm">{summary}</p>
+          </div>
+        </button>
+      </li>
+    );
+  }
+
+  return (
+    <li className="rounded-lg border border-border bg-card p-4 text-card-foreground">
+      <div className="min-w-0">
+        {deleted ? (
+          <p className="truncate text-base font-semibold">{name}</p>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="block w-full text-left"
+          >
+            <p className="truncate text-base font-semibold underline-offset-2 hover:underline">
+              {name}
+            </p>
+          </button>
+        )}
+        <p className="text-xs text-muted-foreground">
+          {formatLogDate(submission.updatedAt)}
+        </p>
+        <p className="mt-1 text-sm">{summary}</p>
+        {deleted && (
+          <p className="mt-1 text-xs italic text-muted-foreground">
+            Original form deleted, can't edit
+          </p>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onRequestDelete}
+          aria-label={`Delete ${name}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Delete
+        </button>
+      </div>
+    </li>
+  );
+}
+
 function EmptyState() {
   return (
     <div className="mt-12 flex flex-col items-center gap-4 text-center">
@@ -308,33 +406,79 @@ function EmptyState() {
         <line x1="20" y1="42" x2="36" y2="42" />
       </svg>
       <p className="text-sm text-muted-foreground">
-        No workouts logged yet. Complete a workout to see it here.
+        Nothing logged yet. Complete a workout or submit a form to see it here.
       </p>
     </div>
   );
 }
 
+type DiaryEntry =
+  | { kind: "log"; id: string; date: string; data: WorkoutLog }
+  | { kind: "submission"; id: string; date: string; data: FormSubmission };
+
+type View =
+  | { mode: "list" }
+  | { mode: "editSubmission"; template: FormTemplate; submission: FormSubmission };
+
 export function DiaryTab() {
-  const { logs, deleteLog, setLogs } = useWorkoutDiary();
+  const { logs, setLogs, deleteLog } = useWorkoutDiary();
+  const { submissions, setSubmissions, deleteSubmission, updateSubmission } =
+    useFormSubmissions();
+  const { formTemplates } = useFormTemplates();
   usePageHeader("Diary");
 
+  const [view, setView] = useState<View>({ mode: "list" });
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [pendingSingleId, setPendingSingleId] = useState<string | null>(null);
+  const [pendingSingleLogId, setPendingSingleLogId] = useState<string | null>(null);
+  const [pendingSingleSubmissionId, setPendingSingleSubmissionId] = useState<string | null>(null);
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
-  const sorted = useMemo(
-    () => [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
-    [logs],
-  );
+  const templateById = useMemo(() => {
+    const m = new Map<string, FormTemplate>();
+    for (const t of formTemplates) m.set(t.id, t);
+    return m;
+  }, [formTemplates]);
 
-  // Exit selection mode automatically if the list becomes empty.
+  const entries: DiaryEntry[] = useMemo(() => {
+    const merged: DiaryEntry[] = [
+      ...logs.map(
+        (l): DiaryEntry => ({ kind: "log", id: `log:${l.id}`, date: l.completedAt, data: l }),
+      ),
+      ...submissions.map(
+        (s): DiaryEntry => ({
+          kind: "submission",
+          id: `sub:${s.id}`,
+          date: s.updatedAt,
+          data: s,
+        }),
+      ),
+    ];
+    merged.sort((a, b) => b.date.localeCompare(a.date));
+    return merged;
+  }, [logs, submissions]);
+
   useEffect(() => {
-    if (sorted.length === 0 && selectionMode) {
+    if (entries.length === 0 && selectionMode) {
       setSelectionMode(false);
       setSelectedIds(new Set());
     }
-  }, [sorted.length, selectionMode]);
+  }, [entries.length, selectionMode]);
+
+  if (view.mode === "editSubmission") {
+    return (
+      <FormRunner
+        template={view.template}
+        initialSubmission={view.submission}
+        onExit={() => setView({ mode: "list" })}
+        onSubmit={(submission) => {
+          updateSubmission(submission);
+          showToast("Submission updated");
+          setView({ mode: "list" });
+        }}
+      />
+    );
+  }
 
   const exitSelectionMode = () => {
     setSelectionMode(false);
@@ -350,23 +494,41 @@ export function DiaryTab() {
     });
   };
 
+  const selectedLogIds = new Set<string>();
+  const selectedSubmissionIds = new Set<string>();
+  for (const id of selectedIds) {
+    if (id.startsWith("log:")) selectedLogIds.add(id.slice(4));
+    else if (id.startsWith("sub:")) selectedSubmissionIds.add(id.slice(4));
+  }
+
   const confirmBulkDelete = () => {
-    const ids = selectedIds;
-    setLogs((prev) => prev.filter((l) => !ids.has(l.id)));
+    if (selectedLogIds.size > 0) {
+      setLogs((prev) => prev.filter((l) => !selectedLogIds.has(l.id)));
+    }
+    if (selectedSubmissionIds.size > 0) {
+      setSubmissions((prev) => prev.filter((s) => !selectedSubmissionIds.has(s.id)));
+    }
     setBulkConfirmOpen(false);
     exitSelectionMode();
   };
 
   const confirmSingleDelete = () => {
-    if (pendingSingleId) deleteLog(pendingSingleId);
-    setPendingSingleId(null);
+    if (pendingSingleLogId) {
+      deleteLog(pendingSingleLogId);
+      setPendingSingleLogId(null);
+    }
+    if (pendingSingleSubmissionId) {
+      deleteSubmission(pendingSingleSubmissionId);
+      setPendingSingleSubmissionId(null);
+    }
   };
 
   const selectedCount = selectedIds.size;
+  const selectedLogObjects = logs.filter((l) => selectedLogIds.has(l.id));
 
   return (
     <div className="flex flex-col gap-4">
-      {sorted.length > 0 && (
+      {entries.length > 0 && (
         <div className="flex items-center justify-between gap-2">
           {selectionMode ? (
             <>
@@ -382,9 +544,8 @@ export function DiaryTab() {
                 <button
                   type="button"
                   onClick={async () => {
-                    const selected = sorted.filter((l) => selectedIds.has(l.id));
-                    if (selected.length === 0) return;
-                    const md = exportNotesMarkdown(selected);
+                    if (selectedLogObjects.length === 0) return;
+                    const md = exportNotesMarkdown(selectedLogObjects);
                     const date = new Date().toISOString().slice(0, 10);
                     await shareFile({
                       content: md,
@@ -393,7 +554,7 @@ export function DiaryTab() {
                       title: "Session notes",
                     });
                   }}
-                  disabled={selectedCount === 0}
+                  disabled={selectedLogObjects.length === 0}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -425,27 +586,47 @@ export function DiaryTab() {
         </div>
       )}
 
-      {sorted.length === 0 ? (
+      {entries.length === 0 ? (
         <EmptyState />
       ) : (
         <ul className="flex flex-col gap-3">
-          {sorted.map((log) => (
-            <LogCard
-              key={log.id}
-              log={log}
-              onRequestDelete={() => setPendingSingleId(log.id)}
-              selectionMode={selectionMode}
-              selected={selectedIds.has(log.id)}
-              onToggleSelect={() => toggleSelect(log.id)}
-            />
-          ))}
+          {entries.map((entry) =>
+            entry.kind === "log" ? (
+              <LogCard
+                key={entry.id}
+                log={entry.data}
+                onRequestDelete={() => setPendingSingleLogId(entry.data.id)}
+                selectionMode={selectionMode}
+                selected={selectedIds.has(entry.id)}
+                onToggleSelect={() => toggleSelect(entry.id)}
+              />
+            ) : (
+              <SubmissionCard
+                key={entry.id}
+                submission={entry.data}
+                template={templateById.get(entry.data.templateId)}
+                onOpen={() => {
+                  const template = templateById.get(entry.data.templateId);
+                  if (!template) return;
+                  setView({ mode: "editSubmission", template, submission: entry.data });
+                }}
+                onRequestDelete={() => setPendingSingleSubmissionId(entry.data.id)}
+                selectionMode={selectionMode}
+                selected={selectedIds.has(entry.id)}
+                onToggleSelect={() => toggleSelect(entry.id)}
+              />
+            ),
+          )}
         </ul>
       )}
 
       <AlertDialog
-        open={pendingSingleId !== null}
+        open={pendingSingleLogId !== null || pendingSingleSubmissionId !== null}
         onOpenChange={(open) => {
-          if (!open) setPendingSingleId(null);
+          if (!open) {
+            setPendingSingleLogId(null);
+            setPendingSingleSubmissionId(null);
+          }
         }}
       >
         <AlertDialogContent>
