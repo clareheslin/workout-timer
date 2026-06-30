@@ -123,7 +123,7 @@ export function FormRunner({ template, initialSubmission, onExit, onSubmit }: Pr
     for (const s of sections) {
       for (const q of s.questions) {
         const a = answers[q.id];
-        if (a && isAnswered(a)) ordered.push(a);
+        if (a && isAnswered(a)) ordered.push({ ...a, questionLabel: q.prompt });
       }
     }
     const submission: FormSubmission = initialSubmission
