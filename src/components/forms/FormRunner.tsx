@@ -262,7 +262,7 @@ function QuestionInput({
           value={answer?.type === "text" ? answer.value : ""}
           errorRing={errorRing}
           onChange={(value) =>
-            onChange({ questionId: question.id, type: "text", value })
+            onChange({ questionId: question.id, questionLabel: question.prompt, type: "text", value })
           }
         />
       )}
@@ -277,6 +277,7 @@ function QuestionInput({
           onChange={(selectedOptionIds) =>
             onChange({
               questionId: question.id,
+              questionLabel: question.prompt,
               type: "multipleChoice",
               selectedOptionIds,
             })
@@ -290,7 +291,7 @@ function QuestionInput({
           value={answer?.type === "numericScale" ? answer.value : undefined}
           errorRing={errorRing}
           onChange={(value) =>
-            onChange({ questionId: question.id, type: "numericScale", value })
+            onChange({ questionId: question.id, questionLabel: question.prompt, type: "numericScale", value })
           }
         />
       )}
