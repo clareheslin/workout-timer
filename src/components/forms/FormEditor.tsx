@@ -431,12 +431,12 @@ function QuestionRow({
       </div>
 
       <div className="mt-2 flex flex-col gap-2">
-        <input
-          type="text"
+        <textarea
           value={question.prompt}
           onChange={(e) => setBase("prompt", e.target.value)}
           placeholder="Question prompt"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
+          rows={2}
+          className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
         />
         <input
           type="text"
