@@ -11,6 +11,7 @@ import { useFormSubmissions } from "@/hooks/useFormSubmissions";
 import { useFormTemplates } from "@/hooks/useFormTemplates";
 import { usePageHeader } from "./PageHeaderContext";
 import { exportNotesMarkdown } from "@/lib/notesExport";
+import { exportFormMarkdown } from "@/lib/formNotesExport";
 import { shareFile } from "@/lib/shareFile";
 import { showToast } from "@/lib/toast";
 import { FormRunner } from "./forms/FormRunner";
