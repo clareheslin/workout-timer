@@ -537,6 +537,7 @@ export function DiaryTab() {
 
   const selectedCount = selectedIds.size;
   const selectedLogObjects = logs.filter((l) => selectedLogIds.has(l.id));
+  const selectedSubmissionObjects = submissions.filter((s) => selectedSubmissionIds.has(s.id));
 
   return (
     <div className="flex flex-col gap-4">
@@ -556,17 +557,38 @@ export function DiaryTab() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (selectedLogObjects.length === 0) return;
-                    const md = exportNotesMarkdown(selectedLogObjects);
+                    const hasLogs = selectedLogObjects.length > 0;
+                    const hasSubs = selectedSubmissionObjects.length > 0;
+                    if (!hasLogs && !hasSubs) return;
                     const date = new Date().toISOString().slice(0, 10);
+                    const demoteHeadings = (md: string) =>
+                      md.replace(/^(#{1,5}) /gm, "$1# ");
+                    let content: string;
+                    let filename: string;
+                    let title: string;
+                    if (hasLogs && hasSubs) {
+                      const workoutMd = demoteHeadings(exportNotesMarkdown(selectedLogObjects));
+                      const formMd = demoteHeadings(exportFormMarkdown(selectedSubmissionObjects));
+                      content = `# Check-in export\n\n${workoutMd}\n\n${formMd}\n`;
+                      filename = `check-in-${date}.md`;
+                      title = "Check-in export";
+                    } else if (hasLogs) {
+                      content = exportNotesMarkdown(selectedLogObjects);
+                      filename = `session-notes-${date}.md`;
+                      title = "Session notes";
+                    } else {
+                      content = exportFormMarkdown(selectedSubmissionObjects);
+                      filename = `form-submissions-${date}.md`;
+                      title = "Form submissions";
+                    }
                     await shareFile({
-                      content: md,
-                      filename: `session-notes-${date}.md`,
+                      content,
+                      filename,
                       mime: "text/markdown",
-                      title: "Session notes",
+                      title,
                     });
                   }}
-                  disabled={selectedLogObjects.length === 0}
+                  disabled={selectedLogObjects.length === 0 && selectedSubmissionObjects.length === 0}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Download className="h-3.5 w-3.5" aria-hidden="true" />
