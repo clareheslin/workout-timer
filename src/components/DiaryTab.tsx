@@ -11,6 +11,7 @@ import { useFormSubmissions } from "@/hooks/useFormSubmissions";
 import { useFormTemplates } from "@/hooks/useFormTemplates";
 import { usePageHeader } from "./PageHeaderContext";
 import { exportNotesMarkdown } from "@/lib/notesExport";
+import { exportFormMarkdown } from "@/lib/formNotesExport";
 import { shareFile } from "@/lib/shareFile";
 import { showToast } from "@/lib/toast";
 import { FormRunner } from "./forms/FormRunner";
@@ -284,6 +285,7 @@ interface SubmissionCardProps {
   template: FormTemplate | undefined;
   onOpen: () => void;
   onRequestDelete: () => void;
+  onExport: () => void;
   selectionMode: boolean;
   selected: boolean;
   onToggleSelect: () => void;
@@ -294,6 +296,7 @@ function SubmissionCard({
   template,
   onOpen,
   onRequestDelete,
+  onExport,
   selectionMode,
   selected,
   onToggleSelect,
@@ -373,6 +376,15 @@ function SubmissionCard({
       </div>
 
       <div className="mt-3 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onExport}
+          aria-label={`Export ${name}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+          Export
+        </button>
         <button
           type="button"
           onClick={onRequestDelete}
@@ -611,6 +623,16 @@ export function DiaryTab() {
                   setView({ mode: "editSubmission", template, submission: entry.data });
                 }}
                 onRequestDelete={() => setPendingSingleSubmissionId(entry.data.id)}
+                onExport={async () => {
+                  const md = exportFormMarkdown([entry.data]);
+                  const date = new Date().toISOString().slice(0, 10);
+                  await shareFile({
+                    content: md,
+                    filename: `form-submission-${date}.md`,
+                    mime: "text/markdown",
+                    title: "Form submission",
+                  });
+                }}
                 selectionMode={selectionMode}
                 selected={selectedIds.has(entry.id)}
                 onToggleSelect={() => toggleSelect(entry.id)}
