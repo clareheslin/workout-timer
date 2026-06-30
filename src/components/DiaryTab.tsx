@@ -537,6 +537,7 @@ export function DiaryTab() {
 
   const selectedCount = selectedIds.size;
   const selectedLogObjects = logs.filter((l) => selectedLogIds.has(l.id));
+  const selectedSubmissionObjects = submissions.filter((s) => selectedSubmissionIds.has(s.id));
 
   return (
     <div className="flex flex-col gap-4">
