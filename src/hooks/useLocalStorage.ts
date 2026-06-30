@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { showToast } from "@/lib/toast";
 
 type SetValue<T> = (value: T | ((prev: T) => T)) => void;
 
@@ -34,8 +35,15 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T
     if (!hydrated) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      // storage full or unavailable — silently ignore
+    } catch (err) {
+      // Surface the failure: silent loss of data is the worst outcome.
+      const msg =
+        err instanceof Error && err.name === "QuotaExceededError"
+          ? `Couldn't save "${key}" — your device storage may be full`
+          : `Couldn't save "${key}" to local storage`;
+      showToast(msg, 6000);
+      // eslint-disable-next-line no-console
+      console.error("[useLocalStorage] persist failed", key, err);
     }
   }, [key, value, hydrated]);
 
