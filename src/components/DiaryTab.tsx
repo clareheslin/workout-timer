@@ -622,6 +622,16 @@ export function DiaryTab() {
                   setView({ mode: "editSubmission", template, submission: entry.data });
                 }}
                 onRequestDelete={() => setPendingSingleSubmissionId(entry.data.id)}
+                onExport={async () => {
+                  const md = exportFormMarkdown([entry.data]);
+                  const date = new Date().toISOString().slice(0, 10);
+                  await shareFile({
+                    content: md,
+                    filename: `form-submission-${date}.md`,
+                    mime: "text/markdown",
+                    title: "Form submission",
+                  });
+                }}
                 selectionMode={selectionMode}
                 selected={selectedIds.has(entry.id)}
                 onToggleSelect={() => toggleSelect(entry.id)}
