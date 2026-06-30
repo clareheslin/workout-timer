@@ -284,6 +284,7 @@ interface SubmissionCardProps {
   template: FormTemplate | undefined;
   onOpen: () => void;
   onRequestDelete: () => void;
+  onExport: () => void;
   selectionMode: boolean;
   selected: boolean;
   onToggleSelect: () => void;
@@ -294,6 +295,7 @@ function SubmissionCard({
   template,
   onOpen,
   onRequestDelete,
+  onExport,
   selectionMode,
   selected,
   onToggleSelect,
@@ -373,6 +375,15 @@ function SubmissionCard({
       </div>
 
       <div className="mt-3 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onExport}
+          aria-label={`Export ${name}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+          Export
+        </button>
         <button
           type="button"
           onClick={onRequestDelete}
