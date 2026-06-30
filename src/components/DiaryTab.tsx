@@ -587,6 +587,7 @@ export function DiaryTab() {
                       mime: "text/markdown",
                       title,
                     });
+                    exitSelectionMode();
                   }}
                   disabled={selectedLogObjects.length === 0 && selectedSubmissionObjects.length === 0}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
