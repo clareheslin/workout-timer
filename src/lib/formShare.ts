@@ -86,7 +86,7 @@ export function slugifyFormFilename(name: string): string {
     .replace(/[^\p{L}\p{N}\s\-_]/gu, "")
     .replace(/\s+/g, "_")
     .slice(0, 60);
-  return `${base || "form"}.fem.form.json`;
+  return `${base || "form"}.fem.json`;
 }
 
 function regenerateQuestionIds(questions: FormQuestion[]): FormQuestion[] {
